@@ -2,51 +2,36 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DRTRACK Conecta — Serviços de Apoio e Segurança</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DRTRACK Conecta</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            min-height: 100vh;
-            color: white;
-            padding-bottom: 80px;
-        }
-        .cabecalho { text-align: center; padding: 20px; }
-        .logo { font-size: 26px; font-weight: bold; color: #facc15; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .subtitulo { color: #94a3b8; margin-top: 5px; font-size: 14px; }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; padding-bottom: 80px; }
         .tela { display: none; padding: 15px; }
         .tela.ativa { display: block; }
-        
+        .cabecalho { text-align: center; padding: 30px 20px; }
+        .logo { font-size: 28px; font-weight: bold; color: #facc15; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .subtitulo { color: #94a3b8; margin-top: 8px; font-size: 15px; }
+        .container-botoes { padding: 20px; max-width: 420px; margin: 0 auto; }
         .botao-grande {
             width: 100%;
-            padding: 18px;
+            padding: 20px;
             border: none;
-            border-radius: 14px;
-            font-size: 18px;
+            border-radius: 16px;
+            font-size: 19px;
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 15px;
-            transition: transform 0.2s;
+            margin-bottom: 16px;
+            transition: transform 0.15s;
         }
-        .botao-grande:active { transform: scale(0.98); }
+        .botao-grande:active { transform: scale(0.97); }
         .botao-amarelo { background: linear-gradient(90deg, #facc15, #eab308); color: #000; }
         .botao-roxo { background: linear-gradient(90deg, #7c3aed, #a855f7); color: white; }
-        .botao-verde { background: linear-gradient(90deg, #16a34a, #15803d); color: white; }
         .botao-cinza { background: #475569; color: #cbd5e1; }
-        
-        .caixa {
-            background: rgba(30, 41, 59, 0.8);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid #334155;
-        }
+        .caixa { background: rgba(30, 41, 59, 0.8); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; }
         .caixa h2 { font-size: 18px; margin-bottom: 15px; color: #facc15; }
-        
         input, select {
             width: 100%;
             padding: 14px;
@@ -58,41 +43,30 @@
             margin-bottom: 12px;
         }
         input:focus, select:focus { outline: 2px solid #facc15; }
-        
+        .botao-voltar {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        #mapa { height: 220px; border-radius: 12px; margin-bottom: 15px; z-index: 1; }
         .ocorrencia-card {
             background: #0f172a;
             border-radius: 14px;
             padding: 16px;
             margin-bottom: 12px;
             border-left: 4px solid #facc15;
-            animation: aparecer 0.3s ease-out;
         }
-        @keyframes aparecer {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .ocorrencia-card.aceita { border-left-color: #4ade80; }
-        .ocorrencia-cabecalho {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-        }
+        .ocorrencia-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
         .ocorrencia-tipo { font-weight: bold; font-size: 15px; }
         .ocorrencia-valor { font-size: 18px; font-weight: bold; color: #4ade80; }
         .ocorrencia-dados { font-size: 14px; color: #cbd5e1; margin: 6px 0; }
         .distancia { font-size: 13px; color: #60a5fa; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
-        .prioridade {
-            display: inline-block;
-            background: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: bold;
-            margin-left: 6px;
-        }
-        
+        .prioridade { display: inline-block; background: rgba(74, 222, 128, 0.2); color: #4ade80; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 6px; }
         .botao-aceitar {
             width: 100%;
             padding: 14px;
@@ -105,74 +79,25 @@
             cursor: pointer;
             margin-top: 10px;
         }
-        .botao-aceitar:disabled { background: #334155; cursor: not-allowed; opacity: 0.6; }
-        
-        #mapa {
-            height: 220px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            z-index: 1;
-        }
-        
+        .sem-servicos { text-align: center; padding: 40px 20px; color: #64748b; }
         .navegacao-inferior {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #1e293b;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            border-top: 1px solid #334155;
-            z-index: 100;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #1e293b; display: flex; justify-content: space-around;
+            padding: 10px 0; border-top: 1px solid #334155; z-index: 100;
         }
-        .nav-item {
-            text-align: center;
-            color: #94a3b8;
-            font-size: 11px;
-            cursor: pointer;
-        }
+        .nav-item { text-align: center; color: #94a3b8; font-size: 11px; cursor: pointer; }
         .nav-item.ativo { color: #facc15; font-weight: bold; }
         .nav-icone { font-size: 20px; margin-bottom: 2px; }
-        
-        .sem-servicos {
-            text-align: center;
-            padding: 40px 20px;
-            color: #64748b;
-        }
-        
-        .status-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-top: 8px;
-        }
-        .badge-pendente { background: rgba(250, 204, 21, 0.2); color: #facc15; }
-        .badge-aceito { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
-        
-        .botao-voltar {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 0;
-            margin-bottom: 15px;
-        }
     </style>
 </head>
 <body>
 
-<!-- TELA INICIAL -->
 <div id="tela-inicio" class="tela ativa">
     <div class="cabecalho">
         <div class="logo">🛡️ DRTRACK Conecta</div>
         <p class="subtitulo">Sistema de Apoio e Segurança</p>
     </div>
-    
-    <div style="padding: 20px;">
+    <div class="container-botoes">
         <button class="botao-grande botao-amarelo" onclick="entrarComo('solicitante')">
             📋 Pedir Serviço
         </button>
@@ -185,28 +110,19 @@
     </div>
 </div>
 
-<!-- TELA SOLICITANTE -->
 <div id="tela-solicitante" class="tela">
     <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
-    
-    <div class="cabecalho" style="padding: 0 0 15px 0;">
-        <h2 style="color:#facc15;">📋 Solicitar Apoio</h2>
-    </div>
-    
     <div class="caixa">
-        <label>Seu nome</label>
+        <h2>📋 Solicitar Apoio</h2>
+        <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">Seu nome</label>
         <input type="text" id="nome-solicitante" placeholder="Digite seu nome">
-        
-        <label>Telefone / WhatsApp</label>
+        <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">Telefone / WhatsApp</label>
         <input type="tel" id="fone-solicitante" placeholder="(11) 9xxxx-xxxx">
-        
-        <label>Endereço do Atendimento</label>
+        <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">Endereço do Atendimento</label>
         <input type="text" id="endereco-servico" placeholder="Rua, número, bairro, cidade">
-        
-        <label>Coordenadas (opcional)</label>
+        <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">Coordenadas (opcional)</label>
         <input type="text" id="coords-servico" placeholder="-23.xxxx, -46.xxxx">
-        
-        <label>Tipo de Serviço</label>
+        <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">Tipo de Serviço</label>
         <select id="tipo-servico">
             <option value="">Selecione...</option>
             <option value="alarme">🚨 Verificação de Alarme</option>
@@ -215,70 +131,47 @@
             <option value="foto">📷 Registro Fotográfico</option>
             <option value="outro">📝 Outro</option>
         </select>
-        
-        <label>Detalhes / Observações</label>
-        <input type="text" id="detalhes-servico" placeholder="Informações adicionais">
-        
-        <label>Valor Oferecido R$</label>
+        <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">Valor Oferecido R$</label>
         <input type="number" id="valor-servico" placeholder="0,00" step="0.01">
-        
-        <button class="botao-grande botao-verde" onclick="lancarOcorrencia()">🚀 LANÇAR OCORRÊNCIA</button>
+        <button class="botao-grande" style="background:linear-gradient(90deg, #16a34a, #15803d); color:white; margin-top:8px;" onclick="lancarOcorrencia()">🚀 LANÇAR OCORRÊNCIA</button>
     </div>
 </div>
 
-<!-- TELA PRESTADOR — MAPA + LISTA + DISTÂNCIA -->
 <div id="tela-prestador" class="tela">
     <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
-    
-    <div class="cabecalho" style="padding: 0 0 10px 0;">
-        <h2 style="color:#facc15;">🛵 Serviços Próximos</h2>
-        <p style="color:#94a3b8; font-size:13px; margin-top:5px;">Ordenados por distância — o mais próximo aparece primeiro</p>
-    </div>
-    
-    <!-- MAPA SEMPRE VISÍVEL NO TOPO -->
+    <h2 style="color:#facc15; margin-bottom:10px;">🛵 Serviços Próximos</h2>
+    <p style="color:#94a3b8; font-size:13px; margin-bottom:15px;">Ordenados por distância — o mais próximo aparece primeiro</p>
     <div id="mapa"></div>
-    
-    <!-- LISTA DE SERVIÇOS ORDENADA -->
     <div id="lista-servicos">
         <div class="sem-servicos">
             📍 Obtendo sua localização...<br>
-            <span style="font-size:12px; color:#64748b;">Permita o acesso à localização para ver os serviços próximos</span>
+            <span style="font-size:12px;">Permita o acesso à localização</span>
         </div>
     </div>
 </div>
 
-<!-- TELA ADMIN — REDIRECIONA PARA PAINEL COMPLETO -->
 <div id="tela-admin" class="tela">
     <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
     <div class="caixa" style="text-align:center; margin-top:60px;">
         <h2 style="color:#facc15; margin-bottom:20px;">⚙️ Painel Administrativo</h2>
-        <p style="color:#94a3b8; margin-bottom:25px;">Acesse o fechamento completo, controle de ocorrências e relatórios.</p>
-        <button class="botao-grande botao-roxo" onclick="abrirPainelAdmin()">🔑 ABRIR PAINEL DE FECHAMENTO</button>
+        <p style="color:#94a3b8; margin-bottom:25px;">Use o código do painel separado para fechamento e relatórios.</p>
+        <button class="botao-grande botao-cinza" onclick="voltarInicio()">🔙 Voltar</button>
     </div>
 </div>
 
-<!-- NAVEGAÇÃO INFERIOR — SÓ APARECE QUANDO LOGADO -->
 <div class="navegacao-inferior" id="nav-inferior" style="display:none;">
     <div class="nav-item ativo" onclick="irPara('prestador')">
-        <div class="nav-icone">📍</div>
-        <div>Próximos</div>
+        <div class="nav-icone">📍</div><div>Próximos</div>
     </div>
     <div class="nav-item" onclick="irPara('solicitante')">
-        <div class="nav-icone">➕</div>
-        <div>Solicitar</div>
-    </div>
-    <div class="nav-item" onclick="irPara('meus')">
-        <div class="nav-icone">📋</div>
-        <div>Meus</div>
+        <div class="nav-icone">➕</div><div>Solicitar</div>
     </div>
     <div class="nav-item" onclick="voltarInicio()">
-        <div class="nav-icone">👤</div>
-        <div>Sair</div>
+        <div class="nav-icone">👤</div><div>Sair</div>
     </div>
 </div>
 
 <script>
-// ========== DADOS E CONSTANTES ==========
 const nomesTipos = {
     alarme: '🚨 Verificação de Alarme',
     veiculo: '🚗 Verificação de Veículo',
@@ -286,190 +179,90 @@ const nomesTipos = {
     foto: '📷 Registro Fotográfico',
     outro: '📝 Outro'
 };
+let minhaPosicao = null, mapa = null, listaOcorrencias = [], usuarioAtual = null;
 
-let minhaPosicao = null;
-let mapa = null;
-let marcadores = [];
-let listaOcorrencias = [];
-let usuarioAtual = null;
-
-// ========== ENTRAR ==========
 function entrarComo(tipo) {
     usuarioAtual = tipo;
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById(`tela-${tipo}`).classList.add('ativa');
-    
     if (tipo === 'prestador') {
         document.getElementById('nav-inferior').style.display = 'flex';
         iniciarMapa();
         carregarOcorrencias();
     } else if (tipo === 'solicitante') {
         document.getElementById('nav-inferior').style.display = 'flex';
-    } else if (tipo === 'admin') {
-        // Fica na tela admin
     }
 }
-
 function voltarInicio() {
     usuarioAtual = null;
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-inicio').classList.add('ativa');
     document.getElementById('nav-inferior').style.display = 'none';
 }
-
 function irPara(pagina) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
     event.currentTarget.classList.add('ativo');
-    
-    if (pagina === 'meus') {
-        alert('📋 Em desenvolvimento — em breve acompanhamento dos seus atendimentos!');
-        return;
-    }
-    
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById(`tela-${pagina}`).classList.add('ativa');
-    
     if (pagina === 'prestador') carregarOcorrencias();
 }
-
-function abrirPainelAdmin() {
-    alert('🔑 Abrindo Painel de Fechamento...\n\nCole o código do painel administrativo em outra página/aba.\n\nEste é o app principal — o painel é um sistema separado.');
-}
-
-// ========== LANÇAR OCORRÊNCIA ==========
 function lancarOcorrencia() {
     const endereco = document.getElementById('endereco-servico').value.trim();
     if (!endereco) { alert('📍 Digite o endereço!'); return; }
-    
     const valor = parseFloat(document.getElementById('valor-servico').value) || 0;
     const coordsTexto = document.getElementById('coords-servico').value.trim();
-    
-    let lat = -23.5505; // Centro SP padrão
-    let lng = -46.6333;
-    
+    let lat = -23.5505, lng = -46.6333;
     if (coordsTexto && coordsTexto.includes(',')) {
         const partes = coordsTexto.split(',').map(p => parseFloat(p.trim()));
-        if (partes.length === 2 && !isNaN(partes[0]) && !isNaN(partes[1])) {
-            lat = partes[0];
-            lng = partes[1];
-        }
+        if (partes.length === 2 && !isNaN(partes[0]) && !isNaN(partes[1])) { lat = partes[0]; lng = partes[1]; }
     }
-    
     const nova = {
         id: Date.now(),
         data: new Date().toLocaleString('pt-BR'),
         endereco: endereco,
         coords: { lat, lng },
         tipo: document.getElementById('tipo-servico').value || 'outro',
-        detalhes: document.getElementById('detalhes-servico').value || '—',
         solicitante: document.getElementById('nome-solicitante').value || 'Não informado',
         telefone: document.getElementById('fone-solicitante').value || 'Não informado',
         valor: valor,
-        status: 'pendente',
-        aceitoPor: null,
-        distancia: null
+        status: 'pendente'
     };
-    
     listaOcorrencias.unshift(nova);
     salvarOcorrencias();
-    
-    alert('✅ OCORRÊNCIA LANÇADA!\n\nAparecerá em instantes para os apoios próximos!');
-    
-    // Limpar formulário
+    alert('✅ OCORRÊNCIA LANÇADA!');
     document.getElementById('endereco-servico').value = '';
+    document.getElementById('valor-servico').value = '';
     document.getElementById('coords-servico').value = '';
     document.getElementById('tipo-servico').value = '';
-    document.getElementById('detalhes-servico').value = '';
-    document.getElementById('valor-servico').value = '';
-    
     if (usuarioAtual === 'prestador') carregarOcorrencias();
 }
-
-// ========== MAPA E LOCALIZAÇÃO ==========
 function iniciarMapa() {
     if (mapa) return;
-    
     mapa = L.map('mapa').setView([-23.5505, -46.6333], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    }).addTo(mapa);
-    
-    // Pegar localização do usuário
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapa);
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                minhaPosicao = {
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude
-                };
+                minhaPosicao = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                 mapa.setView([minhaPosicao.lat, minhaPosicao.lng], 13);
-                
-                // Marcador da minha posição
                 L.marker([minhaPosicao.lat, minhaPosicao.lng], {
-                    icon: L.divIcon({
-                        className: 'marcador-eu',
-                        html: '<div style="background:#7c3aed; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(124,58,237,0.5);"></div>',
-                        iconSize: [22, 22]
-                    })
+                    icon: L.divIcon({ className: 'meu-marcador', html: '<div style="background:#7c3aed; width:16px; height:16px; border-radius:50%; border:3px solid white;"></div>', iconSize: [22, 22] })
                 }).addTo(mapa).bindPopup('📍 Você está aqui');
-                
                 carregarOcorrencias();
             },
-            (erro) => {
-                console.log('Geolocalização negada:', erro);
-                minhaPosicao = { lat: -23.5505, lng: -46.6333 };
-                carregarOcorrencias();
-            }
+            () => { minhaPosicao = { lat: -23.5505, lng: -46.6333 }; carregarOcorrencias(); }
         );
-    } else {
-        minhaPosicao = { lat: -23.5505, lng: -46.6333 };
-        carregarOcorrencias();
-    }
+    } else { minhaPosicao = { lat: -23.5505, lng: -46.6333 }; carregarOcorrencias(); }
 }
-
-// ========== CÁLCULO DE DISTÂNCIA ==========
 function calcularDistancia(coord1, coord2) {
     if (!coord1 || !coord2) return null;
-    
-    const R = 6371; // Raio da Terra em km
+    const R = 6371;
     const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
     const dLng = (coord2.lng - coord1.lng) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(coord1.lat * Math.PI / 180) * Math.cos(coord2.lat * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const km = R * c;
-    
-    if (km < 1) return `${Math.round(km * 1000)} m`;
-    return `${km.toFixed(2)} km`;
+    const a = Math.sin(dLat/2)**2 + Math.cos(coord1.lat*Math.PI/180)*Math.cos(coord2.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+    const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(2)} km`;
 }
-
-// ========== CARREGAR E RENDERIZAR OCORRÊNCIAS ==========
-function carregarOcorrencias() {
-    listaOcorrencias = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
-    
-    // Calcular distância e ordenar
-    const comDistancia = listaOcorrencias.map(oc => {
-        oc.distanciaTexto = minhaPosicao 
-            ? calcularDistancia(minhaPosicao, oc.coords) 
-            ? '—';
-        oc.distanciaValor = minhaPosicao 
-            ? calcularDistanciaValor(minhaPosicao, oc.coords) 
-            : 9999;
-        return oc;
-    });
-    
-    // Ordenar: mais próximo primeiro, depois pendentes
-    const ordenadas = comDistancia.sort((a, b) => {
-        if (a.status === 'pendente' && b.status !== 'pendente') return -1;
-        if (a.status !== 'pendente' && b.status === 'pendente') return 1;
-        return a.distanciaValor - b.distanciaValor;
-    });
-    
-    atualizarMarcadores(ordenadas);
-    renderizarLista(ordenadas);
-}
-
 function calcularDistanciaValor(coord1, coord2) {
     if (!coord1 || !coord2) return 9999;
     const R = 6371;
@@ -478,94 +271,68 @@ function calcularDistanciaValor(coord1, coord2) {
     const a = Math.sin(dLat/2)**2 + Math.cos(coord1.lat*Math.PI/180)*Math.cos(coord2.lat*Math.PI/180)*Math.sin(dLng/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
-
-function atualizarMarcadores(ocorrencias) {
-    marcadores.forEach(m => mapa.removeLayer(m));
-    marcadores = [];
-    
-    ocorrencias.forEach(oc => {
-        const cor = oc.status === 'pendente' ? '#facc15' : '#4ade80';
-        const marcador = L.circleMarker([oc.coords.lat, oc.coords.lng], {
+function carregarOcorrencias() {
+    listaOcorrencias = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
+    const comDistancia = listaOcorrencias.map(oc => {
+        oc.distanciaTexto = minhaPosicao ? calcularDistancia(minhaPosicao, oc.coords) : '—';
+        oc.distanciaValor = minhaPosicao ? calcularDistanciaValor(minhaPosicao, oc.coords) : 9999;
+        return oc;
+    });
+    const ordenadas = comDistancia.sort((a, b) => {
+        if (a.status === 'pendente' && b.status !== 'pendente') return -1;
+        if (a.status !== 'pendente' && b.status === 'pendente') return 1;
+        return a.distanciaValor - b.distanciaValor;
+    });
+    renderizarLista(ordenadas);
+    atualizarMarcadores(ordenadas);
+}
+function atualizarMarcadores(lista) {
+    lista.forEach(oc => {
+        L.circleMarker([oc.coords.lat, oc.coords.lng], {
             radius: oc.status === 'pendente' ? 10 : 7,
-            fillColor: cor,
-            color: '#fff',
-            weight: 2,
-            fillOpacity: 0.9
-        }).addTo(mapa).bindPopup(`
-            <b>${nomesTipos[oc.tipo]}</b><br>
-            ${oc.endereco}<br>
-            💰 R$ ${oc.valor.toFixed(2)}<br>
-            ${oc.distanciaTexto ? '📏 ' + oc.distanciaTexto : ''}
-        `);
-        marcadores.push(marcador);
+            fillColor: oc.status === 'pendente' ? '#facc15' : '#4ade80',
+            color: '#fff', weight: 2, fillOpacity: 0.9
+        }).addTo(mapa).bindPopup(`${nomesTipos[oc.tipo]}<br>${oc.endereco}<br>💰 R$ ${oc.valor.toFixed(2)}`);
     });
 }
-
-function renderizarLista(ocorrencias) {
+function renderizarLista(ordenadas) {
     const container = document.getElementById('lista-servicos');
-    
-    const pendentes = ocorrencias.filter(o => o.status === 'pendente');
-    
+    const pendentes = ordenadas.filter(o => o.status === 'pendente');
     if (pendentes.length === 0) {
-        container.innerHTML = '<div class="sem-servicos">🔍 Nenhum serviço disponível no momento.<br><span style="font-size:12px; color:#64748b;">Aguarde novas solicitações...</span></div>';
+        container.innerHTML = '<div class="sem-servicos">🔍 Nenhum serviço disponível no momento.<br><span style="font-size:12px;">Aguarde novas solicitações...</span></div>';
         return;
     }
-    
-    container.innerHTML = pendentes.map((oc, indice) => `
+    container.innerHTML = pendentes.map((oc, i) => `
         <div class="ocorrencia-card">
             <div class="ocorrencia-cabecalho">
-                <span class="ocorrencia-tipo">${nomesTipos[oc.tipo]}${indice === 0 ? '<span class="prioridade">✅ Mais próximo</span>' : ''}</span>
+                <span class="ocorrencia-tipo">${nomesTipos[oc.tipo]}${i === 0 ? '<span class="prioridade">✅ Mais próximo</span>' : ''}</span>
                 <span class="ocorrencia-valor">R$ ${oc.valor.toFixed(2)}</span>
             </div>
-            <div class="distancia">
-                📏 ${oc.distanciaTexto || 'Distância calculada'}
-            </div>
-            <div class="ocorrencia-dados">
-                📍 ${oc.endereco}<br>
-                👤 ${oc.solicitante}<br>
-                📅 ${oc.data}
-            </div>
-            <button class="botao-aceitar" onclick="aceitarServico(${indice})">
-                ✅ ACEITAR E CONTATAR
-            </button>
+            <div class="distancia">📏 ${oc.distanciaTexto || 'Calculando...'}</div>
+            <div class="ocorrencia-dados">📍 ${oc.endereco}<br>👤 ${oc.solicitante}<br>📅 ${oc.data}</div>
+            <button class="botao-aceitar" onclick="aceitarServico(${i})">✅ ACEITAR E CONTATAR</button>
         </div>
     `).join('');
 }
-
-// ========== ACEITAR SERVIÇO ==========
-function aceitarServico(indiceFiltrado) {
+function aceitarServico(indice) {
     const pendentes = listaOcorrencias.filter(o => o.status === 'pendente');
-    const oc = pendentes[indiceFiltrado];
+    const oc = pendentes[indice];
     const indiceReal = listaOcorrencias.findIndex(o => o.id === oc.id);
-    
-    if (!confirm(`Confirmar aceite deste serviço?\n\n📍 ${oc.endereco}\n💰 R$ ${oc.valor.toFixed(2)}\n\nVocê entrará em contato com: ${oc.telefone}`)) {
-        return;
-    }
-    
+    if (!confirm(`Confirmar aceite?\n📍 ${oc.endereco}\n💰 R$ ${oc.valor.toFixed(2)}\n📞 ${oc.telefone}`)) return;
     listaOcorrencias[indiceReal].status = 'concluida';
-    listaOcorrencias[indiceReal].aceitoPor = 'Você';
     salvarOcorrencias();
-    
-    alert(`✅ SERVIÇO ACEITO!\n\n📞 Contato: ${oc.telefone}\n📍 Local: ${oc.endereco}\n\nBom atendimento! 🛡️`);
-    
+    alert(`✅ SERVIÇO ACEITO!\n📞 Contato: ${oc.telefone}\n📍 Local: ${oc.endereco}`);
     carregarOcorrencias();
 }
-
-// ========== SALVAR ==========
 function salvarOcorrencias() {
     localStorage.setItem('listaOcorrencias', JSON.stringify(listaOcorrencias));
 }
-
-// ========== ATUALIZAÇÃO AUTOMÁTICA ==========
 setInterval(() => {
     if (usuarioAtual === 'prestador') {
         const atual = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
-        if (JSON.stringify(atual) !== JSON.stringify(listaOcorrencias)) {
-            carregarOcorrencias();
-        }
+        if (JSON.stringify(atual) !== JSON.stringify(listaOcorrencias)) carregarOcorrencias();
     }
-}, 3000); // Verifica a cada 3 segundos
+}, 3000);
 </script>
-
 </body>
 </html>

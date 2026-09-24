@@ -3,305 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DRTRACK Conecta — Painel Completo</title>
+    <title>DRTRACK Conecta — Serviços de Apoio e Segurança</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; padding: 20px; color: #fff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: white;
+            padding-bottom: 80px;
+        }
+        .cabecalho { text-align: center; padding: 20px; }
+        .logo { font-size: 26px; font-weight: bold; color: #facc15; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .subtitulo { color: #94a3b8; margin-top: 5px; font-size: 14px; }
         
-        .container { max-width: 540px; margin: 0 auto; }
-        .tela { display: none; }
+        .tela { display: none; padding: 15px; }
         .tela.ativa { display: block; }
         
-        .header { text-align: center; margin-bottom: 20px; }
-        .logo { font-size: 24px; font-weight: 900; color: #facc15; margin-bottom: 5px; }
-        .subtitulo { color: #94a3b8; font-size: 13px; }
+        .botao-grande {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 14px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: transform 0.2s;
+        }
+        .botao-grande:active { transform: scale(0.98); }
+        .botao-amarelo { background: linear-gradient(90deg, #facc15, #eab308); color: #000; }
+        .botao-roxo { background: linear-gradient(90deg, #7c3aed, #a855f7); color: white; }
+        .botao-verde { background: linear-gradient(90deg, #16a34a, #15803d); color: white; }
+        .botao-cinza { background: #475569; color: #cbd5e1; }
         
-        .navegacao { display: flex; gap: 6px; margin-bottom: 18px; flex-wrap: wrap; }
-        .nav-btn { flex: 1; min-width: 90px; padding: 10px; border: none; border-radius: 10px; background: #334155; color: #cbd5e1; cursor: pointer; font-size: 12px; font-weight: 600; }
-        .nav-btn.ativo { background: #facc15; color: #000; }
+        .caixa {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid #334155;
+        }
+        .caixa h2 { font-size: 18px; margin-bottom: 15px; color: #facc15; }
         
-        .card { background: #1e293b; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; }
-        .card h2 { font-size: 17px; margin-bottom: 18px; color: #facc15; display: flex; align-items: center; gap: 8px; }
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            background: #334155;
+            color: white;
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+        input:focus, select:focus { outline: 2px solid #facc15; }
         
-        .contadores { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
-        .contador-card { background: #0f172a; border-radius: 10px; padding: 12px 8px; text-align: center; }
-        .contador-valor { font-size: 20px; font-weight: 900; margin-bottom: 2px; }
-        .contador-label { font-size: 10px; color: #94a3b8; }
-        .amarelo { color: #facc15; }
-        .verde { color: #4ade80; }
-        .vermelho { color: #f87171; }
-        .azul { color: #60a5fa; }
+        .ocorrencia-card {
+            background: #0f172a;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid #facc15;
+            animation: aparecer 0.3s ease-out;
+        }
+        @keyframes aparecer {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ocorrencia-card.aceita { border-left-color: #4ade80; }
+        .ocorrencia-cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        .ocorrencia-tipo { font-weight: bold; font-size: 15px; }
+        .ocorrencia-valor { font-size: 18px; font-weight: bold; color: #4ade80; }
+        .ocorrencia-dados { font-size: 14px; color: #cbd5e1; margin: 6px 0; }
+        .distancia { font-size: 13px; color: #60a5fa; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+        .prioridade {
+            display: inline-block;
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 6px;
+        }
         
-        .caixa-total { background: rgba(250, 204, 21, 0.1); border: 1px solid #facc15; border-radius: 12px; padding: 15px; margin-bottom: 18px; }
-        .linha-total { display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; }
-        .linha-total.destaque { font-size: 18px; font-weight: 900; color: #4ade80; border-top: 1px dashed #4ade80; margin-top: 6px; padding-top: 8px; }
-        .linha-total.comissao { font-size: 13px; color: #94a3b8; display: none; }
-        .comissao-ativa .linha-total.comissao { display: flex; }
-        .aviso-sem-comissao { font-size: 11px; color: #94a3b8; font-style: italic; margin-top: 6px; }
+        .botao-aceitar {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #16a34a, #15803d);
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .botao-aceitar:disabled { background: #334155; cursor: not-allowed; opacity: 0.6; }
         
-        .caixa-opcao { background: #0f172a; border-radius: 10px; padding: 10px 14px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-        .caixa-opcao input[type="checkbox"] { width: 18px; height: 18px; margin: 0; cursor: pointer; }
-        .caixa-opcao label { font-size: 13px; color: #cbd5e1; cursor: pointer; margin: 0; }
+        #mapa {
+            height: 220px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            z-index: 1;
+        }
         
-        .filtros-linha { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
-        .filtro-btn { padding: 8px 12px; border-radius: 8px; border: none; background: #334155; color: #cbd5e1; font-size: 12px; cursor: pointer; }
-        .filtro-btn.ativo { background: #facc15; color: #000; font-weight: 700; }
+        .navegacao-inferior {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1e293b;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            border-top: 1px solid #334155;
+            z-index: 100;
+        }
+        .nav-item {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .nav-item.ativo { color: #facc15; font-weight: bold; }
+        .nav-icone { font-size: 20px; margin-bottom: 2px; }
         
-        input, select, textarea { width: 100%; padding: 11px 14px; border-radius: 10px; border: none; background: #334155; color: #fff; font-size: 14px; margin-bottom: 15px; }
-        input:focus, select:focus, textarea:focus { outline: 2px solid #facc15; }
-        textarea { min-height: 100px; resize: vertical; }
+        .sem-servicos {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
         
-        .ocorrencia-item { background: #0f172a; border-radius: 12px; padding: 14px; margin-bottom: 10px; border-left: 4px solid #60a5fa; }
-        .ocorrencia-item.pendente { border-left-color: #facc15; }
-        .ocorrencia-item.concluida { border-left-color: #4ade80; }
-        .ocorrencia-item.cancelada { border-left-color: #f87171; opacity: 0.8; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        .badge-pendente { background: rgba(250, 204, 21, 0.2); color: #facc15; }
+        .badge-aceito { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
         
-        .ocorrencia-topo { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-        .ocorrencia-tipo { font-weight: 700; font-size: 14px; }
-        .ocorrencia-data { font-size: 11px; color: #94a3b8; }
-        .ocorrencia-dados { font-size: 13px; color: #cbd5e1; margin: 4px 0; }
-        .ocorrencia-valor { font-weight: 700; color: #4ade80; font-size: 15px; margin-top: 6px; }
-        .ocorrencia-status { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; margin-top: 8px; }
-        .status-pendente { background: rgba(250, 204, 21, 0.2); color: #facc15; }
-        .status-concluida { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
-        .status-cancelada { background: rgba(248, 113, 113, 0.2); color: #f87171; }
-        
-        .btn-enviar { width: 100%; padding: 13px; border-radius: 10px; border: none; background: linear-gradient(90deg, #facc15, #eab308); color: #000; font-weight: 800; font-size: 15px; cursor: pointer; margin-top: 8px; }
-        .btn-enviar:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; opacity: 0.7; }
-        .btn-verde { background: linear-gradient(90deg, #16a34a, #15803d); color: white; }
-        .btn-cinza { background: #475569; color: #cbd5e1; }
-        .btn-roxo { background: linear-gradient(90deg, #7c3aed, #6d28d9); color: white; }
-        .btn-pequeno { padding: 6px 10px; font-size: 12px; width: auto; display: inline-block; }
-        
-        .sem-dados { text-align: center; padding: 30px 20px; color: #94a3b8; font-size: 14px; }
-        hr { border: none; border-top: 1px solid #334155; margin: 20px 0; }
-        
-        .aviso-fotos { background: rgba(250, 204, 21, 0.1); border: 1px solid #facc15; border-radius: 10px; padding: 12px; margin-bottom: 15px; font-size: 13px; }
-        .aviso-fotos.verde { background: rgba(74, 222, 128, 0.1); border-color: #4ade80; }
-        .grade-fotos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
-        .foto-item { background: #0f172a; border-radius: 10px; overflow: hidden; position: relative; }
-        .foto-item img { width: 100%; height: 140px; object-fit: cover; display: block; }
-        .foto-dados { padding: 8px; font-size: 10px; color: #94a3b8; line-height: 1.4; }
-        .foto-remover { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); color: #f87171; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .foto-adicionar { border: 2px dashed #475569; border-radius: 10px; height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; color: #94a3b8; transition: all 0.2s; }
-        .foto-adicionar:hover { border-color: #facc15; color: #facc15; }
-        .contador-fotos { font-weight: 700; margin-top: 4px; }
-        .contador-fotos.faltam { color: #facc15; }
-        .contador-fotos.completo { color: #4ade80; }
-        
-        .mapa-caixa { background: #1e293b; border-radius: 12px; height: 280px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #94a3b8; }
-        .ponto-mapa { background: #facc15; color: #000; padding: 10px 14px; border-radius: 20px; font-weight: 700; margin: 6px; font-size: 12px; max-width: 90%; text-align: center; }
-        .ponto-mapa.verde { background: #4ade80; }
-        .ponto-mapa.distancia { font-size: 10px; opacity: 0.8; margin-top: 2px; }
+        .botao-voltar {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
+<!-- TELA INICIAL -->
+<div id="tela-inicio" class="tela ativa">
+    <div class="cabecalho">
         <div class="logo">🛡️ DRTRACK Conecta</div>
         <p class="subtitulo">Sistema de Apoio e Segurança</p>
     </div>
-
-    <div class="tela ativa" id="telaLogin">
-        <div class="card" style="max-width: 400px; margin: 40px auto;">
-            <h2 style="justify-content: center; text-align: center;">🔐 Acesso</h2>
-            <select id="tipoPerfil" onchange="trocarPerfil()">
-                <option value="admin">👤 Sou Administrador</option>
-                <option value="apoio">🛡️ Sou Apoio / Prestador</option>
-            </select>
-            
-            <div id="loginAdmin">
-                <p style="color:#94a3b8; text-align:center; margin-bottom:15px; font-size:13px;">Painel de Fechamento</p>
-                <input type="password" id="senhaAdmin" placeholder="Senha do Administrador" style="text-align:center;">
-                <button class="btn-enviar btn-roxo" id="btnEntrarAdmin">🔑 ENTRAR</button>
-                <p style="margin-top:12px; font-size:11px; color:#64748b; text-align:center;">Padrão: admin123</p>
-            </div>
-            
-            <div id="loginApoio" style="display:none;">
-                <p style="color:#94a3b8; text-align:center; margin-bottom:15px; font-size:13px;">Acesso do Prestador de Serviço</p>
-                <input type="text" id="nomeApoio" placeholder="Seu nome completo">
-                <input type="tel" id="foneApoio" placeholder="Seu telefone com DDD">
-                <button class="btn-enviar btn-verde" id="btnEntrarApoio">📱 ENTRAR COMO APOIO</button>
-            </div>
-        </div>
+    
+    <div style="padding: 20px;">
+        <button class="botao-grande botao-amarelo" onclick="entrarComo('solicitante')">
+            📋 Pedir Serviço
+        </button>
+        <button class="botao-grande botao-roxo" onclick="entrarComo('prestador')">
+            🛵 Estou Disponível
+        </button>
+        <button class="botao-grande botao-cinza" onclick="entrarComo('admin')">
+            ⚙️ Painel Administrativo
+        </button>
     </div>
+</div>
 
-    <div class="tela" id="telaAdmin">
-        <div class="contadores">
-            <div class="contador-card"><div class="contador-valor azul" id="contTotal">0</div><div class="contador-label">Total</div></div>
-            <div class="contador-card"><div class="contador-valor amarelo" id="contPendente">0</div><div class="contador-label">Pendentes</div></div>
-            <div class="contador-card"><div class="contador-valor verde" id="contConcluida">0</div><div class="contador-label">Concluídas</div></div>
-            <div class="contador-card"><div class="contador-valor vermelho" id="contCancelada">0</div><div class="contador-label">Não Atendidas</div></div>
-        </div>
-
-        <div class="caixa-opcao">
-            <input type="checkbox" id="usarComissao">
-            <label for="usarComissao">💰 Calcular comissão DRTRACK (8%)</label>
-        </div>
-
-        <div class="caixa-total" id="caixaFechamento">
-            <h3 style="font-size:15px; margin-bottom:10px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px;">
-                <span>📊 Fechamento — <span id="nomePeriodo">Todas as Ocorrências</span></span>
-                <span style="font-size:12px; color:#94a3b8;" id="qtdRegistros">0 registros</span>
-            </h3>
-            <div class="linha-total"><span>💵 Valor Total / Bruto</span><span id="valorBruto">R$ 0,00</span></div>
-            <div class="linha-total comissao"><span>🛡️ Comissão DRTRACK (8%)</span><span id="valorComissao">R$ 0,00</span></div>
-            <div class="linha-total destaque"><span id="rotuloRepasse">🧾 Valor a Repassar</span><span id="valorRepasse">R$ 0,00</span></div>
-            <p class="aviso-sem-comissao" id="avisoSemComissao">✅ Sem comissão — período de início</p>
-        </div>
-
-        <div class="navegacao">
-            <button class="nav-btn ativo" data-painel="ocorrencias">📋 Ocorrências</button>
-            <button class="nav-btn" data-painel="lancar">📡 Lançar</button>
-            <button class="nav-btn" data-painel="config">⚙️</button>
-            <button class="nav-btn btn-cinza" id="btnSairAdmin">🚪</button>
-        </div>
-
-        <div class="tela ativa" id="painelOcorrencias">
-            <div class="card">
-                <h2>📋 Lista de Ocorrências</h2>
-                <div class="filtros-linha">
-                    <button class="filtro-btn ativo" data-filtro="todas">Todas</button>
-                    <button class="filtro-btn" data-filtro="hoje">Hoje</button>
-                    <button class="filtro-btn" data-filtro="quinzena1">1ª Quinzena (1-15)</button>
-                    <button class="filtro-btn" data-filtro="quinzena2">2ª Quinzena (16-31)</button>
-                </div>
-                <div class="filtros-linha">
-                    <button class="filtro-btn status-filtro ativo" data-status="todas">Todos</button>
-                    <button class="filtro-btn status-filtro" data-status="pendente">🟡 Pendentes</button>
-                    <button class="filtro-btn status-filtro" data-status="concluida">✅ Concluídas</button>
-                </div>
-                <input type="text" id="buscaOcorrencia" placeholder="🔍 Buscar...">
-                <div id="listaOcorrencias"></div>
-                <button class="btn-enviar btn-verde" id="btnExportar" style="margin-top:20px;">📋 COPIAR FECHAMENTO</button>
-            </div>
-        </div>
-
-        <div class="tela" id="painelLancar">
-            <div class="card">
-                <h2>📡 Lançar Nova Ocorrência</h2>
-                <form id="formOcorrencia">
-                    <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">📍 Endereço Completo *</label>
-                    <input type="text" id="endereco" placeholder="Rua, número, bairro, cidade" required>
-                    
-                    <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">🌐 Latitude</label>
-                    <input type="text" id="latitude" placeholder="-23.123456">
-                    
-                    <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">🌐 Longitude</label>
-                    <input type="text" id="longitude" placeholder="-46.123456">
-                    
-                    <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">📋 Tipo de Atendimento *</label>
-                    <select id="tipo" required>
-                        <option value="">Selecione...</option>
-                        <option value="alarme">🚨 Verificação de Alarme</option>
-                        <option value="veiculo">🚗 Verificação de Veículo</option>
-                        <option value="ronda">👀 Ronda / Presença</option>
-                        <option value="foto">📷 Registro Fotográfico</option>
-                        <option value="outro">📝 Outro</option>
-                    </select>
-                    
-                    <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">🏢 Solicitante / Empresa</label>
-                    <input type="text" id="solicitante" placeholder="Nome ou empresa">
-                    
-                    <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">💰 Valor Combinado R$ *</label>
-                    <input type="number" id="valor" placeholder="0,00" step="0.01" required>
-                    
-                    <button type="submit" class="btn-enviar">🚀 LANÇAR OCORRÊNCIA</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="tela" id="painelConfig">
-            <div class="card">
-                <h2>⚙️ Configurações</h2>
-                <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">🔐 Nova Senha</label>
-                <input type="password" id="novaSenha" placeholder="Digite nova senha">
-                <button class="btn-enviar btn-roxo" id="btnAltSenha">🔄 ALTERAR SENHA</button>
-                <hr>
-                <button class="btn-enviar btn-cinza" id="btnSairAdmin2">🚪 SAIR</button>
-            </div>
-        </div>
+<!-- TELA SOLICITANTE -->
+<div id="tela-solicitante" class="tela">
+    <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
+    
+    <div class="cabecalho" style="padding: 0 0 15px 0;">
+        <h2 style="color:#facc15;">📋 Solicitar Apoio</h2>
     </div>
+    
+    <div class="caixa">
+        <label>Seu nome</label>
+        <input type="text" id="nome-solicitante" placeholder="Digite seu nome">
+        
+        <label>Telefone / WhatsApp</label>
+        <input type="tel" id="fone-solicitante" placeholder="(11) 9xxxx-xxxx">
+        
+        <label>Endereço do Atendimento</label>
+        <input type="text" id="endereco-servico" placeholder="Rua, número, bairro, cidade">
+        
+        <label>Coordenadas (opcional)</label>
+        <input type="text" id="coords-servico" placeholder="-23.xxxx, -46.xxxx">
+        
+        <label>Tipo de Serviço</label>
+        <select id="tipo-servico">
+            <option value="">Selecione...</option>
+            <option value="alarme">🚨 Verificação de Alarme</option>
+            <option value="veiculo">🚗 Verificação de Veículo</option>
+            <option value="ronda">👀 Ronda / Presença</option>
+            <option value="foto">📷 Registro Fotográfico</option>
+            <option value="outro">📝 Outro</option>
+        </select>
+        
+        <label>Detalhes / Observações</label>
+        <input type="text" id="detalhes-servico" placeholder="Informações adicionais">
+        
+        <label>Valor Oferecido R$</label>
+        <input type="number" id="valor-servico" placeholder="0,00" step="0.01">
+        
+        <button class="botao-grande botao-verde" onclick="lancarOcorrencia()">🚀 LANÇAR OCORRÊNCIA</button>
+    </div>
+</div>
 
-    <div class="tela" id="telaApoio">
-        <div class="header">
-            <p style="color:#94a3b8; font-size:13px;">Bem-vindo, <span id="nomeApoioLogado">Apoio</span>!</p>
-        </div>
-
-        <div class="navegacao">
-            <button class="nav-btn ativo" data-painelApoio="mapa">🗺️ Ocorrências</button>
-            <button class="nav-btn" data-painelApoio="minhas">📋 Meus Serviços</button>
-            <button class="nav-btn btn-cinza" id="btnSairApoio">🚪</button>
-        </div>
-
-        <div class="tela ativa" id="painelMapa">
-            <div class="card">
-                <h2>🗺️ Ocorrências Abertas — Mais Próximas</h2>
-                <p style="color:#94a3b8; font-size:12px; margin-bottom:12px;">Ordenadas por distância de você</p>
-                
-                <div id="listaAbertas">
-                    <div class="sem-dados">Nenhuma ocorrência aberta no momento.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="tela" id="painelDetalhe">
-            <div class="card">
-                <h2 id="tituloDetalhe">Detalhes do Serviço</h2>
-                <div id="conteudoDetalhe"></div>
-            </div>
-        </div>
-
-        <div class="tela" id="painelConcluir">
-            <div class="card">
-                <h2>✅ Concluir Atendimento</h2>
-                <p style="color:#94a3b8; font-size:12px; margin-bottom:15px;">Preencha todos os dados e envie</p>
-                
-                <div class="aviso-fotos" id="avisoFotos">
-                    📸 <strong>Fotos do Local</strong><br>
-                    É obrigatório enviar no mínimo <strong>5 fotos</strong>. Você pode enviar quantas forem necessárias.
-                    <div class="contador-fotos faltam" id="contadorFotos">0 de 5 fotos — faltam 5</div>
-                </div>
-
-                <div class="grade-fotos" id="gradeFotos">
-                    <div class="foto-adicionar" id="botaoAdicionarFoto" onclick="document.getElementById('inputFotos').click()">
-                        <span style="font-size:24px;">+</span>
-                        <span style="font-size:11px; margin-top:4px;">Adicionar Foto</span>
-                    </div>
-                </div>
-                <input type="file" id="inputFotos" accept="image/*" multiple style="display:none;" onchange="processarFotos(event)">
-
-                <label style="display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1;">📝 Relato / Observações *</label>
-                <textarea id="relatoApoio" placeholder="Descreva o que encontrou no local, as verificações feitas, horário de chegada e quaisquer observações..."></textarea>
-
-                <button class="btn-enviar btn-verde" id="btnEnviarRelatorio" onclick="enviarRelatorio()" disabled>
-                    ✅ ENVIAR RELATÓRIO COMPLETO
-                </button>
-            </div>
-        </div>
-
-        <div class="tela" id="painelMeus">
-            <div class="card">
-                <h2>📋 Meus Atendimentos</h2>
-                <div id="listaMeusServicos">
-                    <div class="sem-dados">Nenhum serviço aceito ainda.</div>
-                </div>
-            </div>
+<!-- TELA PRESTADOR — MAPA + LISTA + DISTÂNCIA -->
+<div id="tela-prestador" class="tela">
+    <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
+    
+    <div class="cabecalho" style="padding: 0 0 10px 0;">
+        <h2 style="color:#facc15;">🛵 Serviços Próximos</h2>
+        <p style="color:#94a3b8; font-size:13px; margin-top:5px;">Ordenados por distância — o mais próximo aparece primeiro</p>
+    </div>
+    
+    <!-- MAPA SEMPRE VISÍVEL NO TOPO -->
+    <div id="mapa"></div>
+    
+    <!-- LISTA DE SERVIÇOS ORDENADA -->
+    <div id="lista-servicos">
+        <div class="sem-servicos">
+            📍 Obtendo sua localização...<br>
+            <span style="font-size:12px; color:#64748b;">Permita o acesso à localização para ver os serviços próximos</span>
         </div>
     </div>
 </div>
 
-<script>
-const senhaPadrao = 'admin123';
-const TAXA_COMISSAO = 0.08;
-let filtroPerfil = 'todas';
-let filtroStatus = 'todas';
-let listaOcorrencias = [];
-let fotosAnexadas = [];
-let servicoAtual = null;
-let dadosApoio = { nome: '', fone: '' };
+<!-- TELA ADMIN — REDIRECIONA PARA PAINEL COMPLETO -->
+<div id="tela-admin" class="tela">
+    <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
+    <div class="caixa" style="text-align:center; margin-top:60px;">
+        <h2 style="color:#facc15; margin-bottom:20px;">⚙️ Painel Administrativo</h2>
+        <p style="color:#94a3b8; margin-bottom:25px;">Acesse o fechamento completo, controle de ocorrências e relatórios.</p>
+        <button class="botao-grande botao-roxo" onclick="abrirPainelAdmin()">🔑 ABRIR PAINEL DE FECHAMENTO</button>
+    </div>
+</div>
 
+<!-- NAVEGAÇÃO INFERIOR — SÓ APARECE QUANDO LOGADO -->
+<div class="navegacao-inferior" id="nav-inferior" style="display:none;">
+    <div class="nav-item ativo" onclick="irPara('prestador')">
+        <div class="nav-icone">📍</div>
+        <div>Próximos</div>
+    </div>
+    <div class="nav-item" onclick="irPara('solicitante')">
+        <div class="nav-icone">➕</div>
+        <div>Solicitar</div>
+    </div>
+    <div class="nav-item" onclick="irPara('meus')">
+        <div class="nav-icone">📋</div>
+        <div>Meus</div>
+    </div>
+    <div class="nav-item" onclick="voltarInicio()">
+        <div class="nav-icone">👤</div>
+        <div>Sair</div>
+    </div>
+</div>
+
+<script>
+// ========== DADOS E CONSTANTES ==========
 const nomesTipos = {
     alarme: '🚨 Verificação de Alarme',
     veiculo: '🚗 Verificação de Veículo',
@@ -310,419 +287,285 @@ const nomesTipos = {
     outro: '📝 Outro'
 };
 
-const nomesPeriodos = {
-    todas: 'Todas as Ocorrências',
-    hoje: 'Hoje',
-    quinzena1: '1ª Quinzena (1º a 15º)',
-    quinzena2: '2ª Quinzena (16º ao último dia)',
-    mes: `Mês de ${new Date().toLocaleDateString('pt-BR', {month:'long', year:'numeric'})}`
-};
+let minhaPosicao = null;
+let mapa = null;
+let marcadores = [];
+let listaOcorrencias = [];
+let usuarioAtual = null;
 
-function trocarPerfil() {
-    const tipo = document.getElementById('tipoPerfil').value;
-    document.getElementById('loginAdmin').style.display = tipo === 'admin' ? 'block' : 'none';
-    document.getElementById('loginApoio').style.display = tipo === 'apoio' ? 'block' : 'none';
-}
-
-document.getElementById('btnEntrarAdmin').addEventListener('click', () => {
-    const senha = document.getElementById('senhaAdmin').value;
-    const correta = localStorage.getItem('senhaAdmin') || senhaPadrao;
-    if (senha === correta) {
-        document.getElementById('telaLogin').classList.remove('ativa');
-        document.getElementById('telaAdmin').classList.add('ativa');
-        carregarDados();
-    } else {
-        alert('❌ Senha incorreta!');
-    }
-});
-
-document.getElementById('btnSairAdmin').addEventListener('click', sairLogin);
-document.getElementById('btnSairAdmin2').addEventListener('click', sairLogin);
-
-function sairLogin() {
-    if (confirm('Sair do sistema?')) {
-        document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-        document.getElementById('telaLogin').classList.add('ativa');
-        document.getElementById('senhaAdmin').value = '';
+// ========== ENTRAR ==========
+function entrarComo(tipo) {
+    usuarioAtual = tipo;
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById(`tela-${tipo}`).classList.add('ativa');
+    
+    if (tipo === 'prestador') {
+        document.getElementById('nav-inferior').style.display = 'flex';
+        iniciarMapa();
+        carregarOcorrencias();
+    } else if (tipo === 'solicitante') {
+        document.getElementById('nav-inferior').style.display = 'flex';
+    } else if (tipo === 'admin') {
+        // Fica na tela admin
     }
 }
 
-document.getElementById('btnEntrarApoio').addEventListener('click', () => {
-    const nome = document.getElementById('nomeApoio').value.trim();
-    const fone = document.getElementById('foneApoio').value.trim();
-    if (!nome || !fone) { alert('Preencha nome e telefone!'); return; }
-    dadosApoio = { nome, fone };
-    document.getElementById('nomeApoioLogado').textContent = nome;
-    document.getElementById('telaLogin').classList.remove('ativa');
-    document.getElementById('telaApoio').classList.add('ativa');
-    carregarDados();
-    renderizarOcorrenciasAbertas();
-});
+function voltarInicio() {
+    usuarioAtual = null;
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('tela-inicio').classList.add('ativa');
+    document.getElementById('nav-inferior').style.display = 'none';
+}
 
-document.getElementById('btnSairApoio').addEventListener('click', sairLogin);
+function irPara(pagina) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
+    event.currentTarget.classList.add('ativo');
+    
+    if (pagina === 'meus') {
+        alert('📋 Em desenvolvimento — em breve acompanhamento dos seus atendimentos!');
+        return;
+    }
+    
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById(`tela-${pagina}`).classList.add('ativa');
+    
+    if (pagina === 'prestador') carregarOcorrencias();
+}
 
-document.getElementById('btnAltSenha').addEventListener('click', () => {
-    const nova = document.getElementById('novaSenha').value.trim();
-    if (!nova) { alert('Digite a nova senha!'); return; }
-    localStorage.setItem('senhaAdmin', nova);
-    alert('✅ Senha alterada!');
-    document.getElementById('novaSenha').value = '';
-});
+function abrirPainelAdmin() {
+    alert('🔑 Abrindo Painel de Fechamento...\n\nCole o código do painel administrativo em outra página/aba.\n\nEste é o app principal — o painel é um sistema separado.');
+}
 
-const checkboxComissao = document.getElementById('usarComissao');
-const caixaFechamento = document.getElementById('caixaFechamento');
-const avisoSemComissao = document.getElementById('avisoSemComissao');
-const rotuloRepasse = document.getElementById('rotuloRepasse');
-
-checkboxComissao?.addEventListener('change', () => {
-    const ativa = checkboxComissao.checked;
-    caixaFechamento.classList.toggle('comissao-ativa', ativa);
-    avisoSemComissao.style.display = ativa ? 'none' : 'block';
-    rotuloRepasse.textContent = ativa ? '🧾 Valor Líquido ao Prestador' : '🧾 Valor a Repassar';
-    atualizarTotais();
-});
-
-document.querySelectorAll('[data-painel]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-painel]').forEach(b => b.classList.remove('ativo'));
-        btn.classList.add('ativo');
-        document.querySelectorAll('#telaAdmin > .tela').forEach(t => t.classList.remove('ativa'));
-        const id = 'painel' + btn.dataset.painel.charAt(0).toUpperCase() + btn.dataset.painel.slice(1);
-        document.getElementById(id).classList.add('ativa');
-        if (btn.dataset.painel === 'ocorrencias') renderizarOcorrencias();
-    });
-});
-
-document.querySelectorAll('[data-painelApoio]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-painelApoio]').forEach(b => b.classList.remove('ativo'));
-        btn.classList.add('ativo');
-        document.querySelectorAll('#telaApoio > .tela').forEach(t => t.classList.remove('ativa'));
-        document.getElementById('painel' + btn.dataset.painelApoio.charAt(0).toUpperCase() + btn.dataset.painelApoio.slice(1)).classList.add('ativa');
-        if (btn.dataset.painelApoio === 'mapa') renderizarOcorrenciasAbertas();
-        if (btn.dataset.painelApoio === 'minhas') renderizarMeusServicos();
-    });
-});
-
-document.querySelectorAll('[data-filtro]').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('[data-filtro]').forEach(b => b.classList.remove('ativo'));
-        btn.classList.add('ativo');
-        filtroPerfil = btn.dataset.filtro;
-        renderizarOcorrencias();
-    });
-});
-
-document.querySelectorAll('.status-filtro').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.status-filtro').forEach(b => b.classList.remove('ativo'));
-        btn.classList.add('ativo');
-        filtroStatus = btn.dataset.status;
-        renderizarOcorrencias();
-    });
-});
-
-document.getElementById('buscaOcorrencia')?.addEventListener('input', renderizarOcorrencias);
-
-document.getElementById('formOcorrencia').addEventListener('submit', e => {
-    e.preventDefault();
+// ========== LANÇAR OCORRÊNCIA ==========
+function lancarOcorrencia() {
+    const endereco = document.getElementById('endereco-servico').value.trim();
+    if (!endereco) { alert('📍 Digite o endereço!'); return; }
+    
+    const valor = parseFloat(document.getElementById('valor-servico').value) || 0;
+    const coordsTexto = document.getElementById('coords-servico').value.trim();
+    
+    let lat = -23.5505; // Centro SP padrão
+    let lng = -46.6333;
+    
+    if (coordsTexto && coordsTexto.includes(',')) {
+        const partes = coordsTexto.split(',').map(p => parseFloat(p.trim()));
+        if (partes.length === 2 && !isNaN(partes[0]) && !isNaN(partes[1])) {
+            lat = partes[0];
+            lng = partes[1];
+        }
+    }
+    
     const nova = {
         id: Date.now(),
         data: new Date().toLocaleString('pt-BR'),
-        dataObj: new Date(),
-        endereco: document.getElementById('endereco').value,
-        latitude: document.getElementById('latitude').value || null,
-        longitude: document.getElementById('longitude').value || null,
-        tipo: document.getElementById('tipo').value,
-        solicitante: document.getElementById('solicitante').value || 'Não informado',
-        valor: parseFloat(document.getElementById('valor').value),
+        endereco: endereco,
+        coords: { lat, lng },
+        tipo: document.getElementById('tipo-servico').value || 'outro',
+        detalhes: document.getElementById('detalhes-servico').value || '—',
+        solicitante: document.getElementById('nome-solicitante').value || 'Não informado',
+        telefone: document.getElementById('fone-solicitante').value || 'Não informado',
+        valor: valor,
         status: 'pendente',
-        apoio: null,
-        fotos: [],
-        relato: ''
+        aceitoPor: null,
+        distancia: null
     };
+    
     listaOcorrencias.unshift(nova);
     salvarOcorrencias();
-    alert('✅ Ocorrência lançada com sucesso!');
-    e.target.reset();
-    document.querySelector('[data-painel="ocorrencias"]').click();
-});
+    
+    alert('✅ OCORRÊNCIA LANÇADA!\n\nAparecerá em instantes para os apoios próximos!');
+    
+    // Limpar formulário
+    document.getElementById('endereco-servico').value = '';
+    document.getElementById('coords-servico').value = '';
+    document.getElementById('tipo-servico').value = '';
+    document.getElementById('detalhes-servico').value = '';
+    document.getElementById('valor-servico').value = '';
+    
+    if (usuarioAtual === 'prestador') carregarOcorrencias();
+}
 
-function carregarDados() {
+// ========== MAPA E LOCALIZAÇÃO ==========
+function iniciarMapa() {
+    if (mapa) return;
+    
+    mapa = L.map('mapa').setView([-23.5505, -46.6333], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(mapa);
+    
+    // Pegar localização do usuário
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                minhaPosicao = {
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude
+                };
+                mapa.setView([minhaPosicao.lat, minhaPosicao.lng], 13);
+                
+                // Marcador da minha posição
+                L.marker([minhaPosicao.lat, minhaPosicao.lng], {
+                    icon: L.divIcon({
+                        className: 'marcador-eu',
+                        html: '<div style="background:#7c3aed; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(124,58,237,0.5);"></div>',
+                        iconSize: [22, 22]
+                    })
+                }).addTo(mapa).bindPopup('📍 Você está aqui');
+                
+                carregarOcorrencias();
+            },
+            (erro) => {
+                console.log('Geolocalização negada:', erro);
+                minhaPosicao = { lat: -23.5505, lng: -46.6333 };
+                carregarOcorrencias();
+            }
+        );
+    } else {
+        minhaPosicao = { lat: -23.5505, lng: -46.6333 };
+        carregarOcorrencias();
+    }
+}
+
+// ========== CÁLCULO DE DISTÂNCIA ==========
+function calcularDistancia(coord1, coord2) {
+    if (!coord1 || !coord2) return null;
+    
+    const R = 6371; // Raio da Terra em km
+    const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
+    const dLng = (coord2.lng - coord1.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(coord1.lat * Math.PI / 180) * Math.cos(coord2.lat * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const km = R * c;
+    
+    if (km < 1) return `${Math.round(km * 1000)} m`;
+    return `${km.toFixed(2)} km`;
+}
+
+// ========== CARREGAR E RENDERIZAR OCORRÊNCIAS ==========
+function carregarOcorrencias() {
     listaOcorrencias = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
-    renderizarOcorrencias();
-}
-
-function salvarOcorrencias() {
-    localStorage.setItem('listaOcorrencias', JSON.stringify(listaOcorrencias));
-    renderizarOcorrencias();
-    renderizarOcorrenciasAbertas();
-    renderizarMeusServicos();
-}
-
-function filtrarPorPeriodo(oc) {
-    const d = new Date(oc.dataObj);
-    const dia = d.getDate(), mes = d.getMonth();
-    const hoje = new Date(), hDia = hoje.getDate(), hMes = hoje.getMonth();
-    switch(filtroPerfil) {
-        case 'hoje': return dia === hDia && mes === hMes;
-        case 'quinzena1': return dia >= 1 && dia <= 15;
-        case 'quinzena2': return dia >= 16;
-        default: return true;
-    }
-}
-
-function filtrarPorStatus(oc) {
-    return filtroStatus === 'todas' || oc.status === filtroStatus;
-}
-
-function atualizarTotais() {
-    const filtradas = listaOcorrencias.filter(filtrarPorPeriodo).filter(filtrarPorStatus);
-    const bruto = filtradas.reduce((s, oc) => s + oc.valor, 0);
-    const comissaoAtiva = checkboxComissao?.checked;
-    const comissao = comissaoAtiva ? bruto * TAXA_COMISSAO : 0;
-    const repasse = bruto - comissao;
     
-    document.getElementById('nomePeriodo').textContent = nomesPeriodos[filtroPerfil];
-    document.getElementById('qtdRegistros').textContent = `${filtradas.length} registro(s)`;
-    document.getElementById('valorBruto').textContent = `R$ ${bruto.toFixed(2)}`;
-    document.getElementById('valorComissao').textContent = `R$ ${comissao.toFixed(2)}`;
-    document.getElementById('valorRepasse').textContent = `R$ ${repasse.toFixed(2)}`;
-    
-    document.getElementById('contTotal').textContent = listaOcorrencias.length;
-    document.getElementById('contPendente').textContent = listaOcorrencias.filter(o => o.status === 'pendente').length;
-    document.getElementById('contConcluida').textContent = listaOcorrencias.filter(o => o.status === 'concluida').length;
-    document.getElementById('contCancelada').textContent = listaOcorrencias.filter(o => o.status === 'cancelada').length;
-}
-
-function renderizarOcorrencias() {
-    const container = document.getElementById('listaOcorrencias');
-    let filtradas = listaOcorrencias.filter(filtrarPorPeriodo).filter(filtrarPorStatus);
-    atualizarTotais();
-    
-    if (filtradas.length === 0) {
-        container.innerHTML = '<div class="sem-dados">Nenhuma ocorrência encontrada.</div>';
-        return;
-    }
-
-    container.innerHTML = filtradas.map((oc, idxVisivel) => {
-        const statusTexto = {pendente:'🟡 Pendente', concluida:'✅ Concluída', cancelada:'❌ Não Atendida'}[oc.status];
-        return `
-            <div class="ocorrencia-item ${oc.status}">
-                <div class="ocorrencia-topo">
-                    <span class="ocorrencia-tipo">${nomesTipos[oc.tipo]}</span>
-                    <span class="ocorrencia-data">${oc.data}</span>
-                </div>
-                <div class="ocorrencia-dados">
-                    📍 ${oc.endereco}${oc.latitude ? `<br>🌐 ${oc.latitude} / ${oc.longitude}` : ''}<br>
-                    🏢 ${oc.solicitante}
-                </div>
-                <div class="ocorrencia-valor">💰 R$ ${oc.valor.toFixed(2)}</div>
-                <span class="ocorrencia-status status-${oc.status}">${statusTexto}</span>
-                ${oc.apoio ? `<div style="margin-top:6px; font-size:12px; color:#4ade80;">🛡️ Apoio: ${oc.apoio.nome}</div>` : ''}
-                ${oc.relato ? `<div style="margin-top:6px; font-size:12px; color:#cbd5e1; background:#0f172a; padding:8px; border-radius:6px;">📝 ${oc.relato}</div>` : ''}
-                ${oc.fotos.length > 0 ? `<div style="margin-top:8px; font-size:11px; color:#94a3b8;">📸 ${oc.fotos.length} foto(s) enviada(s)</div>` : ''}
-                ${oc.status === 'pendente' ? `
-                    <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
-                        <button class="filtro-btn" style="background:#4ade80; color:#000;" onclick="marcarConcluida(${idxVisivel})">✅ Concluir</button>
-                        <button class="filtro-btn" style="background:#f87171; color:white;" onclick="marcarCancelada(${idxVisivel})">❌ Não Atendida</button>
-                    </div>
-                ` : ''}
-            </div>
-        `;
-    }).join('');
-}
-
-function marcarConcluida(idxVisivel) {
-    const filtradas = listaOcorrencias.filter(filtrarPorPeriodo).filter(filtrarPorStatus);
-    const oc = filtradas[idxVisivel];
-    const idxReal = listaOcorrencias.findIndex(o => o.id === oc.id);
-    listaOcorrencias[idxReal].status = 'concluida';
-    salvarOcorrencias();
-    alert('✅ Marcada como concluída!');
-}
-
-function marcarCancelada(idxVisivel) {
-    if (!confirm('Marcar como não atendida?')) return;
-    const filtradas = listaOcorrencias.filter(filtrarPorPeriodo).filter(filtrarPorStatus);
-    const oc = filtradas[idxVisivel];
-    const idxReal = listaOcorrencias.findIndex(o => o.id === oc.id);
-    listaOcorrencias[idxReal].status = 'cancelada';
-    salvarOcorrencias();
-}
-
-document.getElementById('btnExportar')?.addEventListener('click', () => {
-    const filtradas = listaOcorrencias.filter(filtrarPorPeriodo).filter(filtrarPorStatus);
-    if (!filtradas.length) { alert('Sem dados!'); return; }
-    const bruto = filtradas.reduce((s, oc) => s + oc.valor, 0);
-    const comissaoAtiva = checkboxComissao?.checked;
-    const comissao = comissaoAtiva ? bruto * TAXA_COMISSAO : 0;
-    const repasse = bruto - comissao;
-    
-    let saida = `📋 FECHAMENTO — ${nomesPeriodos[filtroPerfil]}\n📊 ${filtradas.length} registro(s)\n\n`;
-    filtradas.forEach((oc, i) => {
-        saida += `${i+1}. ${nomesTipos[oc.tipo]}\n📅 ${oc.data}\n📍 ${oc.endereco}\n🏢 ${oc.solicitante}\n💰 R$ ${oc.valor.toFixed(2)}\n`;
-        saida += oc.apoio ? `🛡️ Atendido por: ${oc.apoio.nome}\n` : '';
-        saida += `Status: ${oc.status.toUpperCase()}\n${'─'.repeat(30)}\n`;
+    // Calcular distância e ordenar
+    const comDistancia = listaOcorrencias.map(oc => {
+        oc.distanciaTexto = minhaPosicao 
+            ? calcularDistancia(minhaPosicao, oc.coords) 
+            ? '—';
+        oc.distanciaValor = minhaPosicao 
+            ? calcularDistanciaValor(minhaPosicao, oc.coords) 
+            : 9999;
+        return oc;
     });
-    saida += `\n💵 TOTAL BRUTO: R$ ${bruto.toFixed(2)}\n`;
-    saida += comissaoAtiva ? `🛡️ COMISSÃO 8%: R$ ${comissao.toFixed(2)}\n🧾 LÍQUIDO: R$ ${repasse.toFixed(2)}\n` : `✅ SEM COMISSÃO — Total: R$ ${repasse.toFixed(2)}\n`;
-    saida += `\n🛡️ DRTRACK Conecta — ${new Date().toLocaleString('pt-BR')}`;
     
-    navigator.clipboard.writeText(saida).then(() => alert('✅ Copiado!'));
-});
+    // Ordenar: mais próximo primeiro, depois pendentes
+    const ordenadas = comDistancia.sort((a, b) => {
+        if (a.status === 'pendente' && b.status !== 'pendente') return -1;
+        if (a.status !== 'pendente' && b.status === 'pendente') return 1;
+        return a.distanciaValor - b.distanciaValor;
+    });
+    
+    atualizarMarcadores(ordenadas);
+    renderizarLista(ordenadas);
+}
 
-function renderizarOcorrenciasAbertas() {
-    const container = document.getElementById('listaAbertas');
-    const abertas = listaOcorrencias.filter(o => o.status === 'pendente' && !o.apoio);
+function calcularDistanciaValor(coord1, coord2) {
+    if (!coord1 || !coord2) return 9999;
+    const R = 6371;
+    const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
+    const dLng = (coord2.lng - coord1.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(coord1.lat*Math.PI/180)*Math.cos(coord2.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function atualizarMarcadores(ocorrencias) {
+    marcadores.forEach(m => mapa.removeLayer(m));
+    marcadores = [];
     
-    if (!abertas.length) {
-        container.innerHTML = '<div class="sem-dados">Nenhuma ocorrência aberta no momento.<br>Aguarde novas oportunidades!</div>';
+    ocorrencias.forEach(oc => {
+        const cor = oc.status === 'pendente' ? '#facc15' : '#4ade80';
+        const marcador = L.circleMarker([oc.coords.lat, oc.coords.lng], {
+            radius: oc.status === 'pendente' ? 10 : 7,
+            fillColor: cor,
+            color: '#fff',
+            weight: 2,
+            fillOpacity: 0.9
+        }).addTo(mapa).bindPopup(`
+            <b>${nomesTipos[oc.tipo]}</b><br>
+            ${oc.endereco}<br>
+            💰 R$ ${oc.valor.toFixed(2)}<br>
+            ${oc.distanciaTexto ? '📏 ' + oc.distanciaTexto : ''}
+        `);
+        marcadores.push(marcador);
+    });
+}
+
+function renderizarLista(ocorrencias) {
+    const container = document.getElementById('lista-servicos');
+    
+    const pendentes = ocorrencias.filter(o => o.status === 'pendente');
+    
+    if (pendentes.length === 0) {
+        container.innerHTML = '<div class="sem-servicos">🔍 Nenhum serviço disponível no momento.<br><span style="font-size:12px; color:#64748b;">Aguarde novas solicitações...</span></div>';
         return;
     }
-
-    container.innerHTML = abertas.map((oc) => `
-        <div class="ocorrencia-item pendente" style="cursor:pointer;" onclick="verDetalhe(${oc.id})">
-            <div class="ocorrencia-topo">
-                <span class="ocorrencia-tipo">${nomesTipos[oc.tipo]}</span>
-                <span class="ocorrencia-data">${oc.data.split(',')[0]}</span>
+    
+    container.innerHTML = pendentes.map((oc, indice) => `
+        <div class="ocorrencia-card">
+            <div class="ocorrencia-cabecalho">
+                <span class="ocorrencia-tipo">${nomesTipos[oc.tipo]}${indice === 0 ? '<span class="prioridade">✅ Mais próximo</span>' : ''}</span>
+                <span class="ocorrencia-valor">R$ ${oc.valor.toFixed(2)}</span>
             </div>
-            <div class="ocorrencia-dados">📍 ${oc.endereco}</div>
-            <div class="ocorrencia-valor">💰 R$ ${oc.valor.toFixed(2)}</div>
-            <div style="margin-top:8px;">
-                <button class="btn-enviar btn-verde btn-pequeno">👉 Ver detalhes e Aceitar</button>
+            <div class="distancia">
+                📏 ${oc.distanciaTexto || 'Distância calculada'}
             </div>
+            <div class="ocorrencia-dados">
+                📍 ${oc.endereco}<br>
+                👤 ${oc.solicitante}<br>
+                📅 ${oc.data}
+            </div>
+            <button class="botao-aceitar" onclick="aceitarServico(${indice})">
+                ✅ ACEITAR E CONTATAR
+            </button>
         </div>
     `).join('');
 }
 
-function verDetalhe(id) {
-    servicoAtual = listaOcorrencias.find(o => o.id === id);
-    if (!servicoAtual) return;
+// ========== ACEITAR SERVIÇO ==========
+function aceitarServico(indiceFiltrado) {
+    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente');
+    const oc = pendentes[indiceFiltrado];
+    const indiceReal = listaOcorrencias.findIndex(o => o.id === oc.id);
     
-    document.getElementById('tituloDetalhe').textContent = `📋 ${nomesTipos[servicoAtual.tipo]}`;
-    document.getElementById('conteudoDetalhe').innerHTML = `
-        <p style="margin-bottom:8px;"><strong>📍 Endereço:</strong><br>${servicoAtual.endereco}</p>
-        ${servicoAtual.latitude ? `<p style="margin-bottom:8px;"><strong>🌐 Coordenadas:</strong><br>Lat: ${servicoAtual.latitude} | Long: ${servicoAtual.longitude}</p>` : ''}
-        <p style="margin-bottom:8px;"><strong>🏢 Solicitante:</strong><br>${servicoAtual.solicitante}</p>
-        <p style="margin-bottom:12px; font-size:18px;"><strong>💰 Valor: R$ ${servicoAtual.valor.toFixed(2)}</strong></p>
-        <button class="btn-enviar btn-verde" onclick="aceitarServico()">✅ ACEITAR E IR AO LOCAL</button>
-        <button class="btn-enviar btn-cinza" style="margin-top:8px;" onclick="voltarParaLista()">← Voltar</button>
-    `;
+    if (!confirm(`Confirmar aceite deste serviço?\n\n📍 ${oc.endereco}\n💰 R$ ${oc.valor.toFixed(2)}\n\nVocê entrará em contato com: ${oc.telefone}`)) {
+        return;
+    }
     
-    document.querySelectorAll('#telaApoio > .tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('painelDetalhe').classList.add('ativa');
-}
-
-function voltarParaLista() {
-    document.querySelectorAll('#telaApoio > .tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('painelMapa').classList.add('ativa');
-    servicoAtual = null;
-}
-
-function aceitarServico() {
-    if (!servicoAtual) return;
-    servicoAtual.apoio = { ...dadosApoio, horaAceite: new Date().toLocaleString('pt-BR') };
+    listaOcorrencias[indiceReal].status = 'concluida';
+    listaOcorrencias[indiceReal].aceitoPor = 'Você';
     salvarOcorrencias();
     
-    fotosAnexadas = [];
-    atualizarContadorFotos();
-    document.getElementById('relatoApoio').value = '';
+    alert(`✅ SERVIÇO ACEITO!\n\n📞 Contato: ${oc.telefone}\n📍 Local: ${oc.endereco}\n\nBom atendimento! 🛡️`);
     
-    document.querySelectorAll('#telaApoio > .tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('painelConcluir').classList.add('ativa');
-    alert('✅ Serviço aceito! Vá até o local e registre tudo aqui.');
+    carregarOcorrencias();
 }
 
-function processarFotos(event) {
-    const arquivos = event.target.files;
-    if (!arquivos.length) return;
-    
-    for (let arq of arquivos) {
-        const leitor = new FileReader();
-        leitor.onload = function(e) {
-            const agora = new Date();
-            const foto = {
-                id: Date.now() + Math.random(),
-                base64: e.target.result,
-                endereco: servicoAtual?.endereco || 'Local do atendimento',
-                latitude: servicoAtual?.latitude || '-23.xxxxxx',
-                longitude: servicoAtual?.longitude || '-46.xxxxxx',
-                dataHora: agora.toLocaleString('pt-BR')
-            };
-            fotosAnexadas.push(foto);
-            renderizarGradeFotos();
-            atualizarContadorFotos();
-        };
-        leitor.readAsDataURL(arq);
+// ========== SALVAR ==========
+function salvarOcorrencias() {
+    localStorage.setItem('listaOcorrencias', JSON.stringify(listaOcorrencias));
+}
+
+// ========== ATUALIZAÇÃO AUTOMÁTICA ==========
+setInterval(() => {
+    if (usuarioAtual === 'prestador') {
+        const atual = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
+        if (JSON.stringify(atual) !== JSON.stringify(listaOcorrencias)) {
+            carregarOcorrencias();
+        }
     }
-    event.target.value = '';
-}
+}, 3000); // Verifica a cada 3 segundos
+</script>
 
-function renderizarGradeFotos() {
-    const container = document.getElementById('gradeFotos');
-    container.innerHTML = fotosAnexadas.map(f => `
-        <div class="foto-item">
-            <button class="foto-remover" onclick="removerFoto(${f.id})">×</button>
-            <img src="${f.base64}" alt="Foto do local">
-            <div class="foto-dados">
-                📍 ${f.endereco}<br>
-                🌐 Lat: ${f.latitude} | Long: ${f.longitude}<br>
-                🕒 ${f.dataHora}
-            </div>
-        </div>
-    `).join('') + `
-        <div class="foto-adicionar" onclick="document.getElementById('inputFotos').click()">
-            <span style="font-size:24px;">+</span>
-            <span style="font-size:11px; margin-top:4px;">Adicionar Mais</span>
-        </div>
-    `;
-}
-
-function removerFoto(id) {
-    fotosAnexadas = fotosAnexadas.filter(f => f.id !== id);
-    renderizarGradeFotos();
-    atualizarContadorFotos();
-}
-
-function atualizarContadorFotos() {
-    const qtd = fotosAnexadas.length;
-    const contador = document.getElementById('contadorFotos');
-    const btn = document.getElementById('btnEnviarRelatorio');
-    
-    if (qtd < 5) {
-        contador.textContent = `${qtd} de 5 fotos — faltam ${5 - qtd}`;
-        contador.className = 'contador-fotos faltam';
-        btn.disabled = true;
-    } else {
-        contador.textContent = `${qtd} fotos — ✅ Mínimo atingido!`;
-        contador.className = 'contador-fotos completo';
-        btn.disabled = false;
-    }
-}
-
-function enviarRelatorio() {
-    if (!servicoAtual) return;
-    const relato = document.getElementById('relatoApoio').value.trim();
-    if (!relato) { alert('Preencha o relato!'); return; }
-    if (fotosAnexadas.length < 5) { alert('Envie no mínimo 5 fotos!'); return; }
-    
-    const idx = listaOcorrencias.findIndex(o => o.id === servicoAtual.id);
-    listaOcorrencias[idx].relato = relato;
-    listaOcorrencias[idx].fotos = fotosAnexadas;
-    listaOcorrencias[idx].status = 'concluida';
-    
-    salvarOcorrencias();
-    alert('✅ Relatório enviado! Obrigado!');
-    
-    fotosAnexadas = [];
-    document.getElementById('relatoApoio').value = '';
-    atualizarContadorFotos();
-    
-    document.querySelectorAll('#telaApoio > .tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('painelMapa').classList.add('ativa');
-}
-
-function renderizarMeusServicos() {
-    const container = document.getElementById('listaMeusServicos');
-    const meus = listaOcorrencias.filter(o => o.apoio && o.apoio.nome === dadosApoio
+</body>
+</html>

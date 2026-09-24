@@ -8,19 +8,19 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; padding-bottom: 80px; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; padding-bottom: 20px; }
         .tela { display: none; padding: 15px; }
         .tela.ativa { display: block; }
-        .cabecalho { text-align: center; padding: 30px 20px; }
-        .logo { font-size: 28px; font-weight: bold; color: #facc15; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .subtitulo { color: #94a3b8; margin-top: 8px; font-size: 15px; }
+        .cabecalho { text-align: center; padding: 25px 20px; }
+        .logo { font-size: 26px; font-weight: bold; color: #facc15; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .subtitulo { color: #94a3b8; margin-top: 6px; font-size: 14px; }
         .container-botoes { padding: 20px; max-width: 420px; margin: 0 auto; }
         .botao-grande {
             width: 100%;
             padding: 20px;
             border: none;
             border-radius: 16px;
-            font-size: 19px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             margin-bottom: 16px;
@@ -32,14 +32,14 @@
         .botao-verde { background: linear-gradient(90deg, #16a34a, #15803d); color: white; }
         .botao-vermelho { background: linear-gradient(90deg, #dc2626, #b91c1c); color: white; }
         .botao-cinza { background: #475569; color: #cbd5e1; }
-        .botao-pequeno { padding: 10px 16px; font-size: 14px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; margin: 4px; }
+        .botao-pequeno { padding: 10px 14px; font-size: 13px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; margin: 4px; }
         .caixa { background: rgba(30, 41, 59, 0.8); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; }
         .caixa h2 { font-size: 18px; margin-bottom: 15px; color: #facc15; }
-        .caixa h3 { font-size: 16px; margin-bottom: 12px; color: #cbd5e1; }
+        .caixa h3 { font-size: 15px; margin-bottom: 12px; color: #cbd5e1; }
         label { display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1; }
-        input, select, textarea {
+        input, select {
             width: 100%;
-            padding: 14px;
+            padding: 13px;
             border-radius: 10px;
             border: none;
             background: #334155;
@@ -47,70 +47,75 @@
             font-size: 15px;
             margin-bottom: 12px;
         }
-        input:focus, select:focus, textarea:focus { outline: 2px solid #facc15; }
+        input:focus, select:focus { outline: 2px solid #facc15; }
         .botao-voltar {
             background: transparent;
             border: none;
             color: #94a3b8;
-            font-size: 16px;
+            font-size: 15px;
             cursor: pointer;
-            padding: 10px 15px;
+            padding: 8px 12px;
             margin-bottom: 10px;
             display: inline-block;
         }
-        #mapa { height: 220px; border-radius: 12px; margin-bottom: 15px; z-index: 1; }
+        #mapa { height: 200px; border-radius: 12px; margin-bottom: 15px; z-index: 1; }
         .ocorrencia-card, .cadastro-card {
             background: #0f172a;
             border-radius: 14px;
-            padding: 16px;
+            padding: 15px;
             margin-bottom: 12px;
             border-left: 4px solid #facc15;
         }
-        .ocorrencia-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .ocorrencia-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
         .ocorrencia-tipo { font-weight: bold; font-size: 15px; }
-        .ocorrencia-valor { font-size: 18px; font-weight: bold; color: #4ade80; }
-        .ocorrencia-dados { font-size: 14px; color: #cbd5e1; margin: 6px 0; }
-        .distancia { font-size: 13px; color: #60a5fa; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+        .ocorrencia-valor { font-size: 17px; font-weight: bold; color: #4ade80; }
+        .ocorrencia-dados { font-size: 13px; color: #cbd5e1; margin: 6px 0; line-height: 1.5; }
+        .distancia { font-size: 12px; color: #60a5fa; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
         .prioridade { display: inline-block; background: rgba(74, 222, 128, 0.2); color: #4ade80; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 6px; }
         .botao-aceitar {
             width: 100%;
-            padding: 14px;
+            padding: 13px;
             border: none;
             border-radius: 10px;
             background: linear-gradient(90deg, #16a34a, #15803d);
             color: white;
-            font-size: 17px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             margin-top: 10px;
         }
-        .sem-servicos, .sem-cadastros { text-align: center; padding: 40px 20px; color: #64748b; }
-        .navegacao-inferior {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: #1e293b; display: flex; justify-content: space-around;
-            padding: 10px 0; border-top: 1px solid #334155; z-index: 100;
+        .sem-itens { text-align: center; padding: 30px 20px; color: #64748b; font-size: 14px; }
+        .navegacao-abas {
+            display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;
         }
-        .nav-item { text-align: center; color: #94a3b8; font-size: 11px; cursor: pointer; }
-        .nav-item.ativo { color: #facc15; font-weight: bold; }
-        .nav-icone { font-size: 20px; margin-bottom: 2px; }
-        .senha-caixa { max-width: 340px; margin: 60px auto; text-align: center; }
-        .status-pendente { border-left-color: #facc15; }
-        .status-aceito { border-left-color: #60a5fa; }
-        .status-concluido { border-left-color: #4ade80; }
-        .status-bloqueado { border-left-color: #ef4444; }
-        .etiqueta-status { display: inline-block; padding: 3px 8px; border-radius: 8px; font-size: 12px; font-weight: bold; }
+        .aba { padding: 10px 15px; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px; font-weight: 500; }
+        .aba.ativa { border-bottom-color: #facc15; color: #facc15; font-weight: bold; }
+        .estatisticas { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; justify-content: center; }
+        .estat {
+            flex: 1; min-width: 130px;
+            padding: 15px 10px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .estat span { font-size: 22px; display: block; margin-bottom: 3px; }
+        .estat-pend { background: rgba(250, 204, 21, 0.15); color: #facc15; }
+        .estat-aceit { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
+        .estat-ativ { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
+        .estat-pendaprov { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .etiqueta-status { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
         .pendente { background: rgba(250, 204, 21, 0.2); color: #facc15; }
         .aceito { background: rgba(96, 165, 250, 0.2); color: #60a5fa; }
         .concluido { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
         .aprovado { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
-        .pendente-aprov { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .pend-aprov { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
         .bloqueado { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-        .foto-preview { width: 100px; height: 100px; border-radius: 50%; background: #334155; display:flex; align-items:center; justify-content:center; margin:10px auto; font-size:40px; overflow:hidden; }
+        .foto-preview { width: 70px; height: 70px; border-radius: 50%; background: #334155; display:flex; align-items:center; justify-content:center; margin:8px 0; font-size: 30px; overflow:hidden; flex-shrink:0; }
         .foto-preview img { width:100%; height:100%; object-fit:cover; }
-        .estatistica { display:inline-block; padding:10px 15px; border-radius:10px; margin:5px; text-align:center; min-width:90px; }
-        .aba { display:inline-block; padding:10px 15px; cursor:pointer; border-bottom:3px solid transparent; }
-        .aba.ativa { border-bottom-color: #facc15; color: #facc15; font-weight:bold; }
+        .linha-cadastro { display:flex; gap:12px; align-items:flex-start; }
         .oculto { display:none !important; }
+        .aviso { padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; }
+        .aviso-amarelo { background: rgba(250, 204, 21, 0.15); border: 1px solid #facc1540; color: #fef3c7; }
     </style>
 </head>
 <body>
@@ -122,158 +127,156 @@
         <p class="subtitulo">Sistema de Apoio e Segurança</p>
     </div>
     <div class="container-botoes">
-        <button class="botao-grande botao-amarelo" onclick="entrarComo('admin')">
+        <button class="botao-grande botao-amarelo" onclick="irParaSenhaAdmin()">
             ⚙️ Painel Administrativo
         </button>
-        <button class="botao-grande botao-roxo" onclick="verificarAcessoApoio()">
+        <button class="botao-grande botao-roxo" onclick="irParaAcessoApoio()">
             🛵 Área do Apoio
         </button>
     </div>
 </div>
 
-<!-- Tela Escolha Apoio: Login ou Cadastro -->
-<div id="tela-acesso-apoio" class="tela">
-    <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
-    <div style="text-align:center; margin:20px 0;">
-        <span class="aba ativa" id="aba-login" onclick="trocarAbaAcesso('login')">🔑 Entrar</span>
-        <span class="aba" id="aba-cadastro" onclick="trocarAbaAcesso('cadastro')">📝 Cadastrar</span>
-    </div>
-
-    <!-- Login do Apoio -->
-    <div id="form-login-apoio" class="caixa">
-        <h2>🔑 Acesso do Apoio</h2>
-        <label>Nome Completo</label>
-        <input type="text" id="login-nome" placeholder="Digite seu nome completo">
-        <label>Senha de Acesso</label>
-        <input type="password" id="login-senha" placeholder="Sua senha">
-        <button class="botao-grande botao-verde" onclick="logarApoio()">Entrar 🚀</button>
-        <p id="msg-login-erro" style="color:#f87171; margin-top:10px; display:none;">Nome ou senha incorretos / cadastro pendente de aprovação</p>
-    </div>
-
-    <!-- Cadastro do Apoio -->
-    <div id="form-cadastro-apoio" class="caixa oculto">
-        <h2>📝 Cadastro do Apoio</h2>
-        <label>Nome Completo *</label>
-        <input type="text" id="cad-nome" placeholder="Seu nome completo">
-        <label>Telefone / WhatsApp *</label>
-        <input type="tel" id="cad-fone" placeholder="(11) 9xxxx-xxxx">
-        <label>Tipo de Veículo *</label>
-        <select id="cad-veiculo">
-            <option value="">Selecione...</option>
-            <option value="motocicleta">🏍️ Motocicleta</option>
-            <option value="carro">🚗 Carro</option>
-            <option value="bicicleta">🚲 Bicicleta</option>
-        </select>
-        <label>Placa do Veículo *</label>
-        <input type="text" id="cad-placa" placeholder="ABC-1D23 ou ABC1D23">
-        <label>Chave PIX para Recebimento *</label>
-        <input type="text" id="cad-pix" placeholder="CPF, telefone, e-mail ou chave aleatória">
-        <label>Foto do Rosto (recomendado)</label>
-        <input type="file" id="cad-foto" accept="image/*" onchange="previewFoto(this)">
-        <div class="foto-preview" id="preview-foto">👤</div>
-        <label>Criar Senha de Acesso *</label>
-        <input type="password" id="cad-senha" placeholder="Mínimo 6 caracteres">
-        <label>Repetir Senha *</label>
-        <input type="password" id="cad-senha2" placeholder="Digite novamente">
-        <button class="botao-grande botao-verde" onclick="salvarCadastroApoio()">Enviar Cadastro ✅</button>
-        <p style="color:#94a3b8; font-size:12px; margin-top:10px; text-align:center;">Seu cadastro será analisado e aprovado pelo Administrador</p>
-    </div>
-</div>
-
 <!-- Tela Senha Administrador -->
-<div id="tela-senha-admin" class="tela">
+<div id="tela-senha" class="tela">
     <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
-    <div class="senha-caixa caixa">
-        <h2>🔐 Acesso Restrito</h2>
-        <p style="margin-bottom:15px; color:#94a3b8;">Digite a senha do Administrador</p>
-        <input type="password" id="senha-admin" placeholder="Digite a senha...">
+    <div class="caixa" style="max-width: 360px; margin: 40px auto;">
+        <h2 style="text-align:center;">🔐 Acesso Restrito</h2>
+        <p style="text-align:center; margin-bottom:20px; color:#94a3b8;">Digite a senha do Administrador</p>
+        <input type="password" id="senha-admin" placeholder="Senha...">
         <button class="botao-grande botao-verde" onclick="verificarSenha()">Entrar 🔑</button>
-        <p id="erro-senha" style="color:#f87171; margin-top:10px; display:none;">Senha incorreta!</p>
+        <p id="erro-senha" style="color:#f87171; margin-top:10px; display:none; text-align:center;">Senha incorreta!</p>
     </div>
 </div>
 
-<!-- Painel Administrativo — Controle Total -->
+<!-- Painel Administrativo -->
 <div id="tela-admin" class="tela">
     <button class="botao-voltar" onclick="voltarInicio()">← Sair</button>
     
-    <div style="text-align:center; margin-bottom:20px;">
-        <span class="aba ativa" id="aba-servicos" onclick="trocarAbaAdmin('servicos')">📋 Serviços</span>
-        <span class="aba" id="aba-cadastros" onclick="trocarAbaAdmin('cadastros')">👥 Apoios</span>
-        <span class="aba" id="aba-lancar" onclick="trocarAbaAdmin('lancar')">➕ Lançar</span>
-    </div>
-
+    <h2 style="text-align:center; color:#facc15; margin-bottom:15px;">⚙️ Painel de Controle</h2>
+    
     <!-- Estatísticas -->
-    <div style="text-align:center; margin-bottom:15px;">
-        <span class="estatistica" style="background:rgba(250,204,21,0.1);">
-            <strong id="qtd-pendentes">0</strong><br>Pendentes
-        </span>
-        <span class="estatistica" style="background:rgba(96,165,250,0.1);">
-            <strong id="qtd-aceitos">0</strong><br>Aceitos
-        </span>
-        <span class="estatistica" style="background:rgba(74,222,128,0.1);">
-            <strong id="qtd-aprovados">0</strong><br>Apoios Ativos
-        </span>
-        <span class="estatistica" style="background:rgba(251,191,36,0.1);">
-            <strong id="qtd-aprov-pendente">0</strong><br>Aguardando
-        </span>
+    <div class="estatisticas">
+        <div class="estat estat-pend"><span id="qtd-pend">0</span>Pendentes</div>
+        <div class="estat estat-aceit"><span id="qtd-aceit">0</span>Aceitos</div>
+        <div class="estat estat-ativ"><span id="qtd-ativ">0</span>Apoios Ativos</div>
+        <div class="estat estat-pendaprov"><span id="qtd-pendaprov">0</span>Aguardando</div>
     </div>
-
-    <!-- Sub-Aba: Lançar Serviço -->
-    <div id="conteudo-lancar" class="caixa">
-        <h2>➕ Lançar Nova Ocorrência</h2>
-        <label>Solicitante / Responsável</label>
-        <input type="text" id="nome-solicitante" placeholder="Seu nome">
-        <label>Telefone / WhatsApp</label>
-        <input type="tel" id="fone-solicitante" placeholder="(11) 9xxxx-xxxx">
-        <label>Endereço do Atendimento</label>
-        <input type="text" id="endereco-servico" placeholder="Rua, número, bairro, cidade">
-        <label>Coordenadas (opcional)</label>
-        <input type="text" id="coords-servico" placeholder="-23.xxxx, -46.xxxx">
-        <label>Tipo de Serviço</label>
-        <select id="tipo-servico">
-            <option value="">Selecione...</option>
-            <option value="alarme">🚨 Verificação de Alarme</option>
-            <option value="veiculo">🚗 Verificação de Veículo</option>
-            <option value="ronda">👀 Ronda / Presença</option>
-            <option value="foto">📷 Registro Fotográfico</option>
-            <option value="outro">📝 Outro</option>
-        </select>
-        <label>Valor do Serviço R$</label>
-        <input type="number" id="valor-servico" placeholder="0,00" step="0.01">
-        <button class="botao-grande" style="background:linear-gradient(90deg, #16a34a, #15803d); color:white; margin-top:8px;" onclick="lancarOcorrencia()">🚀 LANÇAR PARA APOIOS</button>
+    
+    <!-- Abas -->
+    <div class="navegacao-abas">
+        <div class="aba ativa" data-aba="lancar" onclick="trocarAbaAdmin('lancar')">➕ Lançar</div>
+        <div class="aba" data-aba="servicos" onclick="trocarAbaAdmin('servicos')">📊 Serviços</div>
+        <div class="aba" data-aba="apoios" onclick="trocarAbaAdmin('apoios')">👥 Apoios</div>
     </div>
-
-    <!-- Sub-Aba: Lista de Serviços -->
-    <div id="conteudo-servicos" class="oculto">
-        <h3 style="margin-bottom:10px;">📊 Todas as Ocorrências</h3>
-        <div id="lista-admin-servicos">
-            <p style="color:#64748b; text-align:center; padding:20px;">Nenhuma ocorrência lançada ainda.</p>
+    
+    <!-- Aba: Lançar -->
+    <div id="conteudo-lancar">
+        <div class="caixa">
+            <h3>Lançar Nova Ocorrência</h3>
+            <label>Solicitante / Responsável</label>
+            <input type="text" id="nome-solic" placeholder="Seu nome">
+            <label>Telefone / WhatsApp</label>
+            <input type="tel" id="fone-solic" placeholder="(11) 9xxxx-xxxx">
+            <label>Endereço do Atendimento *</label>
+            <input type="text" id="endereco-serv" placeholder="Rua, número, bairro, cidade">
+            <label>Coordenadas (opcional)</label>
+            <input type="text" id="coords-serv" placeholder="-23.xxxx, -46.xxxx">
+            <label>Tipo de Serviço</label>
+            <select id="tipo-serv">
+                <option value="">Selecione...</option>
+                <option value="alarme">🚨 Verificação de Alarme</option>
+                <option value="veiculo">🚗 Verificação de Veículo</option>
+                <option value="ronda">👀 Ronda / Presença</option>
+                <option value="foto">📷 Registro Fotográfico</option>
+                <option value="outro">📝 Outro</option>
+            </select>
+            <label>Valor R$</label>
+            <input type="number" id="valor-serv" placeholder="0,00" step="0.01">
+            <button class="botao-grande botao-verde" onclick="lancarOcorrencia()" style="margin-top:10px;">🚀 LANÇAR</button>
         </div>
     </div>
-
-    <!-- Sub-Aba: Cadastros de Apoio -->
-    <div id="conteudo-cadastros" class="oculto">
-        <h3 style="margin-bottom:10px;">👥 Controle de Apoios</h3>
-        <div id="lista-admin-cadastros">
-            <p style="color:#64748b; text-align:center; padding:20px;">Nenhum cadastro recebido.</p>
+    
+    <!-- Aba: Serviços -->
+    <div id="conteudo-servicos" class="oculto">
+        <h3 style="margin-bottom:12px;">📊 Todas as Ocorrências</h3>
+        <div id="lista-servicos-admin">
+            <p class="sem-itens">Nenhuma ocorrência lançada ainda.</p>
+        </div>
+    </div>
+    
+    <!-- Aba: Apoios — CONTROLE TOTAL -->
+    <div id="conteudo-apoios" class="oculto">
+        <h3 style="margin-bottom:12px;">👥 Controle de Apoios</h3>
+        <div id="lista-apoios-admin">
+            <p class="sem-itens">Nenhum cadastro recebido.</p>
         </div>
     </div>
 </div>
 
-<!-- Tela do Apoio — Serviços Disponíveis -->
-<div id="tela-apoio" class="tela">
+<!-- Tela Acesso Apoio: Login / Cadastro -->
+<div id="tela-acesso-apoio" class="tela">
+    <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
+    <h2 style="text-align:center; color:#facc15; margin-bottom:20px;">🛵 Área do Apoio</h2>
+    
+    <div class="navegacao-abas">
+        <div class="aba ativa" data-aba="login" onclick="trocarAbaAcesso('login')">🔑 Entrar</div>
+        <div class="aba" data-aba="cadastro" onclick="trocarAbaAcesso('cadastro')">📝 Cadastrar</div>
+    </div>
+    
+    <!-- Login -->
+    <div id="form-login">
+        <div class="caixa">
+            <label>Nome Completo</label>
+            <input type="text" id="login-nome" placeholder="Seu nome completo">
+            <label>Senha de Acesso</label>
+            <input type="password" id="login-senha" placeholder="Sua senha">
+            <button class="botao-grande botao-verde" onclick="logarApoio()">Entrar 🚀</button>
+            <p id="msg-erro-login" style="color:#f87171; margin-top:12px; display:none; text-align:center;"></p>
+        </div>
+    </div>
+    
+    <!-- Cadastro -->
+    <div id="form-cadastro" class="oculto">
+        <div class="caixa">
+            <label>Nome Completo *</label>
+            <input type="text" id="cad-nome" placeholder="Seu nome completo">
+            <label>Telefone / WhatsApp *</label>
+            <input type="tel" id="cad-fone" placeholder="(11) 9xxxx-xxxx">
+            <label>Tipo de Veículo *</label>
+            <select id="cad-veiculo">
+                <option value="">Selecione...</option>
+                <option value="motocicleta">🏍️ Motocicleta</option>
+                <option value="carro">🚗 Carro</option>
+                <option value="bicicleta">🚲 Bicicleta</option>
+            </select>
+            <label>Placa do Veículo *</label>
+            <input type="text" id="cad-placa" placeholder="ABC-1D23">
+            <label>Chave PIX para Recebimento *</label>
+            <input type="text" id="cad-pix" placeholder="CPF, telefone, e-mail...">
+            <label>Foto do Rosto</label>
+            <input type="file" id="cad-foto" accept="image/*" onchange="carregarPreviewFoto(this)">
+            <div class="foto-preview" id="preview-foto">👤</div>
+            <label>Criar Senha (mín. 6 caracteres) *</label>
+            <input type="password" id="cad-senha" placeholder="Digite sua senha">
+            <label>Repetir Senha *</label>
+            <input type="password" id="cad-senha2" placeholder="Digite novamente">
+            <button class="botao-grande botao-verde" onclick="enviarCadastro()">Enviar Cadastro ✅</button>
+            <p style="font-size:12px; color:#94a3b8; margin-top:12px; text-align:center;">Seu cadastro será analisado pelo Administrador.<br>Aguarde a aprovação.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Tela Serviços do Apoio Logado -->
+<div id="tela-apoio-logado" class="tela">
     <button class="botao-voltar" onclick="sairApoio()">← Sair</button>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
         <h2 style="color:#facc15;">🛵 Serviços Próximos</h2>
-        <span style="font-size:13px; color:#94a3b8;">Bem-vindo, <span id="nome-apoio-logado"></span></span>
+        <span style="font-size:13px; color:#94a3b8;">Bem-vindo, <span id="nome-apoio"></span></span>
     </div>
     <p style="color:#94a3b8; font-size:13px; margin-bottom:15px;">Ordenados por distância — mais próximo primeiro</p>
     <div id="mapa"></div>
     <div id="lista-servicos-apoio">
-        <div class="sem-servicos">
-            📍 Obtendo sua localização...<br>
-            <span style="font-size:12px;">Permita o acesso à localização</span>
-        </div>
+        <p class="sem-itens">📍 Obtendo localização...<br>Permita o acesso à localização.</p>
     </div>
 </div>
 
@@ -292,10 +295,10 @@ const nomesVeiculos = {
     bicicleta: '🚲 Bicicleta'
 };
 
-let minhaPosicao = null, mapa = null;
-let listaOcorrencias = [], cadastrosApoio = [], usuarioApoio = null;
+let listaOcorrencias = [], cadastrosApoio = [];
+let usuarioLogado = null, mapa = null, minhaPosicao = null;
 
-// ===== INICIALIZAÇÃO =====
+// ===== CARREGAR DADOS =====
 function carregarDados() {
     listaOcorrencias = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
     cadastrosApoio = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
@@ -304,21 +307,20 @@ carregarDados();
 
 // ===== TELA INICIAL =====
 function voltarInicio() {
-    usuarioApoio = null;
+    usuarioLogado = null;
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-inicio').classList.add('ativa');
 }
 
-// ===== ACESSO ADMINISTRADOR =====
-function entrarComo(tipo) {
-    if (tipo === 'admin') {
-        document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-        document.getElementById('tela-senha-admin').classList.add('ativa');
-    }
+// ===== ACESSO ADMIN =====
+function irParaSenhaAdmin() {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('tela-senha').classList.add('ativa');
+    document.getElementById('senha-admin').value = '';
+    document.getElementById('erro-senha').style.display = 'none';
 }
 function verificarSenha() {
-    const senha = document.getElementById('senha-admin').value;
-    if (senha === SENHA_ADMIN) {
+    if (document.getElementById('senha-admin').value === SENHA_ADMIN) {
         document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
         document.getElementById('tela-admin').classList.add('ativa');
         trocarAbaAdmin('lancar');
@@ -328,131 +330,178 @@ function verificarSenha() {
     }
 }
 function trocarAbaAdmin(aba) {
-    ['lancar','servicos','cadastros'].forEach(a => {
-        document.getElementById(`aba-${a}`)?.classList.remove('ativa');
+    ['lancar','servicos','apoios'].forEach(a => {
+        document.querySelector(`[data-aba="${a}"]`)?.classList.remove('ativa');
         document.getElementById(`conteudo-${a}`)?.classList.add('oculto');
     });
-    document.getElementById(`aba-${aba}`).classList.add('ativa');
+    document.querySelector(`[data-aba="${aba}"]`).classList.add('ativa');
     document.getElementById(`conteudo-${aba}`).classList.remove('oculto');
     
-    if (aba === 'servicos') renderizarListaServicosAdmin();
-    if (aba === 'cadastros') renderizarListaCadastrosAdmin();
+    if (aba === 'servicos') renderizarServicosAdmin();
+    if (aba === 'apoios') renderizarApoiosAdmin();
 }
 function atualizarEstatisticas() {
-    document.getElementById('qtd-pendentes').textContent = listaOcorrencias.filter(o => o.status === 'pendente').length;
-    document.getElementById('qtd-aceitos').textContent = listaOcorrencias.filter(o => o.status === 'aceito').length;
-    document.getElementById('qtd-aprovados').textContent = cadastrosApoio.filter(c => c.aprovado === true).length;
-    document.getElementById('qtd-aprov-pendente').textContent = cadastrosApoio.filter(c => c.aprovado === false).length;
+    document.getElementById('qtd-pend').textContent = listaOcorrencias.filter(o => o.status === 'pendente').length;
+    document.getElementById('qtd-aceit').textContent = listaOcorrencias.filter(o => o.status === 'aceito').length;
+    document.getElementById('qtd-ativ').textContent = cadastrosApoio.filter(c => c.aprovado === true).length;
+    document.getElementById('qtd-pendaprov').textContent = cadastrosApoio.filter(c => c.aprovado === false).length;
 }
 
 // ===== LANÇAR OCORRÊNCIA =====
 function lancarOcorrencia() {
-    const endereco = document.getElementById('endereco-servico').value.trim();
-    if (!endereco) { alert('📍 Digite o endereço!'); return; }
+    const end = document.getElementById('endereco-serv').value.trim();
+    if (!end) { alert('⚠️ Digite o endereço!'); return; }
     
-    const valor = parseFloat(document.getElementById('valor-servico').value) || 0;
-    const coordsTexto = document.getElementById('coords-servico').value.trim();
     let lat = -23.5505, lng = -46.6333;
-    
-    if (coordsTexto && coordsTexto.includes(',')) {
-        const partes = coordsTexto.split(',').map(p => parseFloat(p.trim()));
-        if (partes.length === 2 && !isNaN(partes[0]) && !isNaN(partes[1])) {
-            lat = partes[0]; lng = partes[1];
-        }
+    const coordsTxt = document.getElementById('coords-serv').value.trim();
+    if (coordsTxt && coordsTxt.includes(',')) {
+        const p = coordsTxt.split(',').map(x => parseFloat(x.trim()));
+        if (p.length === 2 && !isNaN(p[0]) && !isNaN(p[1])) { lat = p[0]; lng = p[1]; }
     }
     
-    const nova = {
+    listaOcorrencias.unshift({
         id: Date.now(),
         data: new Date().toLocaleString('pt-BR'),
-        endereco: endereco,
+        endereco: end,
         coords: { lat, lng },
-        tipo: document.getElementById('tipo-servico').value || 'outro',
-        solicitante: document.getElementById('nome-solicitante').value || 'Administrador',
-        telefone: document.getElementById('fone-solicitante').value || 'Não informado',
-        valor: valor,
+        tipo: document.getElementById('tipo-serv').value || 'outro',
+        solicitante: document.getElementById('nome-solic').value.trim() || 'Administrador',
+        telefone: document.getElementById('fone-solic').value.trim() || 'Não informado',
+        valor: parseFloat(document.getElementById('valor-serv').value) || 0,
         status: 'pendente',
-        aceitoPor: null,
-        idApoio: null
-    };
+        aceitoPor: null
+    });
     
-    listaOcorrencias.unshift(nova);
     salvarDados();
-    
-    alert('✅ OCORRÊNCIA LANÇADA PARA TODOS OS APOIOS!');
+    alert('✅ Lançado com sucesso!');
     
     // Limpar
-    document.getElementById('endereco-servico').value = '';
-    document.getElementById('valor-servico').value = '';
-    document.getElementById('coords-servico').value = '';
-    document.getElementById('tipo-servico').value = '';
+    document.getElementById('endereco-serv').value = '';
+    document.getElementById('valor-serv').value = '';
+    document.getElementById('coords-serv').value = '';
+    document.getElementById('tipo-serv').value = '';
     
     atualizarEstatisticas();
     trocarAbaAdmin('servicos');
 }
 
 // ===== GERENCIAR SERVIÇOS (ADMIN) =====
-function renderizarListaServicosAdmin() {
-    const container = document.getElementById('lista-admin-servicos');
-    if (listaOcorrencias.length === 0) {
-        container.innerHTML = '<p style="color:#64748b; text-align:center; padding:20px;">Nenhuma ocorrência lançada ainda.</p>';
+function renderizarServicosAdmin() {
+    const cont = document.getElementById('lista-servicos-admin');
+    if (!listaOcorrencias.length) {
+        cont.innerHTML = '<p class="sem-itens">Nenhuma ocorrência lançada ainda.</p>';
         return;
     }
-    container.innerHTML = listaOcorrencias.map((oc, i) => `
-        <div class="ocorrencia-card status-${oc.status}">
+    cont.innerHTML = listaOcorrencias.map((oc, i) => `
+        <div class="ocorrencia-card">
             <div class="ocorrencia-cabecalho">
                 <span class="ocorrencia-tipo">${nomesTipos[oc.tipo]}</span>
                 <span class="etiqueta-status ${oc.status}">${oc.status.toUpperCase()}</span>
             </div>
             <div class="ocorrencia-dados">
                 📍 ${oc.endereco}<br>
-                💰 Valor: R$ ${oc.valor.toFixed(2)}<br>
+                💰 R$ ${oc.valor.toFixed(2)}<br>
                 📅 ${oc.data}<br>
                 ${oc.aceitoPor ? `🛵 Aceito por: ${oc.aceitoPor.nome || oc.aceitoPor}` : '⏳ Aguardando aceite...'}
             </div>
-            <div style="display:flex; gap:5px; margin-top:10px; flex-wrap:wrap;">
-                ${oc.status === 'aceito' ? `<button class="botao-pequeno botao-verde" onclick="marcarConcluido(${i})">✓ Concluído</button>` : ''}
-                ${oc.status === 'pendente' ? `<button class="botao-pequeno botao-cinza" onclick="reabrirServico(${i})">↻ Reabrir</button>` : ''}
-                <button class="botao-pequeno botao-vermelho" onclick="excluirServico(${i})">🗑️ Excluir</button>
+            <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
+                ${oc.status === 'pendente' ? `<button class="botao-pequeno botao-cinza" onclick="reabrir(${i})">↻ Reabrir</button>` : ''}
+                ${oc.status === 'aceito' ? `<button class="botao-pequeno botao-verde" onclick="concluir(${i})">✓ Concluído</button>` : ''}
+                <button class="botao-pequeno botao-vermelho" onclick="excluirServ(${i})">🗑️ Excluir</button>
             </div>
         </div>
     `).join('');
     atualizarEstatisticas();
 }
-function marcarConcluido(indice) {
-    listaOcorrencias[indice].status = 'concluido';
-    salvarDados();
-    renderizarListaServicosAdmin();
-    alert('✅ Serviço marcado como CONCLUÍDO!');
+function reabrir(i) {
+    listaOcorrencias[i].status = 'pendente';
+    listaOcorrencias[i].aceitoPor = null;
+    salvarDados(); renderizarServicosAdmin();
+    alert('↻ Reaberto!');
 }
-function reabrirServico(indice) {
-    listaOcorrencias[indice].status = 'pendente';
-    listaOcorrencias[indice].aceitoPor = null;
-    salvarDados();
-    renderizarListaServicosAdmin();
-    alert('↻ Serviço reaberto!');
+function concluir(i) {
+    listaOcorrencias[i].status = 'concluido';
+    salvarDados(); renderizarServicosAdmin();
+    alert('✅ Concluído!');
 }
-function excluirServico(indice) {
-    if (!confirm('Tem certeza que deseja EXCLUIR esta ocorrência?\nEsta ação não pode ser desfeita.')) return;
-    listaOcorrencias.splice(indice, 1);
-    salvarDados();
-    renderizarListaServicosAdmin();
-    alert('🗑️ Excluído!');
+function excluirServ(i) {
+    if (!confirm('Excluir esta ocorrência?')) return;
+    listaOcorrencias.splice(i, 1);
+    salvarDados(); renderizarServicosAdmin();
 }
 
-// ===== ACESSO ÁREA DO APOIO =====
-function verificarAcessoApoio() {
+// ===== GERENCIAR APOIOS — CONTROLE TOTAL =====
+function renderizarApoiosAdmin() {
+    const cont = document.getElementById('lista-apoios-admin');
+    if (!cadastrosApoio.length) {
+        cont.innerHTML = '<p class="sem-itens">Nenhum cadastro recebido.<br>Quando alguém se cadastrar, aparecerá aqui.</p>';
+        return;
+    }
+    cont.innerHTML = cadastrosApoio.map((cad, i) => `
+        <div class="cadastro-card">
+            <div class="linha-cadastro">
+                <div class="foto-preview">${cad.foto ? `<img src="${cad.foto}">` : '👤'}</div>
+                <div>
+                    <div class="ocorrencia-cabecalho">
+                        <span class="ocorrencia-tipo">${cad.nome}</span>
+                        <span class="etiqueta-status ${cad.aprovado === true ? 'aprovado' : cad.aprovado === 'bloqueado' ? 'bloqueado' : 'pend-aprov'}">
+                            ${cad.aprovado === true ? '✅ APROVADO' : cad.aprovado === 'bloqueado' ? '🚫 BLOQUEADO' : '⏳ PENDENTE'}
+                        </span>
+                    </div>
+                    <div class="ocorrencia-dados">
+                        📱 ${cad.fone}<br>
+                        🚗 ${nomesVeiculos[cad.veiculo]} — ${cad.placa}<br>
+                        💳 PIX: ${cad.pix}<br>
+                        📅 ${cad.dataCadastro}
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex; gap:6px; margin-top:12px; flex-wrap:wrap;">
+                ${cad.aprovado !== true ? `<button class="botao-pequeno botao-verde" onclick="aprovar(${i})">✅ Aprovar</button>` : ''}
+                ${cad.aprovado === true ? `<button class="botao-pequeno botao-cinza" onclick="bloquear(${i})">🚫 Bloquear</button>` : ''}
+                ${cad.aprovado === 'bloqueado' ? `<button class="botao-pequeno botao-verde" onclick="desbloquear(${i})">✅ Desbloquear</button>` : ''}
+                <button class="botao-pequeno botao-vermelho" onclick="excluirApoio(${i})">🗑️ Excluir</button>
+            </div>
+        </div>
+    `).join('');
+    atualizarEstatisticas();
+}
+function aprovar(i) {
+    cadastrosApoio[i].aprovado = true;
+    salvarDados(); renderizarApoiosAdmin();
+    alert('✅ APROVADO! Agora pode acessar.');
+}
+function bloquear(i) {
+    if (!confirm('Bloquear? Não conseguirá mais entrar.')) return;
+    cadastrosApoio[i].aprovado = 'bloqueado';
+    salvarDados(); renderizarApoiosAdmin();
+    alert('🚫 BLOQUEADO!');
+}
+function desbloquear(i) {
+    cadastrosApoio[i].aprovado = true;
+    salvarDados(); renderizarApoiosAdmin();
+    alert('✅ DESBLOQUEADO!');
+}
+function excluirApoio(i) {
+    if (!confirm('Excluir permanentemente?')) return;
+    cadastrosApoio.splice(i, 1);
+    salvarDados(); renderizarApoiosAdmin();
+}
+
+// ===== ACESSO APOIO =====
+function irParaAcessoApoio() {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-acesso-apoio').classList.add('ativa');
     trocarAbaAcesso('login');
 }
 function trocarAbaAcesso(aba) {
-    document.getElementById('aba-login').classList.toggle('ativa', aba === 'login');
-    document.getElementById('aba-cadastro').classList.toggle('ativa', aba === 'cadastro');
-    document.getElementById('form-login-apoio').classList.toggle('oculto', aba !== 'login');
-    document.getElementById('form-cadastro-apoio').classList.toggle('oculto', aba !== 'cadastro');
-    document.getElementById('msg-login-erro').style.display = 'none';
+    document.querySelectorAll('[data-aba]').forEach(el => el.classList.remove('ativa'));
+    document.querySelector(`[data-aba="${aba}"]`).classList.add('ativa');
+    document.getElementById('form-login').classList.toggle('oculto', aba !== 'login');
+    document.getElementById('form-cadastro').classList.toggle('oculto', aba !== 'cadastro');
+    document.getElementById('msg-erro-login').style.display = 'none';
 }
-function previewFoto(input) {
+function carregarPreviewFoto(input) {
     const preview = document.getElementById('preview-foto');
     if (input.files && input.files[0]) {
         const reader = new FileReader();
@@ -460,7 +509,7 @@ function previewFoto(input) {
         reader.readAsDataURL(input.files[0]);
     }
 }
-function salvarCadastroApoio() {
+function enviarCadastro() {
     const nome = document.getElementById('cad-nome').value.trim();
     const fone = document.getElementById('cad-fone').value.trim();
     const veiculo = document.getElementById('cad-veiculo').value;
@@ -470,39 +519,27 @@ function salvarCadastroApoio() {
     const senha2 = document.getElementById('cad-senha2').value;
     
     if (!nome || !fone || !veiculo || !placa || !pix || !senha) {
-        alert('⚠️ Preencha TODOS os campos obrigatórios!');
-        return;
+        alert('⚠️ Preencha TODOS os campos!'); return;
     }
-    if (senha.length < 6) { alert('⚠️ Senha deve ter pelo menos 6 caracteres!'); return; }
-    if (senha !== senha2) { alert('⚠️ As senhas não coincidem!'); return; }
-    
-    const existe = cadastrosApoio.some(c => c.fone === fone || c.placa === placa);
-    if (existe) { alert('⚠️ Já existe um cadastro com este telefone ou placa!'); return; }
+    if (senha.length < 6) { alert('⚠️ Senha com mínimo 6 caracteres!'); return; }
+    if (senha !== senha2) { alert('⚠️ Senhas não coincidem!'); return; }
+    if (cadastrosApoio.some(c => c.fone === fone || c.placa === placa)) {
+        alert('⚠️ Já existe cadastro com este telefone ou placa!'); return;
+    }
     
     const fotoInput = document.getElementById('cad-foto');
     let fotoBase64 = null;
-    if (fotoInput.files && fotoInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
-            fotoBase64 = e.target.result;
-            finalizarCadastro();
-        };
-        reader.readAsDataURL(fotoInput.files[0]);
-    } else {
-        finalizarCadastro();
-    }
     
-    function finalizarCadastro() {
-        const novoCadastro = {
+    function finalizar(foto) {
+        cadastrosApoio.push({
             id: Date.now(),
             nome, fone, veiculo, placa, pix, senha,
-            foto: fotoBase64,
+            foto: foto,
             aprovado: false,
             dataCadastro: new Date().toLocaleString('pt-BR')
-        };
-        cadastrosApoio.push(novoCadastro);
+        });
         salvarDados();
-        alert('✅ Cadastro enviado com sucesso!\nAguarde a aprovação do Administrador.');
+        alert('✅ Cadastro enviado!\nAguarde a aprovação do Administrador.');
         trocarAbaAcesso('login');
         // Limpar
         document.getElementById('cad-nome').value = '';
@@ -513,216 +550,158 @@ function salvarCadastroApoio() {
         document.getElementById('cad-senha').value = '';
         document.getElementById('cad-senha2').value = '';
         document.getElementById('preview-foto').innerHTML = '👤';
-        atualizarEstatisticas();
+    }
+    
+    if (fotoInput.files && fotoInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => finalizar(e.target.result);
+        reader.readAsDataURL(fotoInput.files[0]);
+    } else {
+        finalizar(null);
     }
 }
 function logarApoio() {
     const nome = document.getElementById('login-nome').value.trim();
     const senha = document.getElementById('login-senha').value;
+    const msgEl = document.getElementById('msg-erro-login');
     
-    const cadastro = cadastrosApoio.find(c => c.nome === nome && c.senha === senha);
+    const cad = cadastrosApoio.find(c => c.nome === nome && c.senha === senha);
     
-    if (!cadastro) {
-        document.getElementById('msg-login-erro').style.display = 'block';
+    if (!cad) {
+        msgEl.textContent = 'Nome ou senha incorretos.';
+        msgEl.style.display = 'block';
         return;
     }
-    if (cadastro.aprovado === false) {
-        alert('⏳ Seu cadastro ainda não foi aprovado.\nAguarde a liberação do Administrador.');
+    if (cad.aprovado === false) {
+        msgEl.innerHTML = '⏳ Seu cadastro está em análise.<br>Aguarde a liberação do Administrador.';
+        msgEl.style.display = 'block';
         return;
     }
-    if (cadastro.aprovado === 'bloqueado') {
-        alert('🚫 Seu acesso foi bloqueado.\nEntre em contato com o Administrador.');
+    if (cad.aprovado === 'bloqueado') {
+        msgEl.textContent = '🚫 Acesso bloqueado. Contate o Administrador.';
+        msgEl.style.display = 'block';
         return;
     }
     
-    usuarioApoio = cadastro;
+    // LOGADO COM SUCESSO ✅
+    usuarioLogado = cad;
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('tela-apoio').classList.add('ativa');
-    document.getElementById('nome-apoio-logado').textContent = cadastro.nome.split(' ')[0];
+    document.getElementById('tela-apoio-logado').classList.add('ativa');
+    document.getElementById('nome-apoio').textContent = cad.nome.split(' ')[0];
     iniciarMapa();
 }
 function sairApoio() {
-    usuarioApoio = null;
+    usuarioLogado = null;
     voltarInicio();
-}
-
-// ===== GERENCIAR CADASTROS (ADMIN) =====
-function renderizarListaCadastrosAdmin() {
-    const container = document.getElementById('lista-admin-cadastros');
-    if (cadastrosApoio.length === 0) {
-        container.innerHTML = '<p style="color:#64748b; text-align:center; padding:20px;">Nenhum cadastro recebido.</p>';
-        return;
-    }
-    container.innerHTML = cadastrosApoio.map((cad, i) => `
-        <div class="cadastro-card status-${cad.aprovado === true ? 'aprovado' : cad.aprovado === 'bloqueado' ? 'bloqueado' : 'pendente-aprov'}">
-            <div style="display:flex; gap:15px; align-items:flex-start;">
-                <div class="foto-preview" style="width:70px; height:70px; margin:0; flex-shrink:0;">
-                    ${cad.foto ? `<img src="${cad.foto}">` : '👤'}
-                </div>
-                <div style="flex:1;">
-                    <div class="ocorrencia-cabecalho">
-                        <span class="ocorrencia-tipo">${cad.nome}</span>
-                        <span class="etiqueta-status ${cad.aprovado === true ? 'aprovado' : cad.aprovado === 'bloqueado' ? 'bloqueado' : 'pendente-aprov'}">
-                            ${cad.aprovado === true ? '✅ APROVADO' : cad.aprovado === 'bloqueado' ? '🚫 BLOQUEADO' : '⏳ PENDENTE'}
-                        </span>
-                    </div>
-                    <div class="ocorrencia-dados">
-                        📱 ${cad.fone}<br>
-                        🚗 ${nomesVeiculos[cad.veiculo]} — ${cad.placa}<br>
-                        💳 PIX: ${cad.pix}<br>
-                        📅 Cadastro: ${cad.dataCadastro}
-                    </div>
-                </div>
-            </div>
-            <div style="display:flex; gap:5px; margin-top:12px; flex-wrap:wrap;">
-                ${cad.aprovado !== true ? `<button class="botao-pequeno botao-verde" onclick="aprovarApoio(${i})">✅ Aprovar</button>` : ''}
-                ${cad.aprovado === true ? `<button class="botao-pequeno botao-cinza" onclick="bloquearApoio(${i})">🚫 Bloquear</button>` : ''}
-                ${cad.aprovado === 'bloqueado' ? `<button class="botao-pequeno botao-verde" onclick="desbloquearApoio(${i})">✅ Desbloquear</button>` : ''}
-                <button class="botao-pequeno botao-vermelho" onclick="excluirApoio(${i})">🗑️ Excluir</button>
-            </div>
-        </div>
-    `).join('');
-    atualizarEstatisticas();
-}
-function aprovarApoio(indice) {
-    cadastrosApoio[indice].aprovado = true;
-    salvarDados();
-    renderizarListaCadastrosAdmin();
-    alert('✅ Apoio APROVADO! Agora pode acessar o sistema.');
-}
-function bloquearApoio(indice) {
-    if (!confirm('Bloquear este Apoio?\nEle não conseguirá mais acessar.')) return;
-    cadastrosApoio[indice].aprovado = 'bloqueado';
-    salvarDados();
-    renderizarListaCadastrosAdmin();
-    alert('🚫 Apoio BLOQUEADO!');
-}
-function desbloquearApoio(indice) {
-    cadastrosApoio[indice].aprovado = true;
-    salvarDados();
-    renderizarListaCadastrosAdmin();
-    alert('✅ Apoio DESBLOQUEADO!');
-}
-function excluirApoio(indice) {
-    if (!confirm('Excluir este cadastro permanentemente?')) return;
-    cadastrosApoio.splice(indice, 1);
-    salvarDados();
-    renderizarListaCadastrosAdmin();
-    alert('🗑️ Excluído!');
 }
 
 // ===== MAPA E SERVIÇOS PARA APOIO =====
 function iniciarMapa() {
     if (mapa) return;
     mapa = L.map('mapa').setView([-23.5505, -46.6333], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapa);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
     
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-            (pos) => {
+            pos => {
                 minhaPosicao = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                 mapa.setView([minhaPosicao.lat, minhaPosicao.lng], 13);
                 L.marker([minhaPosicao.lat, minhaPosicao.lng], {
                     icon: L.divIcon({ html: '<div style="background:#7c3aed; width:16px; height:16px; border-radius:50%; border:3px solid white;"></div>', iconSize: [22, 22] })
                 }).addTo(mapa).bindPopup('📍 Você está aqui');
-                carregarServicosParaApoio();
+                carregarServicosApoio();
             },
-            () => { minhaPosicao = { lat: -23.5505, lng: -46.6333 }; carregarServicosParaApoio(); }
+            () => { minhaPosicao = { lat: -23.5505, lng: -46.6333 }; carregarServicosApoio(); }
         );
-    } else { minhaPosicao = { lat: -23.5505, lng: -46.6333 }; carregarServicosParaApoio(); }
+    } else {
+        minhaPosicao = { lat: -23.5505, lng: -46.6333 };
+        carregarServicosApoio();
+    }
 }
-function calcularDistancia(coord1, coord2) {
-    if (!coord1 || !coord2) return '—';
+function distKm(c1, c2) {
+    if (!c1 || !c2) return 9999;
     const R = 6371;
-    const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
-    const dLng = (coord2.lng - coord1.lng) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(coord1.lat*Math.PI/180)*Math.cos(coord2.lat*Math.PI/180)*Math.sin(dLng/2)**2;
-    const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(2)} km`;
-}
-function calcularDistanciaValor(coord1, coord2) {
-    if (!coord1 || !coord2) return 9999;
-    const R = 6371;
-    const dLat = (coord2.lat - coord1.lat) * Math.PI / 180;
-    const dLng = (coord2.lng - coord1.lng) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(coord1.lat*Math.PI/180)*Math.cos(coord2.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+    const dLat = (c2.lat - c1.lat) * Math.PI / 180;
+    const dLng = (c2.lng - c1.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(c1.lat*Math.PI/180)*Math.cos(c2.lat*Math.PI/180)*Math.sin(dLng/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
-function carregarServicosParaApoio() {
-    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente').map(oc => {
-        oc.distanciaTexto = minhaPosicao ? calcularDistancia(minhaPosicao, oc.coords) : '—';
-        oc.distanciaValor = minhaPosicao ? calcularDistanciaValor(minhaPosicao, oc.coords) : 9999;
-        return oc;
-    }).sort((a, b) => a.distanciaValor - b.distanciaValor);
+function distTexto(c1, c2) {
+    const km = distKm(c1, c2);
+    return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(2)} km`;
+}
+function carregarServicosApoio() {
+    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente').map(o => ({
+        ...o,
+        dTexto: distTexto(minhaPosicao, o.coords),
+        dValor: distKm(minhaPosicao, o.coords)
+    })).sort((a, b) => a.dValor - b.dValor);
     
-    const container = document.getElementById('lista-servicos-apoio');
-    if (pendentes.length === 0) {
-        container.innerHTML = '<div class="sem-servicos">🔍 Nenhum serviço disponível no momento.<br><span style="font-size:12px;">Aguarde novas ocorrências do Administrador.</span></div>';
+    const cont = document.getElementById('lista-servicos-apoio');
+    if (!pendentes.length) {
+        cont.innerHTML = '<p class="sem-itens">🔍 Nenhum serviço disponível no momento.<br>Aguarde novas ocorrências.</p>';
         return;
     }
-    container.innerHTML = pendentes.map((oc, i) => `
-        <div class="ocorrencia-card status-${oc.status}">
+    cont.innerHTML = pendentes.map((oc, i) => `
+        <div class="ocorrencia-card">
             <div class="ocorrencia-cabecalho">
                 <span class="ocorrencia-tipo">${nomesTipos[oc.tipo]}${i === 0 ? '<span class="prioridade">✅ Mais próximo</span>' : ''}</span>
                 <span class="ocorrencia-valor">R$ ${oc.valor.toFixed(2)}</span>
             </div>
-            <div class="distancia">📏 ${oc.distanciaTexto}</div>
+            <div class="distancia">📏 ${oc.dTexto}</div>
             <div class="ocorrencia-dados">
                 📍 ${oc.endereco}<br>
-                👤 Solicitante: ${oc.solicitante}<br>
+                👤 ${oc.solicitante}<br>
                 📅 ${oc.data}
             </div>
             <button class="botao-aceitar" onclick="aceitarServico(${listaOcorrencias.indexOf(oc)})">✅ ACEITAR E CONTATAR</button>
         </div>
     `).join('');
     
-    // Atualizar marcadores no mapa
     pendentes.forEach(oc => {
         L.circleMarker([oc.coords.lat, oc.coords.lng], {
             radius: 10, fillColor: '#facc15', color: '#fff', weight: 2, fillOpacity: 0.9
-        }).addTo(mapa).bindPopup(`${nomesTipos[oc.tipo]}<br>${oc.endereco}<br>💰 R$ ${oc.valor.toFixed(2)}`);
+        }).addTo(mapa).bindPopup(`${nomesTipos[oc.tipo]}<br>${oc.endereco}<br>R$ ${oc.valor.toFixed(2)}`);
     });
 }
-function aceitarServico(indiceReal) {
-    const oc = listaOcorrencias[indiceReal];
-    if (!confirm(`Confirmar aceite?\n📍 ${oc.endereco}\n💰 Valor: R$ ${oc.valor.toFixed(2)}\n📞 Contato: ${oc.telefone}`)) return;
+function aceitarServico(i) {
+    const oc = listaOcorrencias[i];
+    if (!confirm(`Confirmar aceite?\n📍 ${oc.endereco}\n💰 R$ ${oc.valor.toFixed(2)}\n📞 ${oc.telefone}`)) return;
     
-    listaOcorrencias[indiceReal].status = 'aceito';
-    listaOcorrencias[indiceReal].aceitoPor = usuarioApoio;
-    listaOcorrencias[indiceReal].idApoio = usuarioApoio.id;
-    
+    listaOcorrencias[i].status = 'aceito';
+    listaOcorrencias[i].aceitoPor = { nome: usuarioLogado.nome, id: usuarioLogado.id };
     salvarDados();
-    alert(`✅ SERVIÇO ACEITO!\n\nContato: ${oc.telefone}\nLocal: ${oc.endereco}\nValor: R$ ${oc.valor.toFixed(2)}\nPIX para recebimento:\n${usuarioApoio.pix}\n\nBom trabalho, ${usuarioApoio.nome.split(' ')[0]}! 🛡️`);
     
-    carregarServicosParaApoio();
+    alert(`✅ SERVIÇO ACEITO!\n\n📞 Contato: ${oc.telefone}\n📍 Local: ${oc.endereco}\n💰 Valor: R$ ${oc.valor.toFixed(2)}\n💳 Seu PIX: ${usuarioLogado.pix}\n\nBom trabalho, ${usuarioLogado.nome.split(' ')[0]}! 🛡️`);
+    
+    carregarServicosApoio();
 }
 
-// ===== SALVAR DADOS =====
+// ===== SALVAR =====
 function salvarDados() {
     localStorage.setItem('listaOcorrencias', JSON.stringify(listaOcorrencias));
     localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
 }
 
-// ===== ATUALIZAÇÃO AUTOMÁTICA =====
+// ===== SINCRONIZAÇÃO EM TEMPO REAL =====
 setInterval(() => {
-    const dadosServicos = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
-    const dadosCadastros = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
+    const servicosAtuais = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
+    const cadastrosAtuais = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
     
-    if (JSON.stringify(dadosServicos) !== JSON.stringify(listaOcorrencias)) {
-        listaOcorrencias = dadosServicos;
-        if (usuarioApoio) carregarServicosParaApoio();
+    if (JSON.stringify(servicosAtuais) !== JSON.stringify(listaOcorrencias)) {
+        listaOcorrencias = servicosAtuais;
         if (document.getElementById('tela-admin').classList.contains('ativa')) {
             atualizarEstatisticas();
-            if (!document.getElementById('conteudo-servicos').classList.contains('oculto')) {
-                renderizarListaServicosAdmin();
-            }
+            if (!document.getElementById('conteudo-servicos').classList.contains('oculto')) renderizarServicosAdmin();
         }
+        if (usuarioLogado) carregarServicosApoio();
     }
-    if (JSON.stringify(dadosCadastros) !== JSON.stringify(cadastrosApoio)) {
-        cadastrosApoio = dadosCadastros;
-        atualizarEstatisticas();
-        if (!document.getElementById('conteudo-cadastros').classList.contains('oculto')) {
-            renderizarListaCadastrosAdmin();
+    
+    if (JSON.stringify(cadastrosAtuais) !== JSON.stringify(cadastrosApoio)) {
+        cadastrosApoio = cadastrosAtuais;
+        if (document.getElementById('tela-admin').classList.contains('ativa')) {
+            atualizarEstatisticas();
+            if (!document.getElementById('conteudo-apoios').classList.contains('oculto')) renderizarApoiosAdmin();
         }
     }
 }, 2000);

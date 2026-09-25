@@ -45,8 +45,6 @@
             background: transparent; border: none; color: #94a3b8; font-size: 15px;
             cursor: pointer; padding: 8px 12px; margin-bottom: 10px; display: inline-block;
         }
-        #mapa { height: 220px; border-radius: 12px; margin-bottom: 15px; z-index: 1; }
-        #mapa-deslocamento { height: 200px; border-radius: 12px; margin-bottom: 10px; z-index: 1; }
         .ocorrencia-card, .cadastro-card {
             background: #0f172a; border-radius: 14px; padding: 15px; margin-bottom: 12px;
             border-left: 4px solid #facc15;
@@ -55,13 +53,11 @@
         .ocorrencia-tipo { font-weight: bold; font-size: 15px; }
         .ocorrencia-valor { font-size: 17px; font-weight: bold; color: #4ade80; }
         .ocorrencia-dados { font-size: 13px; color: #cbd5e1; margin: 6px 0; line-height: 1.5; }
-        .distancia { font-size: 12px; color: #60a5fa; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
         .botao-aceitar {
             width: 100%; padding: 13px; border: none; border-radius: 10px;
             background: linear-gradient(90deg, #16a34a, #15803d); color: white;
             font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
-        .botao-aceitar:disabled { background: #334155; cursor: not-allowed; opacity: 0.6; }
         .sem-itens { text-align: center; padding: 30px 20px; color: #64748b; font-size: 14px; }
         .navegacao-abas {
             display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;
@@ -71,7 +67,7 @@
         .estatisticas { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; justify-content: center; }
         .estat {
             flex: 1; min-width: 130px; padding: 15px 10px; border-radius: 12px;
-            text-align: center; font-weight: bold;
+            text-align: center; font-weight: bold; cursor: pointer;
         }
         .estat span { font-size: 22px; display: block; margin-bottom: 3px; }
         .estat-pend { background: rgba(250, 204, 21, 0.15); color: #facc15; }
@@ -88,36 +84,24 @@
         .foto-preview img { width:100%; height:100%; object-fit:cover; }
         .linha-cadastro { display:flex; gap:12px; align-items:flex-start; }
         .oculto { display:none !important; }
-        .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0; }
-        .foto-item { aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; background: #334155; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 24px; color: #94a3b8; cursor: pointer; padding: 8px; }
-        .foto-item img { width: 100%; height: 100%; object-fit: cover; }
-        .foto-item.pendente-foto { border: 2px dashed #64748b; }
-        .foto-item.enviada { border: 2px solid #4ade80; position: relative; }
-        .foto-item .coords { font-size: 9px; color: #94a3b8; margin-top: 2px; text-align: center; word-break: break-all; padding: 2px; }
-        .progresso { height: 8px; background: #334155; border-radius: 4px; margin: 10px 0; overflow: hidden; }
-        .progresso-barra { height: 100%; background: linear-gradient(90deg, #16a34a, #4ade80); width: 0%; transition: width 0.3s; }
-        .etapa { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; margin-bottom: 8px; background: #1e293b; transition: all 0.3s; }
-        .etapa.concluida { border-left: 3px solid #4ade80; opacity: 1; background: rgba(22, 163, 74, 0.1); }
-        .etapa.pendente-etapa { border-left: 3px solid #64748b; opacity: 0.7; }
-        .etapa-icone { font-size: 20px; }
-        .info-coords { font-size: 11px; color: #94a3b8; margin-top: 4px; }
-        .editor-relatorio { background: #1e293b; border: 1px solid #475569; border-radius: 10px; padding: 15px; margin: 10px 0; }
-        .editor-relatorio h4 { color: #facc15; margin-bottom: 10px; font-size: 14px; }
-        .fotos-relatorio { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
-        .foto-miniatura { width: 80px; height: 80px; border-radius: 8px; overflow: hidden; cursor: pointer; border: 2px solid transparent; }
+        .fotos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
+        .foto-miniatura { width: 100%; aspect-ratio: 1/1; border-radius: 8px; overflow: hidden; cursor: pointer; border: 3px solid transparent; }
         .foto-miniatura.selecionada { border-color: #facc15; }
         .foto-miniatura img { width: 100%; height: 100%; object-fit: cover; }
+        .editor-relatorio { background: #1e293b; border: 1px solid #475569; border-radius: 10px; padding: 15px; margin: 10px 0; }
+        .editor-relatorio h4 { color: #facc15; margin-bottom: 10px; font-size: 14px; }
         .painel-envio { background: rgba(250, 204, 21, 0.08); border: 1px solid #facc15; border-radius: 12px; padding: 15px; margin-top: 15px; }
         .painel-envio h4 { color: #facc15; margin-bottom: 12px; }
         .opcoes-exportacao { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
         .visualizacao-relatorio { background: white; color: #000; padding: 25px; border-radius: 12px; margin: 15px 0; }
-        .visualizacao-relatorio h2 { color: #eab308; border-bottom: 2px solid #eab308; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
-        .visualizacao-relatorio .secao { margin-bottom: 12px; }
-        .visualizacao-relatorio .etiqueta { font-weight: bold; color: #475569; display: inline-block; min-width: 120px; }
+        .visualizacao-relatorio h2 { color: #eab308; border-bottom: 2px solid #eab308; padding-bottom: 10px; margin-bottom: 20px; text-align: center; font-size: 18px; }
+        .secao { margin-bottom: 12px; }
+        .etiqueta { font-weight: bold; color: #475569; display: inline-block; min-width: 120px; }
         .grid-fotos-relatorio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
         .grid-fotos-relatorio img { width: 100%; border-radius: 6px; }
         .check-item { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
         .check-item input[type="checkbox"] { width: auto; margin: 0; }
+        .info-coords { font-size: 11px; color: #94a3b8; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -132,7 +116,7 @@
         <button class="botao-grande botao-amarelo" onclick="irParaSenhaAdmin()">
             ⚙️ Painel Administrativo
         </button>
-        <button class="botao-grande botao-roxo" onclick="irParaAcessoApoio()">
+        <button class="botao-grande botao-roxo" onclick="alert('Área do Apoio — Em desenvolvimento')">
             🛵 Área do Apoio
         </button>
     </div>
@@ -149,6 +133,7 @@
         <p id="erro-senha" style="color:#f87171; margin-top:10px; display:none; text-align:center;">Senha incorreta!</p>
     </div>
 </div>
+
 <!-- Painel Administrativo -->
 <div id="tela-admin" class="tela">
     <button class="botao-voltar" onclick="voltarInicio()">← Sair</button>
@@ -164,13 +149,13 @@
     </div>
     
     <div class="estatisticas">
-        <div class="estat estat-pend" onclick="filtrarServicos('pendente')" style="cursor:pointer;">
+        <div class="estat estat-pend" onclick="filtrarServicos('pendente')">
             <span id="qtd-pend">0</span>Pendentes
         </div>
-        <div class="estat estat-aceit" onclick="filtrarServicos('aceito')" style="cursor:pointer;">
+        <div class="estat estat-aceit" onclick="filtrarServicos('aceito')">
             <span id="qtd-aceit">0</span>Aceitos
         </div>
-        <div class="estat estat-ativ" onclick="filtrarServicos('todos')" style="cursor:pointer;">
+        <div class="estat estat-ativ" onclick="filtrarServicos('todos')">
             <span id="qtd-total">0</span>Total
         </div>
         <div class="estat estat-pendaprov">
@@ -236,7 +221,6 @@
     <h2 style="color:#facc15; margin-bottom:15px;">📝 Editar & Enviar Relatório</h2>
     
     <div id="form-edicao-relatorio">
-        <!-- SEÇÃO 1: CAMPOS A INCLUIR -->
         <div class="caixa">
             <h3>✅ Campos a Incluir no Relatório</h3>
             <label class="check-item">
@@ -274,58 +258,51 @@
             <p style="font-size:12px; color:#f97316; margin-top:8px;">ℹ️ O valor NÃO aparece no envio pelo WhatsApp</p>
         </div>
         
-        <!-- SEÇÃO 2: DADOS DO ATENDIMENTO -->
         <div class="caixa">
             <h3>📍 Dados do Atendimento</h3>
             <label>Tipo de Serviço</label>
             <input type="text" id="edit-tipo-servico">
-            
             <label>Solicitante / Responsável</label>
             <input type="text" id="edit-solicitante">
-            
             <label>Endereço / Local</label>
             <textarea id="edit-endereco" rows="2"></textarea>
-            
             <label>Coordenadas</label>
             <input type="text" id="edit-coords">
-            
             <label>Valor R$ (apenas para controle interno)</label>
             <input type="number" id="edit-valor" step="0.01">
-            
             <label>Horário de Chegada</label>
             <input type="text" id="edit-chegada">
-            
             <label>Data/Hora de Conclusão</label>
             <input type="text" id="edit-concluida">
         </div>
         
-        <!-- SEÇÃO 3: HISTÓRICO EDITÁVEL -->
         <div class="caixa editor-relatorio">
             <h4>📝 Histórico / Relatório — Editar abaixo:</h4>
-            <textarea id="edit-historio" rows="8" placeholder="Acrescente ou altere observações, detalhes, informações complementares..."></textarea>
+            <textarea id="edit-historio" rows="6" placeholder="Detalhes, observações, informações complementares..."></textarea>
         </div>
         
-        <!-- SEÇÃO 4: FOTOS — ADMINISTRADOR ESCOLHE QUAIS ENVIAR -->
         <div class="caixa">
-            <h3>📸 Fotos Enviadas pelo Apoio — Selecione quais encaminhar</h3>
+            <h3>📸 Fotos — Selecione quais encaminhar</h3>
             <p style="font-size:12px; color:#94a3b8; margin-bottom:8px;">Clique para selecionar/desmarcar — apenas as marcadas serão enviadas</p>
-            <div class="fotos-grid" id="grid-fotos-edicao"></div>
+            <div class="fotos-grid" id="grid-fotos-edicao">
+                <p style="grid-column:1/-1; color:#94a3b8;">Simulação — após o Apoio enviar, aparecerão aqui</p>
+            </div>
         </div>
         
-        <!-- SEÇÃO 5: VISUALIZAÇÃO EM TEMPO REAL -->
         <div class="visualizacao-relatorio" id="area-visualizacao">
             <h2>🛡️ RELATÓRIO DE ATENDIMENTO — DRTRACK Conecta</h2>
-            <div id="conteudo-visualizacao"></div>
+            <div id="conteudo-visualizacao">
+                <p style="text-align:center; color:#666;">Preencha os dados acima para ver a pré-visualização...</p>
+            </div>
         </div>
         
-        <!-- SEÇÃO 6: AÇÕES -->
         <div class="painel-envio">
             <h4>📤 Salvar e Enviar</h4>
             <div class="opcoes-exportacao">
                 <button class="botao-pequeno botao-azul" onclick="salvarComoPDF()">📄 Salvar PDF</button>
                 <button class="botao-pequeno botao-amarelo" onclick="salvarComoJPEG()">🖼️ Salvar JPEG</button>
                 <button class="botao-pequeno botao-whatsapp" onclick="enviarPorWhatsAppRelatorio()">📲 ENVIAR WHATSAPP</button>
-                <button class="botao-pequeno botao-verde" onclick="salvarAlteracoes()">💾 Salvar Alterações</button>
+                <button class="botao-pequeno botao-verde" onclick="salvarAlteracoes()">💾 Salvar</button>
             </div>
         </div>
     </div>
@@ -420,14 +397,14 @@ function trocarAbaAdmin(aba) {
 
 function filtrarServicos(filtro) {
     filtroAtual = filtro;
-    const nomesFiltro = { pendente: 'Pendentes', aceito: 'Aceitos', todos: 'Todos' };
+    const nomesFiltro = { pendente: 'Pendentes', aceito: 'Aceitos/Concluídos', todos: 'Todos' };
     document.getElementById('filtro-ativo').textContent = nomesFiltro[filtro];
     renderizarServicosAdmin();
 }
 
 function atualizarEstatisticas() {
     document.getElementById('qtd-pend').textContent = listaOcorrencias.filter(o => o.status === 'pendente').length;
-    document.getElementById('qtd-aceit').textContent = listaOcorrencias.filter(o => o.status === 'aceito').length;
+    document.getElementById('qtd-aceit').textContent = listaOcorrencias.filter(o => o.status === 'aceito' || o.status === 'concluido').length;
     document.getElementById('qtd-total').textContent = listaOcorrencias.length;
     document.getElementById('qtd-pendaprov').textContent = cadastrosApoio.filter(c => c.aprovado === false).length;
 }
@@ -464,16 +441,16 @@ function lancarOcorrencia() {
         status: 'pendente',
         aceitoPor: null,
         horarioAceite: null,
-        horarioChegada: null,
+        horarioChegada: '--/--/---- --:--',
         fotos: [],
         fotosCoordenadas: [],
         relatorio: '',
-        dataConclusao: null,
+        dataConclusao: '--/--/---- --:--',
         observacoesAdmin: ''
     });
     
     salvarDados();
-    alert('✅ Lançado com sucesso! Aparece agora para os Apoios.');
+    alert('✅ Lançado com sucesso!');
     document.getElementById('endereco-serv').value = '';
     document.getElementById('valor-serv').value = '';
     document.getElementById('coords-serv').value = '';
@@ -502,9 +479,9 @@ function renderizarServicosAdmin() {
     cont.innerHTML = listaFiltrada.map((oc, i) => {
         const indiceReal = listaOcorrencias.indexOf(oc);
         let resumo = '';
-        if (oc.horarioChegada) resumo += `📍 Chegada: ${oc.horarioChegada}<br>`;
-        if (oc.dataConclusao) resumo += `✅ Concluído: ${oc.dataConclusao}<br>`;
-        if (oc.fotos && oc.fotos.length > 0) resumo += `📸 ${oc.fotos.length} foto(s) enviada(s) pelo Apoio<br>`;
+        if (oc.horarioChegada && oc.horarioChegada !== '--/--/---- --:--') resumo += `📍 Chegada: ${oc.horarioChegada}<br>`;
+        if (oc.dataConclusao && oc.dataConclusao !== '--/--/---- --:--') resumo += `✅ Concluído: ${oc.dataConclusao}<br>`;
+        if (oc.fotos && oc.fotos.length > 0) resumo += `📸 ${oc.fotos.length} foto(s) enviada(s)<br>`;
         if (oc.relatorio) resumo += `📝 Relatório disponível`;
         
         return `
@@ -529,47 +506,40 @@ function renderizarServicosAdmin() {
     atualizarEstatisticas();
 }
 
-// ========== EDIÇÃO E RELATÓRIO COMPLETO ==========
 function abrirEdicaoRelatorio(indice) {
     indiceEdicao = indice;
     const oc = listaOcorrencias[indice];
-    fotosSelecionadasParaEnvio = oc.fotos ? oc.fotos.map((_, idx) => idx) : [];
+    fotosSelecionadasParaEnvio = oc.fotos && oc.fotos.length > 0 ? oc.fotos.map((_, idx) => idx) : [];
     
-    // Preencher TODOS os campos
     document.getElementById('edit-tipo-servico').value = oc.descricaoExibicao || nomesTipos[oc.tipo] || '';
     document.getElementById('edit-solicitante').value = oc.solicitante ? `${oc.solicitante} — ${oc.telefone}` : '';
     document.getElementById('edit-endereco').value = oc.endereco || '';
     document.getElementById('edit-coords').value = oc.coords ? `${oc.coords.lat.toFixed(6)}, ${oc.coords.lng.toFixed(6)}` : '';
     document.getElementById('edit-valor').value = oc.valor || 0;
-    document.getElementById('edit-chegada').value = oc.horarioChegada || 'Não registrada';
-    document.getElementById('edit-concluida').value = oc.dataConclusao || 'Não registrada';
+    document.getElementById('edit-chegada').value = oc.horarioChegada || '--/--/---- --:--';
+    document.getElementById('edit-concluida').value = oc.dataConclusao || '--/--/---- --:--';
     
-    // Relatório combinado
     let relatorioCompleto = '';
     if (oc.relatorio) relatorioCompleto += `--- Relatório do Apoio ---\n${oc.relatorio}\n\n`;
     if (oc.observacoesAdmin) relatorioCompleto += `--- Observações Administrativas ---\n${oc.observacoesAdmin}`;
     document.getElementById('edit-historio').value = relatorioCompleto;
     
-    // FOTOS ENVIADAS PELO APOIO — administrador escolhe
     const gridFotos = document.getElementById('grid-fotos-edicao');
     if (oc.fotos && oc.fotos.length > 0) {
         gridFotos.innerHTML = oc.fotos.map((foto, idx) => `
-            <div class="foto-miniatura selecionada" id="foto-envio-${idx}" onclick="alternarSelecaoFoto(${idx})">
+            <div class="foto-miniatura ${fotosSelecionadasParaEnvio.includes(idx) ? 'selecionada' : ''}" 
+                 id="foto-envio-${idx}" onclick="alternarSelecaoFoto(${idx})">
                 <img src="${foto}" alt="Foto ${idx+1}">
             </div>
         `).join('');
     } else {
-        gridFotos.innerHTML = '<p style="grid-column:1/-1; color:#94a3b8;">Nenhuma foto enviada pelo Apoio ainda</p>';
+        gridFotos.innerHTML = '<p style="grid-column:1/-1; color:#94a3b8;">Nenhuma foto enviada ainda</p>';
     }
     
-    // Atualizar visualização
     atualizarVisualizacaoRelatorio();
-    
-    // Mudar de tela
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-editar-relatorio').classList.add('ativa');
     
-    // Vincular eventos
     ['incluir-tipo','incluir-solicitante','incluir-endereco','incluir-coords','incluir-chegada','incluir-concluida','incluir-historio','incluir-fotos'].forEach(id => {
         document.getElementById(id).onchange = atualizarVisualizacaoRelatorio;
     });
@@ -580,7 +550,226 @@ function abrirEdicaoRelatorio(indice) {
 
 function alternarSelecaoFoto(idx) {
     const el = document.getElementById(`foto-envio-${idx}`);
+    if (!el) return;
     const pos = fotosSelecionadasParaEnvio.indexOf(idx);
     if (pos === -1) {
         fotosSelecionadasParaEnvio.push(idx);
-        el.classList.add(
+        el.classList.add('selecionada');
+    } else {
+        fotosSelecionadasParaEnvio.splice(pos, 1);
+        el.classList.remove('selecionada');
+    }
+    atualizarVisualizacaoRelatorio();
+}
+
+function atualizarVisualizacaoRelatorio() {
+    const incTipo = document.getElementById('incluir-tipo').checked;
+    const incSolic = document.getElementById('incluir-solicitante').checked;
+    const incEnd = document.getElementById('incluir-endereco').checked;
+    const incCoords = document.getElementById('incluir-coords').checked;
+    const incCheg = document.getElementById('incluir-chegada').checked;
+    const incConc = document.getElementById('incluir-concluida').checked;
+    const incHist = document.getElementById('incluir-historio').checked;
+    const incFoto = document.getElementById('incluir-fotos').checked;
+    
+    const tipo = document.getElementById('edit-tipo-servico').value;
+    const solicitante = document.getElementById('edit-solicitante').value;
+    const endereco = document.getElementById('edit-endereco').value;
+    const coords = document.getElementById('edit-coords').value;
+    const chegada = document.getElementById('edit-chegada').value;
+    const concluida = document.getElementById('edit-concluida').value;
+    const historico = document.getElementById('edit-historio').value;
+    
+    const oc = listaOcorrencias[indiceEdicao];
+    
+    let html = '';
+    if (incTipo) html += `<div class="secao"><span class="etiqueta">Serviço:</span> ${tipo}</div>`;
+    if (incSolic) html += `<div class="secao"><span class="etiqueta">Solicitante:</span> ${solicitante}</div>`;
+    if (incEnd) html += `<div class="secao"><span class="etiqueta">Local:</span> ${endereco}</div>`;
+    if (incCoords) html += `<div class="secao"><span class="etiqueta">Coordenadas:</span> ${coords}</div>`;
+    if (incCheg) html += `<div class="secao"><span class="etiqueta">Chegada:</span> ${chegada}</div>`;
+    if (incConc) html += `<div class="secao"><span class="etiqueta">Conclusão:</span> ${concluida}</div>`;
+    if (incHist && historico) html += `<div class="secao"><span class="etiqueta">Relatório:</span><br><br>${historico.replace(/\n/g, '<br>')}</div>`;
+    
+    if (incFoto && oc && oc.fotos && fotosSelecionadasParaEnvio.length > 0) {
+        html += `<div class="secao"><strong>📸 Fotos Anexadas:</strong><br><br><div class="grid-fotos-relatorio">`;
+        fotosSelecionadasParaEnvio.forEach(idx => {
+            html += `<img src="${oc.fotos[idx]}" alt="Foto ${idx+1}">`;
+        });
+        html += `</div></div>`;
+    }
+    
+    html += `<div style="margin-top:30px; padding-top:15px; border-top:1px solid #ddd; font-size:12px; color:#666; text-align:center;">
+        Relatório gerado por DRTRACK Conecta — Segurança e Apoio<br>
+        📞 (11) 99494-4410
+    </div>`;
+    
+    document.getElementById('conteudo-visualizacao').innerHTML = html || '<p style="text-align:center; color:#666;">Preencha os dados acima...</p>';
+}
+
+function salvarAlteracoes() {
+    if (indiceEdicao === -1) return;
+    const oc = listaOcorrencias[indiceEdicao];
+    
+    oc.descricaoExibicao = document.getElementById('edit-tipo-servico').value;
+    oc.solicitante = document.getElementById('edit-solicitante').value.split('—')[0].trim();
+    oc.telefone = document.getElementById('edit-solicitante').value.split('—')[1]?.trim() || oc.telefone;
+    oc.endereco = document.getElementById('edit-endereco').value;
+    oc.valor = parseFloat(document.getElementById('edit-valor').value) || 0;
+    oc.horarioChegada = document.getElementById('edit-chegada').value;
+    oc.dataConclusao = document.getElementById('edit-concluida').value;
+    
+    const textoHist = document.getElementById('edit-historio').value;
+    if (textoHist.includes('--- Observações Administrativas ---')) {
+        const partes = textoHist.split('--- Observações Administrativas ---');
+        oc.relatorio = partes[0].replace('--- Relatório do Apoio ---', '').trim();
+        oc.observacoesAdmin = partes[1] || '';
+    } else {
+        oc.observacoesAdmin = textoHist;
+    }
+    
+    salvarDados();
+    alert('✅ Alterações salvas!');
+    atualizarVisualizacaoRelatorio();
+}
+
+async function salvarComoPDF() {
+    salvarAlteracoes();
+    const { jsPDF } = window.jspdf;
+    const area = document.getElementById('area-visualizacao');
+    const canvas = await html2canvas(area, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const w = pdf.internal.pageSize.getWidth();
+    const h = (canvas.height * w) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 10, 10, w - 20, h);
+    pdf.save(`relatorio-drtrack-${Date.now()}.pdf`);
+    alert('✅ PDF salvo!');
+}
+
+async function salvarComoJPEG() {
+    salvarAlteracoes();
+    const area = document.getElementById('area-visualizacao');
+    const canvas = await html2canvas(area, { scale: 2, useCORS: true });
+    const link = document.createElement('a');
+    link.download = `relatorio-drtrack-${Date.now()}.jpg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.9);
+    link.click();
+    alert('✅ JPEG salvo!');
+}
+
+function enviarPorWhatsAppRelatorio() {
+    salvarAlteracoes();
+    const incTipo = document.getElementById('incluir-tipo').checked;
+    const incSolic = document.getElementById('incluir-solicitante').checked;
+    const incEnd = document.getElementById('incluir-endereco').checked;
+    const incCoords = document.getElementById('incluir-coords').checked;
+    const incCheg = document.getElementById('incluir-chegada').checked;
+    const incConc = document.getElementById('incluir-concluida').checked;
+    const incHist = document.getElementById('incluir-historio').checked;
+    const incFoto = document.getElementById('incluir-fotos').checked;
+    
+    const tipo = document.getElementById('edit-tipo-servico').value;
+    const solicitante = document.getElementById('edit-solicitante').value;
+    const endereco = document.getElementById('edit-endereco').value;
+    const coords = document.getElementById('edit-coords').value;
+    const chegada = document.getElementById('edit-chegada').value;
+    const concluida = document.getElementById('edit-concluida').value;
+    const historico = document.getElementById('edit-historio').value;
+    const oc = listaOcorrencias[indiceEdicao];
+    
+    let msg = `🛡️ *RELATÓRIO DE ATENDIMENTO — DRTRACK Conecta*\n\n`;
+    if (incTipo) msg += `📋 *Serviço:* ${tipo}\n`;
+    if (incSolic) msg += `👤 *Solicitante:* ${solicitante}\n`;
+    if (incEnd) msg += `📍 *Local:* ${endereco}\n`;
+    if (incCoords) msg += `🌐 *Coordenadas:* ${coords}\n`;
+    if (incCheg) msg += `📍 *Chegada:* ${chegada}\n`;
+    if (incConc) msg += `✅ *Conclusão:* ${concluida}\n`;
+    if (incHist && historico) msg += `\n📝 *Relatório:*\n${historico}\n`;
+    if (incFoto && oc && oc.fotos && fotosSelecionadasParaEnvio.length > 0) {
+        msg += `\n📸 *Fotos selecionadas:* ${fotosSelecionadasParaEnvio.length} foto(s)\n`;
+        fotosSelecionadasParaEnvio.forEach(idx => {
+            if (oc.fotosCoordenadas && oc.fotosCoordenadas[idx]) {
+                msg += `Foto ${idx+1}: ${oc.fotosCoordenadas[idx]}\n`;
+            }
+        });
+    }
+    msg += `\n—\n*DRTRACK Conecta — Segurança e Apoio*\n📞 (11) 99494-4410`;
+    
+    const numDestino = formatarNumeroWhatsapp(document.getElementById('whatsapp-destino').value || '5511994944410');
+    window.open(`https://wa.me/${numDestino}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function reabrir(i) {
+    listaOcorrencias[i].status = 'pendente';
+    salvarDados(); renderizarServicosAdmin();
+}
+function concluir(i) {
+    listaOcorrencias[i].status = 'concluido';
+    listaOcorrencias[i].dataConclusao = new Date().toLocaleString('pt-BR');
+    salvarDados(); renderizarServicosAdmin();
+}
+function excluirServ(i) {
+    if (confirm('Tem certeza? Isso apaga permanentemente!')) {
+        listaOcorren
+cias.splice(i, 1);
+        salvarDados(); renderizarServicosAdmin();
+    }
+}
+
+function renderizarApoiosAdmin() {
+    const cont = document.getElementById('lista-apoios-admin');
+    if (!cadastrosApoio.length) {
+        cont.innerHTML = '<p class="sem-itens">Nenhum cadastro recebido.<br>Quando alguém se cadastrar, aparecerá aqui.</p>';
+        return;
+    }
+    cont.innerHTML = cadastrosApoio.map((apo, i) => `
+    <div class="ocorrencia-card">
+        <div class="linha-cadastro">
+            <div class="foto-preview">${apo.foto ? `<img src="${apo.foto}">` : '👤'}</div>
+            <div style="flex:1;">
+                <strong>${apo.nome}</strong><br>
+                📱 ${apo.telefone}<br>
+                🚗 Veículo: ${apo.veiculo || 'Não informado'}<br>
+                🔑 PIX: ${apo.pix}<br>
+                <span class="etiqueta-status ${apo.aprovado ? 'aprovado' : 'pend-aprov'}">
+                    ${apo.aprovado ? '✅ APROVADO' : '⏳ AGUARDANDO'}
+                </span>
+            </div>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
+            ${!apo.aprovado ? `<button class="botao-pequeno botao-verde" onclick="aprovar(${i})">✅ Aprovar</button>` : ''}
+            ${apo.aprovado ? `<button class="botao-pequeno botao-cinza" onclick="suspender(${i})">⚠️ Suspender</button>` : ''}
+            <button class="botao-pequeno botao-azul" onclick="elogiar(${i})">⭐ Elogiar</button>
+            <button class="botao-pequeno botao-amarelo" onclick="gorjeta(${i})">💰 Gorjeta</button>
+            <button class="botao-pequeno botao-vermelho" onclick="excluirApoio(${i})">🗑️ Excluir</button>
+        </div>
+    </div>`).join('');
+}
+
+function aprovar(i) { 
+    cadastrosApoio[i].aprovado = true; 
+    salvarDados(); renderizarApoiosAdmin(); atualizarEstatisticas(); 
+    alert(`✅ ${cadastrosApoio[i].nome} foi APROVADO!`);
+}
+function suspender(i) { 
+    cadastrosApoio[i].aprovado = false; 
+    salvarDados(); renderizarApoiosAdmin(); atualizarEstatisticas();
+    alert(`⚠️ ${cadastrosApoio[i].nome} foi suspenso.`);
+}
+function elogiar(i) { 
+    alert(`⭐ Elogio registrado para ${cadastrosApoio[i].nome}!`); 
+}
+function gorjeta(i) { 
+    alert(`💰 Gorjeta para ${cadastrosApoio[i].nome}\nPIX: ${cadastrosApoio[i].pix}`); 
+}
+function excluirApoio(i) {
+    if (confirm('Excluir este cadastro permanentemente?')) { 
+        cadastrosApoio.splice(i, 1); 
+        salvarDados(); renderizarApoiosAdmin(); atualizarEstatisticas();
+    }
+}
+</script>
+
+</body>
+</html>

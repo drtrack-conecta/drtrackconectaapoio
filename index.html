@@ -37,7 +37,7 @@
         .caixa h2 { font-size: 18px; margin-bottom: 15px; color: #facc15; }
         .caixa h3 { font-size: 15px; margin-bottom: 12px; color: #cbd5e1; }
         label { display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1; }
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 13px;
             border-radius: 10px;
@@ -47,7 +47,8 @@
             font-size: 15px;
             margin-bottom: 12px;
         }
-        input:focus, select:focus { outline: 2px solid #facc15; }
+        textarea { min-height: 100px; resize: vertical; }
+        input:focus, select:focus, textarea:focus { outline: 2px solid #facc15; }
         .botao-voltar {
             background: transparent;
             border: none;
@@ -58,7 +59,7 @@
             margin-bottom: 10px;
             display: inline-block;
         }
-        #mapa { height: 200px; border-radius: 12px; margin-bottom: 15px; z-index: 1; }
+        #mapa { height: 220px; border-radius: 12px; margin-bottom: 15px; z-index: 1; }
         .ocorrencia-card, .cadastro-card {
             background: #0f172a;
             border-radius: 14px;
@@ -84,6 +85,7 @@
             cursor: pointer;
             margin-top: 10px;
         }
+        .botao-aceitar:disabled { background: #334155; cursor: not-allowed; opacity: 0.6; }
         .sem-itens { text-align: center; padding: 30px 20px; color: #64748b; font-size: 14px; }
         .navegacao-abas {
             display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;
@@ -116,6 +118,17 @@
         .oculto { display:none !important; }
         .aviso { padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; }
         .aviso-amarelo { background: rgba(250, 204, 21, 0.15); border: 1px solid #facc1540; color: #fef3c7; }
+        .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0; }
+        .foto-item { aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #94a3b8; }
+        .foto-item img { width: 100%; height: 100%; object-fit: cover; }
+        .foto-item.pendente-foto { border: 2px dashed #64748b; cursor: pointer; }
+        .foto-item.enviada { border: 2px solid #4ade80; }
+        .progresso { height: 8px; background: #334155; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+        .progresso-barra { height: 100%; background: linear-gradient(90deg, #16a34a, #4ade80); width: 0%; transition: width 0.3s; }
+        .etapa { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; margin-bottom: 8px; background: #1e293b; }
+        .etapa.concluida { border-left: 3px solid #4ade80; opacity: 1; }
+        .etapa.pendente-etapa { border-left: 3px solid #64748b; opacity: 0.7; }
+        .etapa-icone { font-size: 20px; }
     </style>
 </head>
 <body>
@@ -154,7 +167,6 @@
     
     <h2 style="text-align:center; color:#facc15; margin-bottom:15px;">⚙️ Painel de Controle</h2>
     
-    <!-- Estatísticas -->
     <div class="estatisticas">
         <div class="estat estat-pend"><span id="qtd-pend">0</span>Pendentes</div>
         <div class="estat estat-aceit"><span id="qtd-aceit">0</span>Aceitos</div>
@@ -162,14 +174,12 @@
         <div class="estat estat-pendaprov"><span id="qtd-pendaprov">0</span>Aguardando</div>
     </div>
     
-    <!-- Abas -->
     <div class="navegacao-abas">
         <div class="aba ativa" data-aba="lancar" onclick="trocarAbaAdmin('lancar')">➕ Lançar</div>
         <div class="aba" data-aba="servicos" onclick="trocarAbaAdmin('servicos')">📊 Serviços</div>
         <div class="aba" data-aba="apoios" onclick="trocarAbaAdmin('apoios')">👥 Apoios</div>
     </div>
     
-    <!-- Aba: Lançar -->
     <div id="conteudo-lancar">
         <div class="caixa">
             <h3>Lançar Nova Ocorrência</h3>
@@ -181,8 +191,8 @@
             <input type="text" id="endereco-serv" placeholder="Rua, número, bairro, cidade">
             <label>Coordenadas (opcional)</label>
             <input type="text" id="coords-serv" placeholder="-23.xxxx, -46.xxxx">
-            <label>Tipo de Serviço</label>
-            <select id="tipo-serv">
+            <label>Tipo de Serviço *</label>
+            <select id="tipo-serv" onchange="mostrarCampoOutro()">
                 <option value="">Selecione...</option>
                 <option value="alarme">🚨 Verificação de Alarme</option>
                 <option value="veiculo">🚗 Verificação de Veículo</option>
@@ -190,13 +200,16 @@
                 <option value="foto">📷 Registro Fotográfico</option>
                 <option value="outro">📝 Outro</option>
             </select>
+            <div id="campo-outro-container" class="oculto">
+                <label>Especifique o serviço *</label>
+                <input type="text" id="descricao-outro" placeholder="Descreva o que precisa ser feito...">
+            </div>
             <label>Valor R$</label>
             <input type="number" id="valor-serv" placeholder="0,00" step="0.01">
             <button class="botao-grande botao-verde" onclick="lancarOcorrencia()" style="margin-top:10px;">🚀 LANÇAR</button>
         </div>
     </div>
     
-    <!-- Aba: Serviços -->
     <div id="conteudo-servicos" class="oculto">
         <h3 style="margin-bottom:12px;">📊 Todas as Ocorrências</h3>
         <div id="lista-servicos-admin">
@@ -204,11 +217,10 @@
         </div>
     </div>
     
-    <!-- Aba: Apoios — CONTROLE TOTAL -->
     <div id="conteudo-apoios" class="oculto">
         <h3 style="margin-bottom:12px;">👥 Controle de Apoios</h3>
         <div id="lista-apoios-admin">
-            <p class="sem-itens">Nenhum cadastro recebido.</p>
+            <p class="sem-itens">Nenhum cadastro recebido.<br>Quando alguém se cadastrar, aparecerá aqui.</p>
         </div>
     </div>
 </div>
@@ -223,7 +235,6 @@
         <div class="aba" data-aba="cadastro" onclick="trocarAbaAcesso('cadastro')">📝 Cadastrar</div>
     </div>
     
-    <!-- Login -->
     <div id="form-login">
         <div class="caixa">
             <label>Nome Completo</label>
@@ -235,7 +246,6 @@
         </div>
     </div>
     
-    <!-- Cadastro -->
     <div id="form-cadastro" class="oculto">
         <div class="caixa">
             <label>Nome Completo *</label>
@@ -266,7 +276,7 @@
     </div>
 </div>
 
-<!-- Tela Serviços do Apoio Logado -->
+<!-- Tela Serviços Próximos -->
 <div id="tela-apoio-logado" class="tela">
     <button class="botao-voltar" onclick="sairApoio()">← Sair</button>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -278,6 +288,91 @@
     <div id="lista-servicos-apoio">
         <p class="sem-itens">📍 Obtendo localização...<br>Permita o acesso à localização.</p>
     </div>
+</div>
+
+<!-- Tela Acompanhamento do Atendimento -->
+<div id="tela-atendimento" class="tela">
+    <button class="botao-voltar" onclick="voltarParaServicos()">← Voltar aos Serviços</button>
+    
+    <h2 style="color:#facc15; margin-bottom:15px; text-align:center;">📋 Acompanhamento do Atendimento</h2>
+    
+    <div class="caixa">
+        <div class="ocorrencia-cabecalho">
+            <span class="ocorrencia-tipo" id="atend-tipo-servico"></span>
+            <span class="ocorrencia-valor" id="atend-valor"></span>
+        </div>
+        <div class="ocorrencia-dados" id="atend-dados-local"></div>
+    </div>
+    
+    <!-- Etapas do Atendimento -->
+    <div class="caixa">
+        <h3 style="margin-bottom:15px;">📊 Progresso do Atendimento</h3>
+        
+        <div class="etapa pendente-etapa" id="etapa-deslocamento">
+            <span class="etapa-icone">🏃</span>
+            <div>
+                <strong>Deslocamento até o local</strong>
+                <div class="distancia" id="atend-distancia-atual">Calculando...</div>
+            </div>
+        </div>
+        
+        <div class="etapa pendente-etapa" id="etapa-chegada">
+            <span class="etapa-icone">📍</span>
+            <div>
+                <strong>Chegada confirmada</strong>
+                <div style="font-size:12px; color:#94a3b8;" id="horario-chegada">Aguardando...</div>
+            </div>
+        </div>
+        
+        <div class="etapa pendente-etapa" id="etapa-fotos">
+            <span class="etapa-icone">📸</span>
+            <div>
+                <strong>Registro Fotográfico (5 fotos obrigatórias)</strong>
+                <div class="progresso">
+                    <div class="progresso-barra" id="barra-fotos"></div>
+                </div>
+                <span id="contador-fotos">0 de 5 fotos</span>
+            </div>
+        </div>
+        
+        <div class="etapa pendente-etapa" id="etapa-relatorio">
+            <span class="etapa-icone">📝</span>
+            <div>
+                <strong>Relatório Final</strong>
+                <div style="font-size:12px; color:#94a3b8;">Aguardando preenchimento</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mapa de Deslocamento -->
+    <div class="caixa" id="caixa-mapa-deslocamento">
+        <h3 style="margin-bottom:10px;">🗺️ Seu Deslocamento</h3>
+        <div id="mapa-deslocamento"></div>
+    </div>
+    
+    <!-- Botão Cheguei ao Local -->
+    <button class="botao-grande botao-amarelo" id="btn-cheguei" onclick="confirmarChegada()" style="margin-bottom:15px;">
+        📍 CHEGUEI AO LOCAL
+    </button>
+    
+    <!-- Registro Fotográfico -->
+    <div class="caixa oculto" id="secao-fotos">
+        <h3>📸 Enviar Fotos do Local</h3>
+        <p style="font-size:13px; color:#94a3b8; margin-bottom:10px;">Mínimo de 5 fotos obrigatórias</p>
+        <div class="fotos-grid" id="grid-fotos"></div>
+    </div>
+    
+    <!-- Relatório -->
+    <div class="caixa oculto" id="secao-relatorio">
+        <h3>📝 Relatório de Atendimento</h3>
+        <label>Descreva o que foi encontrado e feito no local:</label>
+        <textarea id="campo-relatorio" placeholder="Detalhe o que observou, as condições do local, ações tomadas..."></textarea>
+    </div>
+    
+    <!-- Finalizar -->
+    <button class="botao-grande botao-verde" id="btn-finalizar" onclick="finalizarAtendimento()" style="margin-top:10px;" disabled>
+        ✅ FINALIZAR ATENDIMENTO
+    </button>
 </div>
 
 <script>
@@ -296,7 +391,8 @@ const nomesVeiculos = {
 };
 
 let listaOcorrencias = [], cadastrosApoio = [];
-let usuarioLogado = null, mapa = null, minhaPosicao = null;
+let usuarioLogado = null, mapa = null, mapaDesloc = null, minhaPosicao = null;
+let atendimentoAtual = null, fotosEnviadas = [], watchPosicao = null;
 
 // ===== CARREGAR DADOS =====
 function carregarDados() {
@@ -307,9 +403,27 @@ carregarDados();
 
 // ===== TELA INICIAL =====
 function voltarInicio() {
+    pararRastreamento();
     usuarioLogado = null;
+    atendimentoAtual = null;
+    fotosEnviadas = [];
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-inicio').classList.add('ativa');
+}
+
+function voltarParaServicos() {
+    pararRastreamento();
+    atendimentoAtual = null;
+    fotosEnviadas = [];
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('tela-apoio-logado').classList.add('ativa');
+    carregarServicosApoio();
+}
+
+// ===== CAMPO "OUTRO" =====
+function mostrarCampoOutro() {
+    const sel = document.getElementById('tipo-serv').value;
+    document.getElementById('campo-outro-container').classList.toggle('oculto', sel !== 'outro');
 }
 
 // ===== ACESSO ADMIN =====
@@ -350,7 +464,15 @@ function atualizarEstatisticas() {
 // ===== LANÇAR OCORRÊNCIA =====
 function lancarOcorrencia() {
     const end = document.getElementById('endereco-serv').value.trim();
-    if (!end) { alert('⚠️ Digite o endereço!'); return; }
+    const tipo = document.getElementById('tipo-serv').value;
+    if (!end || !tipo) { alert('⚠️ Preencha endereço e tipo de serviço!'); return; }
+    
+    let descricaoCompleta = nomesTipos[tipo];
+    if (tipo === 'outro') {
+        const descOutro = document.getElementById('descricao-outro').value.trim();
+        if (!descOutro) { alert('⚠️ Descreva o serviço no campo "Outro"!'); return; }
+        descricaoCompleta = `📝 ${descOutro}`;
+    }
     
     let lat = -23.5505, lng = -46.6333;
     const coordsTxt = document.getElementById('coords-serv').value.trim();
@@ -364,12 +486,19 @@ function lancarOcorrencia() {
         data: new Date().toLocaleString('pt-BR'),
         endereco: end,
         coords: { lat, lng },
-        tipo: document.getElementById('tipo-serv').value || 'outro',
+        tipo: tipo,
+        descricaoExibicao: descricaoCompleta,
+        descricaoPersonalizada: tipo === 'outro' ? document.getElementById('descricao-outro').value.trim() : '',
         solicitante: document.getElementById('nome-solic').value.trim() || 'Administrador',
         telefone: document.getElementById('fone-solic').value.trim() || 'Não informado',
         valor: parseFloat(document.getElementById('valor-serv').value) || 0,
         status: 'pendente',
-        aceitoPor: null
+        aceitoPor: null,
+        horarioAceite: null,
+        horarioChegada: null,
+        fotos: [],
+        relatorio: '',
+        dataConclusao: null
     });
     
     salvarDados();
@@ -380,6 +509,8 @@ function lancarOcorrencia() {
     document.getElementById('valor-serv').value = '';
     document.getElementById('coords-serv').value = '';
     document.getElementById('tipo-serv').value = '';
+    document.getElementById('descricao-outro').value = '';
+    document.getElementById('campo-outro-container').classList.add('oculto');
     
     atualizarEstatisticas();
     trocarAbaAdmin('servicos');
@@ -392,17 +523,37 @@ function renderizarServicosAdmin() {
         cont.innerHTML = '<p class="sem-itens">Nenhuma ocorrência lançada ainda.</p>';
         return;
     }
-    cont.innerHTML = listaOcorrencias.map((oc, i) => `
+    cont.innerHTML = listaOcorrencias.map((oc, i) => {
+        let detalhesExtras = '';
+        if (oc.status === 'concluido' && oc.fotos && oc.fotos.length > 0) {
+            detalhesExtras += `<div style="margin-top:10px;"><strong>📸 Fotos enviadas (${oc.fotos.length}):</strong><br>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:5px;">
+                ${oc.fotos.map(f => `<img src="${f}" style="width:60px; height:60px; border-radius:6px; object-fit:cover;">`).join('')}
+                </div></div>`;
+        }
+        if (oc.status === 'concluido' && oc.relatorio) {
+            detalhesExtras += `<div style="margin-top:10px;"><strong>📝 Relatório:</strong><br>
+                <p style="background:#1e293b; padding:10px; border-radius:6px; margin-top:5px; font-size:13px;">${oc.relatorio}</p></div>`;
+        }
+        if (oc.horarioChegada) {
+            detalhesExtras += `<div style="margin-top:8px; font-size:12px; color:#4ade80;">📍 Chegada: ${oc.horarioChegada}</div>`;
+        }
+        if (oc.dataConclusao) {
+            detalhesExtras += `<div style="margin-top:4px; font-size:12px; color:#60a5fa;">✅ Concluído: ${oc.dataConclusao}</div>`;
+        }
+        
+        return `
         <div class="ocorrencia-card">
             <div class="ocorrencia-cabecalho">
-                <span class="ocorrencia-tipo">${nomesTipos[oc.tipo]}</span>
+                <span class="ocorrencia-tipo">${oc.descricaoExibicao || nomesTipos[oc.tipo]}</span>
                 <span class="etiqueta-status ${oc.status}">${oc.status.toUpperCase()}</span>
             </div>
             <div class="ocorrencia-dados">
                 📍 ${oc.endereco}<br>
                 💰 R$ ${oc.valor.toFixed(2)}<br>
                 📅 ${oc.data}<br>
-                ${oc.aceitoPor ? `🛵 Aceito por: ${oc.aceitoPor.nome || oc.aceitoPor}` : '⏳ Aguardando aceite...'}
+                ${oc.aceitoPor ? `🛵 Aceito por: ${oc.aceitoPor.nome} em ${oc.horarioAceite || '--'}` : '⏳ Aguardando aceite...'}
+                ${detalhesExtras}
             </div>
             <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
                 ${oc.status === 'pendente' ? `<button class="botao-pequeno botao-cinza" onclick="reabrir(${i})">↻ Reabrir</button>` : ''}
@@ -410,17 +561,23 @@ function renderizarServicosAdmin() {
                 <button class="botao-pequeno botao-vermelho" onclick="excluirServ(${i})">🗑️ Excluir</button>
             </div>
         </div>
-    `).join('');
+    `}).join('');
     atualizarEstatisticas();
 }
 function reabrir(i) {
     listaOcorrencias[i].status = 'pendente';
     listaOcorrencias[i].aceitoPor = null;
+    listaOcorrencias[i].horarioAceite = null;
+    listaOcorrencias[i].horarioChegada = null;
+    listaOcorrencias[i].fotos = [];
+    listaOcorrencias[i].relatorio = '';
+    listaOcorrencias[i].dataConclusao = null;
     salvarDados(); renderizarServicosAdmin();
     alert('↻ Reaberto!');
 }
 function concluir(i) {
     listaOcorrencias[i].status = 'concluido';
+    listaOcorrencias[i].dataConclusao = new Date().toLocaleString('pt-BR');
     salvarDados(); renderizarServicosAdmin();
     alert('✅ Concluído!');
 }
@@ -430,7 +587,7 @@ function excluirServ(i) {
     salvarDados(); renderizarServicosAdmin();
 }
 
-// ===== GERENCIAR APOIOS — CONTROLE TOTAL =====
+// ===== GERENCIAR APOIOS =====
 function renderizarApoiosAdmin() {
     const cont = document.getElementById('lista-apoios-admin');
     if (!cadastrosApoio.length) {
@@ -528,7 +685,6 @@ function enviarCadastro() {
     }
     
     const fotoInput = document.getElementById('cad-foto');
-    let fotoBase64 = null;
     
     function finalizar(foto) {
         cadastrosApoio.push({
@@ -541,7 +697,6 @@ function enviarCadastro() {
         salvarDados();
         alert('✅ Cadastro enviado!\nAguarde a aprovação do Administrador.');
         trocarAbaAcesso('login');
-        // Limpar
         document.getElementById('cad-nome').value = '';
         document.getElementById('cad-fone').value = '';
         document.getElementById('cad-veiculo').value = '';
@@ -583,7 +738,6 @@ function logarApoio() {
         return;
     }
     
-    // LOGADO COM SUCESSO ✅
     usuarioLogado = cad;
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-apoio-logado').classList.add('ativa');
@@ -591,120 +745,15 @@ function logarApoio() {
     iniciarMapa();
 }
 function sairApoio() {
+    pararRastreamento();
     usuarioLogado = null;
     voltarInicio();
 }
 
-// ===== MAPA E SERVIÇOS PARA APOIO =====
-function iniciarMapa() {
-    if (mapa) return;
-    mapa = L.map('mapa').setView([-23.5505, -46.6333], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
-    
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            pos => {
-                minhaPosicao = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                mapa.setView([minhaPosicao.lat, minhaPosicao.lng], 13);
-                L.marker([minhaPosicao.lat, minhaPosicao.lng], {
-                    icon: L.divIcon({ html: '<div style="background:#7c3aed; width:16px; height:16px; border-radius:50%; border:3px solid white;"></div>', iconSize: [22, 22] })
-                }).addTo(mapa).bindPopup('📍 Você está aqui');
-                carregarServicosApoio();
-            },
-            () => { minhaPosicao = { lat: -23.5505, lng: -46.6333 }; carregarServicosApoio(); }
-        );
-    } else {
-        minhaPosicao = { lat: -23.5505, lng: -46.6333 };
-        carregarServicosApoio();
-    }
-}
+// ===== MAPA E SERVIÇOS =====
 function distKm(c1, c2) {
     if (!c1 || !c2) return 9999;
     const R = 6371;
     const dLat = (c2.lat - c1.lat) * Math.PI / 180;
     const dLng = (c2.lng - c1.lng) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(c1.lat*Math.PI/180)*Math.cos(c2.lat*Math.PI/180)*Math.sin(dLng/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-function distTexto(c1, c2) {
-    const km = distKm(c1, c2);
-    return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(2)} km`;
-}
-function carregarServicosApoio() {
-    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente').map(o => ({
-        ...o,
-        dTexto: distTexto(minhaPosicao, o.coords),
-        dValor: distKm(minhaPosicao, o.coords)
-    })).sort((a, b) => a.dValor - b.dValor);
-    
-    const cont = document.getElementById('lista-servicos-apoio');
-    if (!pendentes.length) {
-        cont.innerHTML = '<p class="sem-itens">🔍 Nenhum serviço disponível no momento.<br>Aguarde novas ocorrências.</p>';
-        return;
-    }
-    cont.innerHTML = pendentes.map((oc, i) => `
-        <div class="ocorrencia-card">
-            <div class="ocorrencia-cabecalho">
-                <span class="ocorrencia-tipo">${nomesTipos[oc.tipo]}${i === 0 ? '<span class="prioridade">✅ Mais próximo</span>' : ''}</span>
-                <span class="ocorrencia-valor">R$ ${oc.valor.toFixed(2)}</span>
-            </div>
-            <div class="distancia">📏 ${oc.dTexto}</div>
-            <div class="ocorrencia-dados">
-                📍 ${oc.endereco}<br>
-                👤 ${oc.solicitante}<br>
-                📅 ${oc.data}
-            </div>
-            <button class="botao-aceitar" onclick="aceitarServico(${listaOcorrencias.indexOf(oc)})">✅ ACEITAR E CONTATAR</button>
-        </div>
-    `).join('');
-    
-    pendentes.forEach(oc => {
-        L.circleMarker([oc.coords.lat, oc.coords.lng], {
-            radius: 10, fillColor: '#facc15', color: '#fff', weight: 2, fillOpacity: 0.9
-        }).addTo(mapa).bindPopup(`${nomesTipos[oc.tipo]}<br>${oc.endereco}<br>R$ ${oc.valor.toFixed(2)}`);
-    });
-}
-function aceitarServico(i) {
-    const oc = listaOcorrencias[i];
-    if (!confirm(`Confirmar aceite?\n📍 ${oc.endereco}\n💰 R$ ${oc.valor.toFixed(2)}\n📞 ${oc.telefone}`)) return;
-    
-    listaOcorrencias[i].status = 'aceito';
-    listaOcorrencias[i].aceitoPor = { nome: usuarioLogado.nome, id: usuarioLogado.id };
-    salvarDados();
-    
-    alert(`✅ SERVIÇO ACEITO!\n\n📞 Contato: ${oc.telefone}\n📍 Local: ${oc.endereco}\n💰 Valor: R$ ${oc.valor.toFixed(2)}\n💳 Seu PIX: ${usuarioLogado.pix}\n\nBom trabalho, ${usuarioLogado.nome.split(' ')[0]}! 🛡️`);
-    
-    carregarServicosApoio();
-}
-
-// ===== SALVAR =====
-function salvarDados() {
-    localStorage.setItem('listaOcorrencias', JSON.stringify(listaOcorrencias));
-    localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
-}
-
-// ===== SINCRONIZAÇÃO EM TEMPO REAL =====
-setInterval(() => {
-    const servicosAtuais = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
-    const cadastrosAtuais = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
-    
-    if (JSON.stringify(servicosAtuais) !== JSON.stringify(listaOcorrencias)) {
-        listaOcorrencias = servicosAtuais;
-        if (document.getElementById('tela-admin').classList.contains('ativa')) {
-            atualizarEstatisticas();
-            if (!document.getElementById('conteudo-servicos').classList.contains('oculto')) renderizarServicosAdmin();
-        }
-        if (usuarioLogado) carregarServicosApoio();
-    }
-    
-    if (JSON.stringify(cadastrosAtuais) !== JSON.stringify(cadastrosApoio)) {
-        cadastrosApoio = cadastrosAtuais;
-        if (document.getElementById('tela-admin').classList.contains('ativa')) {
-            atualizarEstatisticas();
-            if (!document.getElementById('conteudo-apoios').classList.contains('oculto')) renderizarApoiosAdmin();
-        }
-    }
-}, 2000);
-</script>
-</body>
-</html>
+    const a = Math.sin(dLat/2)**2 + Math.cos(c1.lat*Math.PI

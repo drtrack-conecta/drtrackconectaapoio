@@ -91,7 +91,7 @@
         .foto-item img { width: 100%; height: 100%; object-fit: cover; }
         .foto-item.pendente-foto { border: 2px dashed #64748b; }
         .foto-item.enviada { border: 2px solid #4ade80; position: relative; }
-        .foto-item .coords { font-size: 9px; color: #94a3b8; margin-top: 2px; text-align: center; word-break: break-all; }
+        .foto-item .coords { font-size: 9px; color: #94a3b8; margin-top: 2px; text-align: center; word-break: break-all; padding: 2px; }
         .progresso { height: 8px; background: #334155; border-radius: 4px; margin: 10px 0; overflow: hidden; }
         .progresso-barra { height: 100%; background: linear-gradient(90deg, #16a34a, #4ade80); width: 0%; transition: width 0.3s; }
         .etapa { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; margin-bottom: 8px; background: #1e293b; transition: all 0.3s; }
@@ -167,7 +167,7 @@
             <input type="tel" id="fone-solic" placeholder="(11) 9xxxx-xxxx">
             <label>Endereço do Atendimento *</label>
             <input type="text" id="endereco-serv" placeholder="Rua, número, bairro, cidade">
-            <label>Coordenadas (opcional)</label>
+            <label>Coordenadas (opcional — deixe vazio para usar centro de SP)</label>
             <input type="text" id="coords-serv" placeholder="-23.xxxx, -46.xxxx">
             <label>Tipo de Serviço *</label>
             <select id="tipo-serv" onchange="mostrarCampoOutro()">
@@ -254,7 +254,7 @@
     </div>
 </div>
 
-<!-- Tela Serviços Próximos -->
+<!-- Tela Serviços Próximos do Apoio -->
 <div id="tela-apoio-logado" class="tela">
     <button class="botao-voltar" onclick="sairApoio()">← Sair</button>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -304,7 +304,7 @@
         <div class="etapa pendente-etapa" id="etapa-fotos">
             <span class="etapa-icone">📸</span>
             <div>
-                <strong>Registro Fotográfico (5 fotos obrigatórias)</strong>
+                <strong>Registro Fotográfico (mínimo 5 fotos)</strong>
                 <div class="progresso">
                     <div class="progresso-barra" id="barra-fotos"></div>
                 </div>
@@ -331,8 +331,8 @@
     </button>
     
     <div class="caixa oculto" id="secao-fotos">
-        <h3>📸 Tirar Fotos do Local (câmera direta)</h3>
-        <p style="font-size:13px; color:#94a3b8; margin-bottom:10px;">Tire direto da câmera — Latitude e Longitude registradas automaticamente</p>
+        <h3>📸 Tirar Fotos do Local — Câmera Direta</h3>
+        <p style="font-size:13px; color:#94a3b8; margin-bottom:10px;">Cada foto registra automaticamente sua Latitude e Longitude atuais</p>
         <div class="fotos-grid" id="grid-fotos"></div>
         <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none;" onchange="processarFoto(event)">
     </div>
@@ -343,7 +343,7 @@
         <textarea id="campo-relatorio" placeholder="Detalhe o que observou, as condições do local, ações tomadas..."></textarea>
     </div>
     
-    <button class="botao-grande botao-verde" id="btn-finalizar" onclick="finalizarAtendimento()" style="margin-top:10px;" disabled>
+    <button class="botao-grande botao-whatsapp" id="btn-finalizar" onclick="finalizarAtendimento()" style="margin-top:10px;" disabled>
         ✅ FINALIZAR E ENVIAR POR WHATSAPP
     </button>
 </div>
@@ -365,8 +365,7 @@ const nomesVeiculos = {
 
 let listaOcorrencias = [], cadastrosApoio = [];
 let usuarioLogado = null, mapa = null, mapaDesloc = null, minhaPosicao = null;
-let atendimentoAtual = null, fotosEnviadas = [], watchPosicao = null;
-let fotosComCoordenadas = [];
+let atendimentoAtual = null, fotosEnviadas = [], fotosCoordenadas = [], watchPosicao = null;
 
 function carregarDados() {
     listaOcorrencias = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
@@ -396,7 +395,7 @@ function voltarInicio() {
     usuarioLogado = null;
     atendimentoAtual = null;
     fotosEnviadas = [];
-    fotosComCoordenadas = [];
+    fotosCoordenadas = [];
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-inicio').classList.add('ativa');
 }
@@ -405,7 +404,7 @@ function voltarParaServicos() {
     pararRastreamento();
     atendimentoAtual = null;
     fotosEnviadas = [];
-    fotosComCoordenadas = [];
+    fotosCoordenadas = [];
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-apoio-logado').classList.add('ativa');
     carregarServicosApoio();
@@ -489,7 +488,7 @@ function lancarOcorrencia() {
     });
     
     salvarDados();
-    alert('✅ Lançado com sucesso!');
+    alert('✅ Lançado com sucesso! Aparece agora para os Apoios.');
     document.getElementById('endereco-serv').value = '';
     document.getElementById('valor-serv').value = '';
     document.getElementById('coords-serv').value = '';
@@ -511,12 +510,12 @@ function renderizarServicosAdmin() {
         if (oc.status === 'concluido' && oc.fotos && oc.fotos.length > 0) {
             detalhesExtras += `<div style="margin-top:10px;"><strong>📸 Fotos enviadas (${oc.fotos.length}):</strong><br>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:5px;">
-                ${oc.fotos.map((f, idx) => `<div style="text-align:center;"><img src="${f}" style="width:60px; height:60px; border-radius:6px; object-fit:cover;"><div style="font-size:9px; color:#94a3b8;">${oc.fotosCoordenadas?.[idx] || ''}</div></div>`).join('')}
+                ${oc.fotos.map((f, idx) => `<div style="text-align:center;"><img src="${f}" style="width:60px; height:60px; border-radius:6px; object-fit:cover;"><div style="font-size:9px; color:#94a3b8; word-break:break-all;">${oc.fotosCoordenadas?.[idx] || ''}</div></div>`).join('')}
                 </div></div>`;
         }
         if (oc.status === 'concluido' && oc.relatorio) {
             detalhesExtras += `<div style="margin-top:10px;"><strong>📝 Relatório:</strong><br>
-                <p style="background:#1e293b; padding:10px; border-radius:6px; margin-top:5px; font-size:13px;">${oc.relatorio}</p></div>`;
+                <p style="background:#1e293b; padding:10px; border-radius:6px; margin-top:5px; font-size:13px; white-space:pre-wrap;">${oc.relatorio}</p></div>`;
         }
         if (oc.horarioChegada) detalhesExtras += `<div style="margin-top:8px; font-size:12px; color:#4ade80;">📍 Chegada: ${oc.horarioChegada}</div>`;
         if (oc.dataConclusao) detalhesExtras += `<div style="margin-top:4px; font-size:12px; color:#60a5fa;">✅ Concluído: ${oc.dataConclusao}</div>`;
@@ -529,7 +528,7 @@ function renderizarServicosAdmin() {
             </div>
             <div class="ocorrencia-dados">
                 📍 ${oc.endereco}<br>💰 R$ ${oc.valor.toFixed(2)}<br>📅 ${oc.data}<br>
-                ${oc.aceitoPor ? `🛵 Aceito por: ${oc.aceitoPor.nome} em ${oc.horarioAceite || '--'}` : '⏳ Aguardando aceite...'}
+                ${oc.aceitoPor ? `🛵 Aceito por: ${oc.aceitoPor.nome} em ${oc.horarioAceite || '--'}` : '⏳ Aguardando aceite — VISÍVEL PARA APOIOS'}
                 ${detalhesExtras}
             </div>
             <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
@@ -551,7 +550,7 @@ function reabrir(i) {
     listaOcorrencias[i].relatorio = '';
     listaOcorrencias[i].dataConclusao = null;
     salvarDados(); renderizarServicosAdmin();
-    alert('↻ Reaberto!');
+    alert('↻ Reaberto! Visível novamente para Apoios.');
 }
 function concluir(i) {
     listaOcorrencias[i].status = 'concluido';
@@ -599,7 +598,7 @@ function renderizarApoiosAdmin() {
 function aprovar(i) { cadastrosApoio[i].aprovado = true; salvarDados(); renderizarApoiosAdmin(); alert('✅ APROVADO!'); }
 function bloquear(i) { if (!confirm('Bloquear?')) return; cadastrosApoio[i].aprovado = 'bloqueado'; salvarDados(); renderizarApoiosAdmin(); alert('🚫 BLOQUEADO!'); }
 function desbloquear(i) { cadastrosApoio[i].aprovado = true; salvarDados(); renderizarApoiosAdmin(); alert('✅ DESBLOQUEADO!'); }
-function excluirApoio(i) { if (!confirm('Excluir?')) return; cadastrosApoio.splice(i, 1); salvarDados(); renderizarApoiosAdmin(); }
+function excluirApoio(i) { if (!confirm('Excluir?')) return; cadastrosApoio.splice(i, 1); salvarDados(); }
 
 function irParaAcessoApoio() {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
@@ -682,9 +681,9 @@ function distKm(c1, c2) {
     if (!c1 || !c2) return 9999;
     const R = 6371;
     const dLat = (c2.lat - c1.lat) * Math.PI / 180;
-    const dLng = (c2.lng - c1.lng) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math
-.cos(d1.lat * Math.PI / 180) * Math.cos(d2.lat * Math.PI / 180) * Math.sin(dLng/2)**2;
+    const dLng = (c
+(c2.lng - c1.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) * Math.sin(dLng/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
@@ -769,7 +768,7 @@ function aceitarServico(id) {
     
     atendimentoAtual = listaOcorrencias[idx];
     fotosEnviadas = [];
-    fotosComCoordenadas = [];
+    fotosCoordenadas = [];
     
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-atendimento').classList.add('ativa');
@@ -892,7 +891,7 @@ function atualizarGridFotos() {
         if (fotosEnviadas[i]) {
             html += `<div class="foto-item enviada">
                 <img src="${fotosEnviadas[i]}">
-                <div class="coords">${fotosComCoordenadas[i] || '—'}</div>
+                <div class="coords">${fotosCoordenadas[i] || '—'}</div>
             </div>`;
         } else {
             html += `<div class="foto-item pendente-foto" onclick="clicarInputFoto()">📷</div>`;
@@ -919,16 +918,16 @@ function processarFoto(e) {
         navigator.geolocation.getCurrentPosition(
             pos => {
                 coordsFoto = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`;
-                fotosComCoordenadas.push(coordsFoto);
+                fotosCoordenadas.push(coordsFoto);
             },
             err => {
                 coordsFoto = 'Localização indisponível';
-                fotosComCoordenadas.push(coordsFoto);
+                fotosCoordenadas.push(coordsFoto);
             },
             { enableHighAccuracy: true, timeout: 8000 }
         );
     } else {
-        fotosComCoordenadas.push('Geolocalização não suportada');
+        fotosCoordenadas.push('Geolocalização não suportada');
     }
     
     const reader = new FileReader();
@@ -947,7 +946,7 @@ function finalizarAtendimento() {
     const relatorioTexto = document.getElementById('campo-relatorio').value.trim();
     
     atendimentoAtual.fotos = [...fotosEnviadas];
-    atendimentoAtual.fotosCoordenadas = [...fotosComCoordenadas];
+    atendimentoAtual.fotosCoordenadas = [...fotosCoordenadas];
     atendimentoAtual.relatorio = relatorioTexto;
     atendimentoAtual.status = 'concluido';
     atendimentoAtual.dataConclusao = new Date().toLocaleString('pt-BR');
@@ -957,8 +956,7 @@ function finalizarAtendimento() {
     
     salvarDados();
     
-    // === MONTAR MENSAGEM PARA WHATSAPP ===
-    const numDestino = formatarNumeroWhatsapp(document.getElementById('whatsapp-destino').value || '(11) 99494-4410');
+    const numDestino = formatarNumeroWhatsapp(localStorage.getItem('whatsappDestino') || '(11) 99494-4410');
     
     let mensagem = `📋 *RELATÓRIO DE ATENDIMENTO — DRTRACK Conecta*\n\n`;
     mensagem += `🔹 *Serviço:* ${atendimentoAtual.descricaoExibicao || nomesTipos[atendimentoAtual.tipo]}\n`;
@@ -973,16 +971,17 @@ function finalizarAtendimento() {
     mensagem += `🔹 *Conclusão:* ${atendimentoAtual.dataConclusao}\n\n`;
     mensagem += `📸 *Fotos Enviadas (${fotosEnviadas.length}):*\n`;
     
-    fotosComCoordenadas.forEach((c, i) => {
+    fotosCoordenadas.forEach((c, i) => {
         mensagem += `Foto ${i+1}: ${c}\n`;
     });
     
     mensagem += `\n📝 *Relatório:*\n${relatorioTexto}\n\n`;
-    mensagem += `—\n*DRTRACK Conecta* — Segurança e Apoio\n(11) 99494-4410`;
+    mensagem += `—\n*DRTRACK Conecta* — Segurança e Apoio\n(11) 99494-4410\n\n`;
+    mensagem += `⚠️ *Anexar as fotos manualmente:*\nSalve cada imagem acima e envie como anexo no WhatsApp.\nAs coordenadas já estão incluídas nesta mensagem.`;
     
     const link = `https://wa.me/55${numDestino}?text=${encodeURIComponent(mensagem)}`;
     
-    alert(`✅ Atendimento concluído!\nAbrindo WhatsApp para envio...`);
+    alert(`✅ Atendimento concluído!\nAbrindo WhatsApp...\nAs fotos devem ser anexadas manualmente.`);
     
     window.open(link, '_blank');
     

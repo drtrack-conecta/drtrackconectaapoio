@@ -1,4 +1,53 @@
-border-left: 4px solid #facc15;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DRTRACK Conecta</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; padding-bottom: 20px; }
+        .tela { display: none; padding: 15px; }
+        .tela.ativa { display: block; }
+        .cabecalho { text-align: center; padding: 40px 20px 30px; }
+        .logo { font-size: 28px; font-weight: bold; color: #facc15; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .subtitulo { color: #94a3b8; margin-top: 8px; font-size: 15px; }
+        .container-botoes { padding: 20px; max-width: 420px; margin: 0 auto; }
+        .botao-grande {
+            width: 100%; padding: 22px; border: none; border-radius: 16px;
+            font-size: 19px; font-weight: bold; cursor: pointer; margin-bottom: 20px;
+            transition: transform 0.15s;
+        }
+        .botao-grande:active { transform: scale(0.97); }
+        .botao-amarelo { background: linear-gradient(90deg, #facc15, #eab308); color: #000; }
+        .botao-roxo { background: linear-gradient(90deg, #7c3aed, #a855f7); color: white; }
+        .botao-verde { background: linear-gradient(90deg, #16a34a, #15803d); color: white; }
+        .botao-vermelho { background: linear-gradient(90deg, #dc2626, #b91c1c); color: white; }
+        .botao-whatsapp { background: linear-gradient(90deg, #25D366, #128C7E); color: white; }
+        .botao-azul { background: linear-gradient(90deg, #3b82f6, #2563eb); color: white; }
+        .botao-cinza { background: #475569; color: #cbd5e1; }
+        .botao-pequeno { padding: 10px 14px; font-size: 13px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; margin: 4px; }
+        .caixa { background: rgba(30, 41, 59, 0.8); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; }
+        .caixa h2 { font-size: 18px; margin-bottom: 15px; color: #facc15; }
+        .caixa h3 { font-size: 15px; margin-bottom: 12px; color: #cbd5e1; }
+        label { display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1; }
+        input, select, textarea {
+            width: 100%; padding: 13px; border-radius: 10px; border: none;
+            background: #334155; color: white; font-size: 15px; margin-bottom: 12px;
+        }
+        textarea { min-height: 100px; resize: vertical; }
+        input:focus, select:focus, textarea:focus { outline: 2px solid #facc15; }
+        .botao-voltar {
+            background: transparent; border: none; color: #94a3b8; font-size: 15px;
+            cursor: pointer; padding: 8px 12px; margin-bottom: 10px; display: inline-block;
+        }
+        .ocorrencia-card, .cadastro-card {
+            background: #0f172a; border-radius: 14px; padding: 15px; margin-bottom: 12px;
+            border-left: 4px solid #facc15;
         }
         .ocorrencia-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
         .ocorrencia-tipo { font-weight: bold; font-size: 15px; }
@@ -59,6 +108,159 @@ border-left: 4px solid #facc15;
             .folha-a4 { box-shadow: none; margin: 0; width: 100%; }
         }
     </style>
+</head>
+<body>
+
+<!-- Tela Inicial -->
+<div id="tela-inicio" class="tela ativa">
+    <div class="cabecalho">
+        <div class="logo">🛡️ DRTRACK Conecta</div>
+        <p class="subtitulo">Sistema de Apoio e Segurança</p>
+    </div>
+    <div class="container-botoes">
+        <button class="botao-grande botao-amarelo" onclick="irParaSenhaAdmin()">
+            ⚙️ Painel Administrativo
+        </button>
+        <button class="botao-grande botao-roxo" onclick="alert('Área do Apoio — Em desenvolvimento')">
+            🛵 Área do Apoio
+        </button>
+    </div>
+</div>
+
+<!-- Tela Senha Administrador -->
+<div id="tela-senha" class="tela">
+    <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
+    <div class="caixa" style="max-width: 360px; margin: 40px auto;">
+        <h2 style="text-align:center;">🔐 Acesso Restrito</h2>
+        <p style="text-align:center; margin-bottom:20px; color:#94a3b8;">Digite a senha do Administrador</p>
+        <input type="password" id="senha-admin" placeholder="Senha...">
+        <button class="botao-grande botao-verde" onclick="verificarSenha()">Entrar 🔑</button>
+        <p id="erro-senha" style="color:#f87171; margin-top:10px; display:none; text-align:center;">Senha incorreta!</p>
+    </div>
+</div>
+
+<!-- Painel Administrativo -->
+<div id="tela-admin" class="tela">
+    <button class="botao-voltar" onclick="voltarInicio()">← Sair</button>
+    
+    <h2 style="text-align:center; color:#facc15; margin-bottom:15px;">⚙️ Painel de Controle</h2>
+    
+    <div class="caixa">
+        <h3>📲 Configuração do WhatsApp de Envio</h3>
+        <label>Número WhatsApp para envio dos relatórios</label>
+        <input type="tel" id="whatsapp-destino" placeholder="(11) 99494-4410" value="(11) 99494-4410">
+        <p class="info-coords">Padrão: (11) 99494-4410 — altere e clique em Salvar</p>
+        <button class="botao-grande botao-whatsapp" onclick="salvarWhatsappConfig()" style="padding:12px; font-size:15px; margin-top:8px;">💾 Salvar Número</button>
+    </div>
+    
+    <div class="estatisticas">
+        <div class="estat estat-pend" onclick="filtrarServicos('pendente')">
+            <span id="qtd-pend">0</span>Pendentes
+        </div>
+        <div class="estat estat-aceit" onclick="filtrarServicos('aceito')">
+            <span id="qtd-aceit">0</span>Aceitos/Concluídos
+        </div>
+        <div class="estat estat-ativ" onclick="filtrarServicos('todos')">
+            <span id="qtd-total">0</span>Total
+        </div>
+        <div class="estat estat-pendaprov">
+            <span id="qtd-pendaprov">0</span>Aguardando
+        </div>
+    </div>
+    
+    <div class="navegacao-abas">
+        <div class="aba ativa" data-aba="lancar" onclick="trocarAbaAdmin('lancar')">➕ Lançar</div>
+        <div class="aba" data-aba="servicos" onclick="trocarAbaAdmin('servicos')">📊 Serviços</div>
+        <div class="aba" data-aba="apoios" onclick="trocarAbaAdmin('apoios')">👥 Apoios</div>
+    </div>
+    
+    <div id="conteudo-lancar">
+        <div class="caixa">
+            <h3>Lançar Nova Ocorrência</h3>
+            <label>Solicitante / Responsável</label>
+            <input type="text" id="nome-solic" placeholder="Seu nome">
+            <label>Telefone / WhatsApp</label>
+            <input type="tel" id="fone-solic" placeholder="(11) 9xxxx-xxxx">
+            <label>Endereço do Atendimento *</label>
+            <input type="text" id="endereco-serv" placeholder="Rua, número, bairro, cidade">
+            <label>Coordenadas (opcional — deixe vazio para usar centro de SP)</label>
+            <input type="text" id="coords-serv" placeholder="-23.xxxx, -46.xxxx">
+            <label>Tipo de Serviço *</label>
+            <select id="tipo-serv" onchange="mostrarCampoOutro()">
+                <option value="">Selecione...</option>
+                <option value="alarme">🚨 Verificação de Alarme</option>
+                <option value="veiculo">🚗 Verificação de Veículo</option>
+                <option value="ronda">👀 Ronda / Presença</option>
+                <option value="foto">📷 Registro Fotográfico</option>
+                <option value="outro">📝 Outro</option>
+            </select>
+            <div id="campo-outro-container" class="oculto">
+                <label>Especifique o serviço *</label>
+                <input type="text" id="descricao-outro" placeholder="Descreva o que precisa ser feito...">
+            </div>
+            <label>Valor R$</label>
+            <input type="number" id="valor-serv" placeholder="0,00" step="0.01">
+            <button class="botao-grande botao-verde" onclick="lancarOcorrencia()" style="margin-top:10px;">🚀 LANÇAR</button>
+        </div>
+    </div>
+    
+    <div id="conteudo-servicos" class="oculto">
+        <h3 style="margin-bottom:12px;">📊 Ocorrências — <span id="filtro-ativo">Todos</span></h3>
+        <div id="lista-servicos-admin">
+            <p class="sem-itens">Nenhuma ocorrência lançada ainda.</p>
+        </div>
+    </div>
+    
+    <div id="conteudo-apoios" class="oculto">
+        <h3 style="margin-bottom:12px;">👥 Controle de Apoios</h3>
+        <div id="lista-apoios-admin">
+            <p class="sem-itens">Nenhum cadastro recebido.<br>Quando alguém se cadastrar, aparecerá aqui.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Tela de Edição/Relatório Completo -->
+<div id="tela-editar-relatorio" class="tela">
+    <button class="botao-voltar" onclick="fecharEdicaoRelatorio()">← Voltar à Lista</button>
+    
+    <h2 style="color:#facc15; margin-bottom:15px;">📝 Editar & Enviar Relatório</h2>
+    
+    <div id="form-edicao-relatorio">
+        <div class="caixa">
+            <h3>✅ Campos a Incluir no Relatório</h3>
+            <label class="check-item">
+                <input type="checkbox" id="incluir-tipo" checked> 📋 Tipo de Serviço
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="incluir-solicitante" checked> 👤 Solicitante / Responsável
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="incluir-endereco" checked> 📍 Endereço / Local
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="incluir-coords" checked> 🌐 Coordenadas
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="incluir-chegada" checked> 📍 Horário de Chegada
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="incluir-concluida" checked> ✅ Data/Hora de Conclusão
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="incluir-historio" checked> 📝 Histórico / Relatório
+            </label>
+            <label class="check-item">
+                <input type="checkbox" id="incluir-fotos" checked> 📸 Fotos Selecionadas
+            </label>
+            <p style="font-size:12px; color:#f97316; margin-top:8px;">ℹ️ O valor NÃO aparece no envio pelo WhatsApp</p>
+        </div>
+        
+        <div class="caixa">
+            <h3>📍 Dados do Atendimento</h3>
+            <label>Tipo de Serviço</label>
+            <input type="text" id="edit-tipo-servico">
+            <label>Solicitante / Responsável</label>
+            <input type="text" id="edit-solicitante">
             <label>Endereço / Local</label>
             <textarea id="edit-endereco" rows="2"></textarea>
             <label>Coordenadas</label>
@@ -272,7 +474,7 @@ function renderizarServicosAdmin() {
         cont.innerHTML = `<p class="sem-itens">Nenhuma ocorrência ${filtroAtual === 'todos' ? '' : 'com este status '}encontrada.</p>`;
         atualizarEstatisticas();
         return;
-}
+    }
     
     cont.innerHTML = listaFiltrada.map((oc, i) => {
         const indiceReal = listaOcorrencias.indexOf(oc);
@@ -307,7 +509,8 @@ function renderizarServicosAdmin() {
 function abrirEdicaoRelatorio(indice) {
     indiceEdicao = indice;
     const oc = listaOcorrencias[indice];
-    fotosSelecionadasParaEnvio
+    fotosSelecionadasParaEnvio = oc.fotos && oc.fotos.length > 0 ? oc.fotos.map((_, idx) => idx) : [];
+    
     document.getElementById('edit-tipo-servico').value = oc.descricaoExibicao || nomesTipos[oc.tipo] || '';
     document.getElementById('edit-solicitante').value = oc.solicitante ? `${oc.solicitante} — ${oc.telefone}` : '';
     document.getElementById('edit-endereco').value = oc.endereco || '';
@@ -343,7 +546,7 @@ function abrirEdicaoRelatorio(indice) {
     ['edit-tipo-servico','edit-solicitante','edit-endereco','edit-coords','edit-chegada','edit-concluida','edit-historio'].forEach(id => {
         document.getElementById(id).oninput = atualizarVisualizacaoRelatorio;
     });
-} no
+}
 
 function alternarSelecaoFoto(idx) {
     const el = document.getElementById(`foto-envio-${idx}`);
@@ -357,6 +560,9 @@ function alternarSelecaoFoto(idx) {
         el.classList.remove('selecionada');
     }
     atualizarVisualizacaoRelatorio();
+}
+
+function atualizarVisualizacaoRelatorio() {
     const incTipo = document.getElementById('incluir-tipo').checked;
     const incSolic = document.getElementById('incluir-solicitante').checked;
     const incEnd = document.getElementById('incluir-endereco').checked;
@@ -374,7 +580,104 @@ function alternarSelecaoFoto(idx) {
     const concluida = document.getElementById('edit-concluida').value;
     const historico = document.getElementById('edit-historio').value;
     const oc = listaOcorrencias[indiceEdicao];
-let msg = `🛡️ *RELATÓRIO DE ATENDIMENTO — DRTRACK Conecta*\n\n`;
+    
+    let html = '';
+    if (incTipo) html += `<div class="secao"><span class="etiqueta">Serviço:</span> ${tipo}</div>`;
+    if (incSolic) html += `<div class="secao"><span class="etiqueta">Solicitante:</span> ${solicitante}</div>`;
+    if (incEnd) html += `<div class="secao"><span class="etiqueta">Local:</span> ${endereco}</div>`;
+    if (incCoords) html += `<div class="secao"><span class="etiqueta">Coordenadas:</span> ${coords}</div>`;
+    if (incCheg) html += `<div class="secao"><span class="etiqueta">Chegada:</span> ${chegada}</div>`;
+    if (incConc) html += `<div class="secao"><span class="etiqueta">Conclusão:</span> ${concluida}</div>`;
+    if (incHist && historico) html += `<div class="secao"><span class="etiqueta">Relatório:</span><br><br>${historico.replace(/\n/g, '<br>')}</div>`;
+    
+    if (incFoto && oc && oc.fotos && fotosSelecionadasParaEnvio.length > 0) {
+        html += `<div class="secao" style="margin-top:20px;"><strong>📸 Fotos Anexadas:</strong><br><br>
+            <div class="grid-fotos-relatorio">`;
+        fotosSelecionadasParaEnvio.forEach(idx => {
+            html += `<img src="${oc.fotos[idx]}" alt="Foto ${idx+1}">`;
+        });
+        html += `</div></div>`;
+    }
+    
+    html += `<div style="margin-top:40px; padding-top:15px; border-top:1px solid #ccc; font-size:12px; color:#555; text-align:center;">
+        Relatório gerado por DRTRACK Conecta — Segurança e Apoio<br>
+        📞 (11) 99494-4410
+    </div>`;
+    
+    document.getElementById('conteudo-visualizacao').innerHTML = html || '<p style="text-align:center; color:#666;">Preencha os dados acima...</p>';
+}
+
+function salvarAlteracoes() {
+    if (indiceEdicao === -1) return;
+    const oc = listaOcorrencias[indiceEdicao];
+    
+    oc.descricaoExibicao = document.getElementById('edit-tipo-servico').value;
+    oc.solicitante = document.getElementById('edit-solicitante').value.split('—')[0].trim();
+    oc.telefone = document.getElementById('edit-solicitante').value.split('—')[1]?.trim() || oc.telefone;
+    oc.endereco = document.getElementById('edit-endereco').value;
+    oc.valor = parseFloat(document.getElementById('edit-valor').value) || 0;
+    oc.horarioChegada = document.getElementById('edit-chegada').value;
+    oc.dataConclusao = document.getElementById('edit-concluida').value;
+    
+    const textoHist = document.getElementById('edit-historio').value;
+    if (textoHist.includes('--- Observações Administrativas ---')) {
+        const partes = textoHist.split('--- Observações Administrativas ---');
+        oc.relatorio = partes[0].replace('--- Relatório do Apoio ---', '').trim();
+        oc.observacoesAdmin = partes[1] || '';
+    } else {
+        oc.observacoesAdmin = textoHist;
+    }
+    
+    salvarDados();
+    alert('✅ Alterações salvas!');
+    atualizarVisualizacaoRelatorio();
+}
+
+async function salvarComoPDF() {
+    salvarAlteracoes();
+    const { jsPDF } = window.jspdf;
+    const area = document.querySelector('.folha-a4');
+    const canvas = await html2canvas(area, { scale: 2, useCORS: true, width: 794, height: 1123 });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const w = pdf.internal.pageSize.getWidth();
+    pdf.addImage(imgData, 'PNG', 0, 0, w, 0);
+    pdf.save(`relatorio-drtrack-${Date.now()}.pdf`);
+    alert('✅ PDF A4 salvo!');
+}
+
+async function salvarComoJPEG() {
+    salvarAlteracoes();
+    const area = document.querySelector('.folha-a4');
+    const canvas = await html2canvas(area, { scale: 2, useCORS: true });
+    const link = document.createElement('a');
+    link.download = `relatorio-drtrack-${Date.now()}.jpg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.9);
+    link.click();
+    alert('✅ Imagem salva!');
+}
+
+function enviarPorWhatsAppRelatorio() {
+    salvarAlteracoes();
+    const incTipo = document.getElementById('incluir-tipo').checked;
+    const incSolic = document.getElementById('incluir-solicitante').checked;
+    const incEnd = document.getElementById('incluir-endereco').checked;
+    const incCoords = document.getElementById('incluir-coords').checked;
+    const incCheg = document.getElementById('incluir-chegada').checked;
+    const incConc = document.getElementById('incluir-concluida').checked;
+    const incHist = document.getElementById('incluir-historio').checked;
+    const incFoto = document.getElementById('incluir-fotos').checked;
+    
+    const tipo = document.getElementById('edit-tipo-servico').value;
+    const solicitante = document.getElementById('edit-solicitante').value;
+    const endereco = document.getElementById('edit-endereco').value;
+    const coords = document.getElementById('edit-coords').value;
+    const chegada = document.getElementById('edit-chegada').value;
+    const concluida = document.getElementById('edit-concluida').value;
+    const historico = document.getElementById('edit-historio').value;
+    const oc = listaOcorrencias[indiceEdicao];
+    
+    let msg = `🛡️ *RELATÓRIO DE ATENDIMENTO — DRTRACK Conecta*\n\n`;
     if (incTipo) msg += `📋 *Serviço:* ${tipo}\n`;
     if (incSolic) msg += `👤 *Solicitante:* ${solicitante}\n`;
     if (incEnd) msg += `📍 *Local:* ${endereco}\n`;
@@ -406,7 +709,7 @@ function enviarFotosSeparadasWhatsApp() {
     }
     
     let msg = `📸
- DO ATENDIMENTO — DRTRACK Conecta*\n\n`;
+*FOTOS DO ATENDIMENTO — DRTRACK Conecta*\n\n`;
     msg += `📍 Local: ${oc.endereco}\n`;
     msg += `📋 Serviço: ${oc.descricaoExibicao || nomesTipos[oc.tipo]}\n`;
     msg += `📅 Data: ${oc.data}\n\n`;
@@ -449,7 +752,7 @@ function renderizarApoiosAdmin() {
         cont.innerHTML = '<p class="sem-itens">Nenhum cadastro recebido.<br>Quando alguém se cadastrar, aparecerá aqui.</p>';
         return;
     }
-cont.innerHTML = cadastrosApoio.map((apo, i) => `
+    cont.innerHTML = cadastrosApoio.map((apo, i) => `
     <div class="ocorrencia-card">
         <div class="linha-cadastro">
             <div class="foto-preview">${apo.foto ? `<img src="${apo.foto}">` : '👤'}</div>
@@ -499,3 +802,47 @@ function excluirApoio(i) {
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        

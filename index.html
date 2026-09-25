@@ -1,53 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DRTRACK Conecta</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; padding-bottom: 20px; }
-        .tela { display: none; padding: 15px; }
-        .tela.ativa { display: block; }
-        .cabecalho { text-align: center; padding: 40px 20px 30px; }
-        .logo { font-size: 28px; font-weight: bold; color: #facc15; display: flex; align-items: center; justify-content: center; gap: 12px; }
-        .subtitulo { color: #94a3b8; margin-top: 8px; font-size: 15px; }
-        .container-botoes { padding: 20px; max-width: 420px; margin: 0 auto; }
-        .botao-grande {
-            width: 100%; padding: 22px; border: none; border-radius: 16px;
-            font-size: 19px; font-weight: bold; cursor: pointer; margin-bottom: 20px;
-            transition: transform 0.15s;
-        }
-        .botao-grande:active { transform: scale(0.97); }
-        .botao-amarelo { background: linear-gradient(90deg, #facc15, #eab308); color: #000; }
-        .botao-roxo { background: linear-gradient(90deg, #7c3aed, #a855f7); color: white; }
-        .botao-verde { background: linear-gradient(90deg, #16a34a, #15803d); color: white; }
-        .botao-vermelho { background: linear-gradient(90deg, #dc2626, #b91c1c); color: white; }
-        .botao-whatsapp { background: linear-gradient(90deg, #25D366, #128C7E); color: white; }
-        .botao-azul { background: linear-gradient(90deg, #3b82f6, #2563eb); color: white; }
-        .botao-cinza { background: #475569; color: #cbd5e1; }
-        .botao-pequeno { padding: 10px 14px; font-size: 13px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; margin: 4px; }
-        .caixa { background: rgba(30, 41, 59, 0.8); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; }
-        .caixa h2 { font-size: 18px; margin-bottom: 15px; color: #facc15; }
-        .caixa h3 { font-size: 15px; margin-bottom: 12px; color: #cbd5e1; }
-        label { display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1; }
-        input, select, textarea {
-            width: 100%; padding: 13px; border-radius: 10px; border: none;
-            background: #334155; color: white; font-size: 15px; margin-bottom: 12px;
-        }
-        textarea { min-height: 100px; resize: vertical; }
-        input:focus, select:focus, textarea:focus { outline: 2px solid #facc15; }
-        .botao-voltar {
-            background: transparent; border: none; color: #94a3b8; font-size: 15px;
-            cursor: pointer; padding: 8px 12px; margin-bottom: 10px; display: inline-block;
-        }
-        .ocorrencia-card, .cadastro-card {
-            background: #0f172a; border-radius: 14px; padding: 15px; margin-bottom: 12px;
-            border-left: 4px solid #facc15;
+border-left: 4px solid #facc15;
         }
         .ocorrencia-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
         .ocorrencia-tipo { font-weight: bold; font-size: 15px; }
@@ -107,186 +58,7 @@
         @media print {
             .folha-a4 { box-shadow: none; margin: 0; width: 100%; }
         }
-        @keyframes piscar {
-            0% { box-shadow: 0 0 5px #facc15, 0 0 10px #facc15; border-color: #facc15; }
-            50% { box-shadow: 0 0 20px #facc15, 0 0 30px #facc15; border-color: #fff; }
-            100% { box-shadow: 0 0 5px #facc15, 0 0 10px #facc15; border-color: #facc15; }
-        }
-        .ocorrencia-piscando {
-            animation: piscar 1s infinite;
-            border-left-color: #facc15 !important;
-            border-left-width: 5px !important;
-        }
-        .foto-com-dados {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        .foto-com-dados img {
-            border: 2px solid #4ade80;
-        }
-        .dados-foto {
-            font-size: 10px;
-            color: #cbd5e1;
-            padding: 4px;
-            background: rgba(0,0,0,0.7);
-            border-radius: 0 0 6px 6px;
-            word-break: break-all;
-        }
     </style>
-</head>
-<body>
-
-<!-- Tela Inicial -->
-<div id="tela-inicio" class="tela ativa">
-    <div class="cabecalho">
-        <div class="logo">🛡️ DRTRACK Conecta</div>
-        <p class="subtitulo">Sistema de Apoio e Segurança</p>
-    </div>
-    <div class="container-botoes">
-        <button class="botao-grande botao-amarelo" onclick="irParaSenhaAdmin()">
-            ⚙️ Painel Administrativo
-        </button>
-        <button class="botao-grande botao-roxo" onclick="irParaLoginApoio()">
-            🛵 Área do Apoio
-        </button>
-    </div>
-</div>
-
-<!-- Tela Senha Administrador -->
-<div id="tela-senha" class="tela">
-    <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
-    <div class="caixa" style="max-width: 360px; margin: 40px auto;">
-        <h2 style="text-align:center;">🔐 Acesso Restrito</h2>
-        <p style="text-align:center; margin-bottom:20px; color:#94a3b8;">Digite a senha do Administrador</p>
-        <input type="password" id="senha-admin" placeholder="Senha...">
-        <button class="botao-grande botao-verde" onclick="verificarSenha()">Entrar 🔑</button>
-        <p id="erro-senha" style="color:#f87171; margin-top:10px; display:none; text-align:center;">Senha incorreta!</p>
-    </div>
-</div>
-
-<!-- Painel Administrativo -->
-<div id="tela-admin" class="tela">
-    <button class="botao-voltar" onclick="voltarInicio()">← Sair</button>
-    
-    <h2 style="text-align:center; color:#facc15; margin-bottom:15px;">⚙️ Painel de Controle</h2>
-    
-    <div class="caixa">
-        <h3>📲 Configuração do WhatsApp de Envio</h3>
-        <label>Número WhatsApp para envio dos relatórios</label>
-        <input type="tel" id="whatsapp-destino" placeholder="(11) 99494-4410" value="(11) 99494-4410">
-        <p class="info-coords">Padrão: (11) 99494-4410 — altere e clique em Salvar</p>
-        <button class="botao-grande botao-whatsapp" onclick="salvarWhatsappConfig()" style="padding:12px; font-size:15px; margin-top:8px;">💾 Salvar Número</button>
-    </div>
-    
-    <div class="estatisticas">
-        <div class="estat estat-pend" onclick="filtrarServicos('pendente')">
-            <span id="qtd-pend">0</span>Pendentes
-        </div>
-        <div class="estat estat-aceit" onclick="filtrarServicos('aceito')">
-            <span id="qtd-aceit">0</span>Aceitos/Concluídos
-        </div>
-        <div class="estat estat-ativ" onclick="filtrarServicos('todos')">
-            <span id="qtd-total">0</span>Total
-        </div>
-        <div class="estat estat-pendaprov">
-            <span id="qtd-pendaprov">0</span>Aguardando
-        </div>
-    </div>
-    
-    <div class="navegacao-abas">
-        <div class="aba ativa" data-aba="lancar" onclick="trocarAbaAdmin('lancar')">➕ Lançar</div>
-        <div class="aba" data-aba="servicos" onclick="trocarAbaAdmin('servicos')">📊 Serviços</div>
-        <div class="aba" data-aba="apoios" onclick="trocarAbaAdmin('apoios')">👥 Apoios</div>
-    </div>
-    
-    <div id="conteudo-lancar">
-        <div class="caixa">
-            <h3>Lançar Nova Ocorrência</h3>
-            <label>Solicitante / Responsável</label>
-            <input type="text" id="nome-solic" placeholder="Seu nome">
-            <label>Telefone / WhatsApp</label>
-            <input type="tel" id="fone-solic" placeholder="(11) 9xxxx-xxxx">
-            <label>Endereço do Atendimento *</label>
-            <input type="text" id="endereco-serv" placeholder="Rua, número, bairro, cidade">
-            <label>Coordenadas (opcional — deixe vazio para usar centro de SP)</label>
-            <input type="text" id="coords-serv" placeholder="-23.xxxx, -46.xxxx">
-            <label>Tipo de Serviço *</label>
-            <select id="tipo-serv" onchange="mostrarCampoOutro()">
-                <option value="">Selecione...</option>
-                <option value="alarme">🚨 Verificação de Alarme</option>
-                <option value="veiculo">🚗 Verificação de Veículo</option>
-                <option value="ronda">👀 Ronda / Presença</option>
-                <option value="foto">📷 Registro Fotográfico</option>
-                <option value="outro">📝 Outro</option>
-            </select>
-            <div id="campo-outro-container" class="oculto">
-                <label>Especifique o serviço *</label>
-                <input type="text" id="descricao-outro" placeholder="Descreva o que precisa ser feito...">
-            </div>
-            <label>Valor R$</label>
-            <input type="number" id="valor-serv" placeholder="0,00" step="0.01">
-            <button class="botao-grande botao-verde" onclick="lancarOcorrencia()" style="margin-top:10px;">🚀 LANÇAR</button>
-        </div>
-    </div>
-    
-    <div id="conteudo-servicos" class="oculto">
-        <h3 style="margin-bottom:12px;">📊 Ocorrências — <span id="filtro-ativo">Todos</span></h3>
-        <div id="lista-servicos-admin">
-            <p class="sem-itens">Nenhuma ocorrência lançada ainda.</p>
-        </div>
-    </div>
-    
-    <div id="conteudo-apoios" class="oculto">
-        <h3 style="margin-bottom:12px;">👥 Controle de Apoios</h3>
-        <div id="lista-apoios-admin">
-            <p class="sem-itens">Nenhum cadastro recebido.<br>Quando alguém se cadastrar, aparecerá aqui.</p>
-        </div>
-    </div>
-</div>
-
-<!-- Tela de Edição/Relatório Completo -->
-<div id="tela-editar-relatorio" class="tela">
-    <button class="botao-voltar" onclick="fecharEdicaoRelatorio()">← Voltar à Lista</button>
-    
-    <h2 style="color:#facc15; margin-bottom:15px;">📝 Editar & Enviar Relatório</h2>
-    
-    <div id="form-edicao-relatorio">
-        <div class="caixa">
-            <h3>✅ Campos a Incluir no Relatório</h3>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-tipo" checked> 📋 Tipo de Serviço
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-solicitante" checked> 👤 Solicitante / Responsável
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-endereco" checked> 📍 Endereço / Local
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-coords" checked> 🌐 Coordenadas
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-chegada" checked> 📍 Horário de Chegada
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-concluida" checked> ✅ Data/Hora de Conclusão
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-historio" checked> 📝 Histórico / Relatório
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-fotos" checked> 📸 Fotos Selecionadas
-            </label>
-            <p style="font-size:12px; color:#f97316; margin-top:8px;">ℹ️ O valor NÃO aparece no envio pelo WhatsApp</p>
-        </div>
-        
-        <div class="caixa">
-            <h3>📍 Dados do Atendimento</h3>
-            <label>Tipo de Serviço</label>
-            <input type="text" id="edit-tipo-servico">
-            <label>Solicitante / Responsável</label>
-            <input type="text" id="edit-solicitante">
             <label>Endereço / Local</label>
             <textarea id="edit-endereco" rows="2"></textarea>
             <label>Coordenadas</label>
@@ -500,7 +272,7 @@ function renderizarServicosAdmin() {
         cont.innerHTML = `<p class="sem-itens">Nenhuma ocorrência ${filtroAtual === 'todos' ? '' : 'com este status '}encontrada.</p>`;
         atualizarEstatisticas();
         return;
-    }
+}
     
     cont.innerHTML = listaFiltrada.map((oc, i) => {
         const indiceReal = listaOcorrencias.indexOf(oc);
@@ -535,8 +307,7 @@ function renderizarServicosAdmin() {
 function abrirEdicaoRelatorio(indice) {
     indiceEdicao = indice;
     const oc = listaOcorrencias[indice];
-    fotosSelecionadasParaEnvio = oc.fotos && oc.fotos.length > 0 ? oc.fotos.map((_, idx) => idx) : [];
-    
+    fotosSelecionadasParaEnvio
     document.getElementById('edit-tipo-servico').value = oc.descricaoExibicao || nomesTipos[oc.tipo] || '';
     document.getElementById('edit-solicitante').value = oc.solicitante ? `${oc.solicitante} — ${oc.telefone}` : '';
     document.getElementById('edit-endereco').value = oc.endereco || '';
@@ -572,7 +343,7 @@ function abrirEdicaoRelatorio(indice) {
     ['edit-tipo-servico','edit-solicitante','edit-endereco','edit-coords','edit-chegada','edit-concluida','edit-historio'].forEach(id => {
         document.getElementById(id).oninput = atualizarVisualizacaoRelatorio;
     });
-}
+} no
 
 function alternarSelecaoFoto(idx) {
     const el = document.getElementById(`foto-envio-${idx}`);
@@ -586,9 +357,6 @@ function alternarSelecaoFoto(idx) {
         el.classList.remove('selecionada');
     }
     atualizarVisualizacaoRelatorio();
-}
-
-function atualizarVisualizacaoRelatorio() {
     const incTipo = document.getElementById('incluir-tipo').checked;
     const incSolic = document.getElementById('incluir-solicitante').checked;
     const incEnd = document.getElementById('incluir-endereco').checked;
@@ -606,550 +374,128 @@ function atualizarVisualizacaoRelatorio() {
     const concluida = document.getElementById('edit-concluida').value;
     const historico = document.getElementById('edit-historio').value;
     const oc = listaOcorrencias[indiceEdicao];
-    
-    let html = '';
-    if (incTipo) html += `<div class="secao"><span class="etiqueta">Serviço:</span> ${tipo}</div>`;
-    if (incSolic) html += `<div class="secao"><span class="etiqueta">Solicitante:</span> ${solicitante}</div>`;
-    if (incEnd) html += `<div class="secao"><span class="etiqueta">Local:</span> ${endereco}</div>`;
-    if (incCoords) html += `<div class="secao"><span class="etiqueta">Coordenadas:</span> ${coords}</div>`;
-    if (incCheg) html += `<div class="secao"><span class="etiqueta">Chegada:</span> ${chegada}</div>`;
-    if (incConc) html += `<div class="secao"><span class="etiqueta">Conclusão:</span> ${concluida}</div>`;
-    if (incHist && historico) html += `<div class="secao"><span class="etiqueta">Relatório:</span><br><br>${historico.replace(/\n/g, '<br>')}</div>`;
-    
-    if (incFoto && oc && oc.fotos && fotosSelecionadasParaEnvio.length > 0) {
-        html += `<div class="secao" style="margin-top:20px;"><strong>📸 Fotos Anexadas:</strong><br><br>
-            <div class="grid-fotos-relatorio">`;
-        fotosSelecionadasParaEnvio.forEach(idx => {
-            html += `<img src="${oc.fotos[idx]}" alt="Foto ${idx+1}">`;
-        });
-        html += `</div></div>`;
-    }
-    
-    html += `<div style="margin-top:40px; padding-top:15px; border-top:1px solid #ccc; font-size:12px; color:#555; text-align:center;">
-        Relatório gerado por DRTRACK Conecta — Segurança e Apoio<br>
-        📞 (11) 99494-4410
-    </div>`;
-    
-    document.getElementById('conteudo-visualizacao').innerHTML = html || '<p style="text-align:center; color:#666;">Preencha os dados acima...</p>';
-}
-
-function salvarAlteracoes() {
-    if (indiceEdicao === -1) return;
-    const oc = listaOcorrencias[indiceEdicao];
-    
-    oc.descricaoExibicao = document.getElementById('edit-tipo-servico').value;
-    oc.solicitante = document.getElementById('edit-solicitante').value.split('—')[0].trim();
-    oc.telefone = document.getElementById('edit-solicitante').value.split('—')[1]?.trim() || oc.telefone;
-    oc.endereco = document.getElementById('edit-endereco').value;
-    oc.valor = parseFloat(document.getElementById('edit-valor').value) || 0;
-    oc.horarioChegada = document.getElementById('edit-chegada').value;
-    oc.dataConclusao = document.getElementById('edit-concluida').value;
-    
-    const textoHist = document.getElementById('edit-historio').value;
-    if (textoHist.includes('--- Observações Administrativas ---')) {
-        const partes = textoHist.split('--- Observações Administrativas ---');
-        oc.relatorio = partes[0].replace('--- Relatório do Apoio ---', '').trim();
-        oc.observacoesAdmin = partes[1] || '';
-    } else {
-        oc.observacoesAdmin = textoHist;
-    }
-    
-    salvarDados();
-    alert('✅ Alterações salvas!');
-    atualizarVisualizacaoRelatorio();
-}
-
-async function salvarComoPDF() {
-    salvarAlteracoes();
-    const { jsPDF } = window.jspdf;
-    const area = document.querySelector('.folha-a4');
-    const canvas = await html2canvas(area, { scale: 2, useCORS: true, width: 794, height: 1123 });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const w = pdf.internal.pageSize.getWidth();
-    pdf.addImage(imgData, 'PNG', 0, 0, w, 0);
-    pdf.save(`relatorio-drtrack-${Date.now()}.pdf`);
-    alert('✅ PDF A4 salvo!');
-}
-
-async function salvarComoJPEG() {
-    salvarAlteracoes();
-    const area = document.querySelector('.folha-a4');
-    const canvas = await html2canvas(area, { scale: 2, useCORS: true });
-    const link = document.createElement('a');
-    link.download = `relatorio-drtrack-${Date.now()}.jpg`;
-    link.href = canvas.toDataURL('image/jpeg', 0.9);
-    link.click();
-    alert('✅ Imagem salva!');
-}
-
-function enviarPorWhatsAppRelatorio() {
-    salvarAlteracoes();
-    const incTipo = document.getElementById('incluir-tipo').checked;
-    const incSolic = document.getElementById('incluir-solicitante').checked;
-    const incEnd = document.getElementById('incluir-endereco').checked;
-    const incCoords = document.getElementById('incluir-coords').checked;
-    const incCheg = document.getElementById('incluir-chegada').checked;
-    const incConc = document.getElementById('incluir-concluida').checked;
-    const incHist = document.getElementById('incluir-historio').checked;
-    const incFoto = document.getElementById('incluir-fotos').checked;
-    
-    const tipo = document.getElementById('edit-tipo-servico').value;
-    const solicitante = document.getElementById('edit-solicitante').value;
-    const endereco = document.getElementById('edit-endereco').value;
-    const coords = document.getElementById('edit-coords').value;
-    const chegada = document.getElementById('edit-chegada').value;
-    const concluida = document.getElementById('edit-concluida').value;
-    const historico = document.getElementById('edit-historio').value;
-    const oc = listaOcorrencias[indiceEdicao];
-    
-    let msg = `🛡️ *RELATÓRIO DE ATENDIMENTO — DRTRACK Conecta*\n\n`;
+let msg = `🛡️ *RELATÓRIO DE ATENDIMENTO — DRTRACK Conecta*\n\n`;
     if (incTipo) msg += `📋 *Serviço:* ${tipo}\n`;
     if (incSolic) msg += `👤 *Solicitante:* ${solicitante}\n`;
     if (incEnd) msg += `📍 *Local:* ${endereco}\n`;
-    if (incCoords) msg += `🌐
-// === SISTEMA DE DADOS ===
-let apoiadores = JSON.parse(localStorage.getItem('apoiadores') || '[]');
-let ocorrencias = JSON.parse(localStorage.getItem('ocorrencias') || '[]');
-let usuarioAtual = null;
-let mapa = null;
-let localizacaoAtiva = false;
-let watchId = null;
-
-// === TELAS ===
-function mostrarTela(id) {
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById(id).classList.add('ativa');
-    
-    if (id === 'tela-apoio' && usuarioAtual) {
-        document.getElementById('nome-apoio').textContent = usuarioAtual.nome;
-        carregarOcorrenciasNoMapa();
-    }
-    if (id === 'tela-admin') atualizarContadores();
-    if (id === 'tela-admin-apoiadores') listarApoiadores();
-    if (id === 'tela-admin-relatorios') atualizarRelatorio();
-}
-
-// === CADASTRO ===
-function salvarCadastro() {
-    const nome = document.getElementById('cad-nome').value.trim();
-    const tel = document.getElementById('cad-tel').value.trim();
-    const regiao = document.getElementById('cad-regiao').value.trim();
-    const veiculo = document.getElementById('cad-veiculo').value;
-    const pix = document.getElementById('cad-pix').value.trim();
-    
-    if (!nome || !tel || !regiao || !veiculo || !pix) {
-        document.getElementById('msg-cadastro').innerHTML = '<span style="color:red;">Preencha todos os campos!</span>';
-        return;
-    }
-    
-    const existente = apoiadores.find(a => a.telefone === tel);
-    if (existente) {
-        document.getElementById('msg-cadastro').innerHTML = '<span style="color:orange;">Telefone já cadastrado! Faça login.</span>';
-        return;
-    }
-    
-    const novo = {
-        id: Date.now(),
-        nome,
-        telefone: tel,
-        regiao,
-        veiculo,
-        pix,
-        online: false,
-        lat: null,
-        lng: null,
-        autorizado: false
-    };
-    
-    apoiadores.push(novo);
-    salvarDados();
-    document.getElementById('msg-cadastro').innerHTML = '<span style="color:green;">✅ Cadastro enviado! Aguardando autorização da DRTRACK.</span>';
-    setTimeout(() => mostrarTela('tela-inicio'), 2500);
-}
-
-// === LOGIN ===
-function entrar() {
-    const tel = document.getElementById('login-tel').value.trim();
-    const usuario = apoiadores.find(a => a.telefone === tel);
-    
-    if (!usuario) {
-        document.getElementById('msg-login').innerHTML = '<span style="color:red;">Não encontrado. Cadastre-se.</span>';
-        return;
-    }
-    if (!usuario.autorizado) {
-        document.getElementById('msg-login').innerHTML = '<span style="color:orange;">⏳ Aguardando autorização administrativa.</span>';
-        return;
-    }
-    
-    usuario.online = true;
-    usuarioAtual = usuario;
-    salvarDados();
-    mostrarTela('tela-apoio');
-}
-
-function loginAdmin() {
-    const senha = document.getElementById('admin-senha').value;
-    if (senha === senhaAdmin) {
-        mostrarTela('tela-admin');
-    } else {
-        alert('Senha incorreta!');
-    }
-}
-
-// === LANÇAR OCORRÊNCIA — COMPLETA ===
-function lancarOcorrencia() {
-    const endereco = document.getElementById('ocor-endereco').value.trim();
-    const lat = document.getElementById('ocor-lat').value.trim();
-    const lng = document.getElementById('ocor-lng').value.trim();
-    const desc = document.getElementById('ocor-desc').value.trim();
-    const valor = parseFloat(document.getElementById('ocor-valor').value) || 0;
-    const comissaoAtiva = document.getElementById('ocor-comissao').checked;
-    
-    if (!endereco) {
-        alert('Preencha o endereço!');
-        return;
-    }
-    
-    const nova = {
-        id: Date.now(),
-        endereco,
-        lat: lat || null,
-        lng: lng || null,
-        descricao: desc,
-        valor,
-        comissao: comissaoAtiva ? (valor * 0.08) : 0,
-        data: new Date().toLocaleString('pt-BR'),
-        status: 'pendente',
-        aceitoPor: null,
-        fotos: [],
-        relato: ''
-    };
-    
-    ocorrencias.unshift(nova);
-    salvarDados();
-    
-    // Dispara alerta para todos os apoiadores online
-    dispararAlertaParaApoiadores(nova);
-    
-    alert('✅ Ocorrência lançada com sucesso!');
-    document.getElementById('ocor-endereco').value = '';
-    document.getElementById('ocor-lat').value = '';
-    document.getElementById('ocor-lng').value = '';
-    document.getElementById('ocor-desc').value = '';
-    document.getElementById('ocor-valor').value = '';
-    mostrarTela('tela-admin');
-}
-
-function dispararAlertaParaApoiadores(ocorrencia) {
-    const painel = document.getElementById('painel-alerta');
-    const conteudo = document.getElementById('alerta-conteudo');
-    
-    conteudo.innerHTML = `
-        <p><strong>📍 Endereço:</strong> ${ocorrencia.endereco}</p>
-        ${ocorrencia.lat ? `<p><strong>Coordenadas:</strong> ${ocorrencia.lat}, ${ocorrencia.lng}</p>` : ''}
-        ${ocorrencia.descricao ? `<p><strong>Detalhes:</strong> ${ocorrencia.descricao}</p>` : ''}
-        <p><strong>💰 Valor:</strong> R$ ${ocorrencia.valor.toFixed(2)}</p>
-        <p><strong>📅 Data:</strong> ${ocorrencia.data}</p>
-    `;
-    
-    painel.style.display = 'block';
-    
-    // Toca som conforme escolha
-    const tipoAlerta = localStorage.getItem('tipoAlerta') || 'sirene';
-    if (tipoAlerta === 'sirene') {
-        tocarSirene();
-    } else {
-        tocarSinalContinuo();
-    }
-    
-    // Auto-ocultar após 30s se ninguém aceitar
-    setTimeout(() => {
-        if (painel.style.display !== 'none') {
-            painel.style.display = 'none';
-        }
-    }, 30000);
-}
-
-function tocarSirene() {
-    const audio = new AudioContext();
-    const osc = audio.createOscillator();
-    const gain = audio.createGain();
-    osc.connect(gain);
-    gain.connect(audio.destination);
-    osc.frequency.setValueAtTime(880, audio.currentTime);
-    osc.frequency.setValueAtTime(440, audio.currentTime + 0.2);
-    osc.frequency.setValueAtTime(880, audio.currentTime + 0.4);
-    gain.gain.setValueAtTime(0.3, audio.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.6);
-    osc.start(audio.currentTime);
-    osc.stop(audio.currentTime + 0.6);
-}
-
-function tocarSinalContinuo() {
-    const audio = new AudioContext();
-    const osc = audio.createOscillator();
-    const gain = audio.createGain();
-    osc.connect(gain);
-    gain.connect(audio.destination);
-    osc.frequency.value = 600;
-    gain.gain.setValueAtTime(0.2, audio.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 1.5);
-    osc.start(audio.currentTime);
-    osc.stop(audio.currentTime + 1.5);
-}
-
-// === ACEITAR / RECUSAR ===
-let ocorrenciaAtualEmAlerta = null;
-
-function aceitarOcorrencia() {
-    if (!usuarioAtual) return;
-    
-    const painel = document.getElementById('painel-alerta');
-    painel.style.display = 'none';
-    
-    // Encontra a última ocorrência pendente
-    const ultimaPendente = ocorrencias.find(o => o.status === 'pendente');
-    if (ultimaPendente) {
-        ultimaPendente.status = 'aceita';
-        ultimaPendente.aceitoPor = usuarioAtual.nome;
-        salvarDados();
-        alert(`✅ Você aceitou o atendimento! Local: ${ultimaPendente.endereco}`);
-    }
-}
-
-function recusarOcorrencia() {
-    document.getElementById('painel-alerta').style.display = 'none';
-}
-
-// === LOCALIZAÇÃO ===
-function ativarLocalizacao() {
-    if (!navigator.geolocation) {
-        alert('Geolocalização não suportada no aparelho.');
-        return;
-    }
-    
-    if (localizacaoAtiva) {
-        navigator.geolocation.clearWatch(watchId);
-        localizacaoAtiva = false;
-        document.getElementById('status-localizacao').textContent = 'Desativada';
-        document.getElementById('btn-localizacao').textContent = '📍 Ativar Localização em Tempo Real';
-        return;
-    }
-    
-    localizacaoAtiva = true;
-    document.getElementById('btn-localizacao').textContent = '📍 Desativar Localização';
-    
-    watchId = navigator.geolocation.watchPosition(
-        (pos) => {
-            if (usuarioAtual) {
-                usuarioAtual.lat = pos.coords.latitude;
-                usuarioAtual.lng = pos.coords.longitude;
-                salvarDados();
+    if (incCoords) msg += `🌐 *Coordenadas:* ${coords}\n`;
+    if (incCheg) msg += `📍 *Chegada:* ${chegada}\n`;
+    if (incConc) msg += `✅ *Conclusão:* ${concluida}\n`;
+    if (incHist && historico) msg += `\n📝 *Relatório:*\n${historico}\n`;
+    if (incFoto && oc && oc.fotos && fotosSelecionadasParaEnvio.length > 0) {
+        msg += `\n📸 *Fotos anexadas:* ${fotosSelecionadasParaEnvio.length} foto(s)\n`;
+        fotosSelecionadasParaEnvio.forEach(idx => {
+            if (oc.fotosCoordenadas && oc.fotosCoordenadas[idx]) {
+                msg += `Foto ${idx+1}: ${oc.fotosCoordenadas[idx]}\n`;
             }
-            document.getElementById('status-localizacao').innerHTML = 
-                `<span style="color:green;">✅ Ativa — ${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}</span>`;
-            carregarOcorrenciasNoMapa();
-        },
-        (erro) => {
-            document.getElementById('status-localizacao').innerHTML = 
-                `<span style="color:red;">Erro: ${erro.message}</span>`;
-        },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-    );
+        });
+    }
+    msg += `\n—\n*DRTRACK Conecta — Segurança e Apoio*\n📞 (11) 99494-4410`;
+    
+    const numDestino = formatarNumeroWhatsapp(document.getElementById('whatsapp-destino').value || '5511994944410');
+    window.open(`https://wa.me/${numDestino}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function salvarPreferenciaAlerta() {
-    const escolha = document.getElementById('tipo-alerta').value;
-    localStorage.setItem('tipoAlerta', escolha);
-}
-
-// === MAPA ===
-function carregarOcorrenciasNoMapa() {
-    const container = document.getElementById('mapa');
-    if (!mapa) {
-        mapa = L.map('mapa').setView([-23.5505, -46.6333], 11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© DRTRACK Conecta'
-        }).addTo(mapa);
-    } else {
-        mapa.eachLayer(l => { if (l instanceof L.Marker) mapa.removeLayer(l); });
+function enviarFotosSeparadasWhatsApp() {
+    if (indiceEdicao === -1) return;
+    const oc = listaOcorrencias[indiceEdicao];
+    
+    if (!oc.fotos || fotosSelecionadasParaEnvio.length === 0) {
+        alert('⚠️ Selecione pelo menos uma foto primeiro!');
+        return;
     }
     
-    ocorrencias.filter(o => o.status === 'pendente' && o.lat && o.lng).forEach(o => {
-        L.marker([parseFloat(o.lat), parseFloat(o.lng)])
-            .addTo(mapa)
-            .bindPopup(`<b>${o.endereco}</b><br>R$ ${o.valor.toFixed(2)}<br>${o.descricao || ''}`);
+    let msg = `📸
+ DO ATENDIMENTO — DRTRACK Conecta*\n\n`;
+    msg += `📍 Local: ${oc.endereco}\n`;
+    msg += `📋 Serviço: ${oc.descricaoExibicao || nomesTipos[oc.tipo]}\n`;
+    msg += `📅 Data: ${oc.data}\n\n`;
+    
+    fotosSelecionadasParaEnvio.forEach((idx, pos) => {
+        msg += `———\n📷 Foto ${pos+1} de ${fotosSelecionadasParaEnvio.length}\n`;
+        if (oc.fotosCoordenadas && oc.fotosCoordenadas[idx]) {
+            msg += `📍 ${oc.fotosCoordenadas[idx]}\n`;
+        }
+        msg += `(imagem anexada)\n`;
     });
     
-    if (usuarioAtual && usuarioAtual.lat && usuarioAtual.lng) {
-        L.marker([usuarioAtual.lat, usuarioAtual.lng], {
-            icon: L.divIcon({ html: '🛡️', className: '', iconSize: [30,30] })
-        }).addTo(mapa).bindPopup(`Você — ${usuarioAtual.nome}`);
-        mapa.setView([usuarioAtual.lat, usuarioAtual.lng], 13);
+    msg += `\n—\n*DRTRACK Conecta*\n📞 (11) 99494-4410`;
+    
+    const numDestino = formatarNumeroWhatsapp(document.getElementById('whatsapp-destino').value || '5511994944410');
+    window.open(`https://wa.me/${numDestino}?text=${encodeURIComponent(msg)}`, '_blank');
+    
+    alert('✅ A mensagem foi aberta! \n\n📲 No WhatsApp, clique no ícone de "📎 Anexar" e selecione as fotos manualmente — o texto já está pronto!');
+}
+
+function reabrir(i) {
+    listaOcorrencias[i].status = 'pendente';
+    salvarDados(); renderizarServicosAdmin();
+}
+function concluir(i) {
+    listaOcorrencias[i].status = 'concluido';
+    listaOcorrencias[i].dataConclusao = new Date().toLocaleString('pt-BR');
+    salvarDados(); renderizarServicosAdmin();
+}
+function excluirServ(i) {
+    if (confirm('Excluir permanentemente?')) {
+        listaOcorrencias.splice(i, 1);
+        salvarDados(); renderizarServicosAdmin();
     }
 }
 
-// === ENVIAR COMPROVANTE ===
-function enviarComprovante() {
-    if (!usuarioAtual) return;
-    
-    const ultimoAceito = ocorrencias.find(o => o.status === 'aceita' && o.aceitoPor === usuarioAtual.nome);
-    if (!ultimoAceito) {
-        alert('Nenhuma ocorrência aceita encontrada!');
+function renderizarApoiosAdmin() {
+    const cont = document.getElementById('lista-apoios-admin');
+    if (!cadastrosApoio.length) {
+        cont.innerHTML = '<p class="sem-itens">Nenhum cadastro recebido.<br>Quando alguém se cadastrar, aparecerá aqui.</p>';
         return;
     }
-    
-    const fotos = [];
-    for (let i = 1; i <= 5; i++) {
-        const input = document.getElementById(`foto${i}`);
-        if (input.files.length > 0) fotos.push(input.files[0].name);
-    }
-    const extra = document.getElementById('fotos-extra').files;
-    for (let f of extra) fotos.push(f.name);
-    
-    if (fotos.length < 5) {
-        alert(`Envie no mínimo 5 fotos! (Enviadas: ${fotos.length})`);
-        return;
-    }
-    
-    ultimoAceito.status = 'concluida';
-    ultimoAceito.fotos = fotos;
-    ultimoAceito.relato = document.getElementById('relato-apoio').value.trim();
-    ultimoAceito.concluidoEm = new Date().toLocaleString('pt-BR');
-    ultimoAceito.localizacaoComprovada = usuarioAtual.lat + ', ' + usuarioAtual.lng;
-    
-    salvarDados();
-    
-    document.getElementById('msg-comprovante').innerHTML = 
-        '<span style="color:green;">✅ Comprovante enviado! Obrigado pelo atendimento.</span>';
-    
-    // Limpa campos
-    for (let i = 1; i <= 5; i++) document.getElementById(`foto${i}`).value = '';
-    document.getElementById('fotos-extra').value = '';
-    document.getElementById('relato-apoio').value = '';
-}
-
-// === ADMIN — APOIADORES ===
-function listarApoiadores() {
-    const div = document.getElementById('lista-apoiadores');
-    div.innerHTML = apoiadores.map(a => `
-        <div class="ocorrencia">
-            <p><strong>${a.nome}</strong> — ${a.telefone}</p>
-            <p>Região: ${a.regiao} | Veículo: ${a.veiculo}</p>
-            <p>PIX: ${a.pix}</p>
-            <p>Status: 
-                ${a.online ? '<span class="etiqueta et-on">Online</span>' : '<span class="etiqueta et-off">Offline</span>'}
-                ${a.autorizado ? '<span class="etiqueta et-on">Autorizado</span>' : '<span class="etiqueta" style="background:#eee;color:#666;">Pendente</span>'}
-            </p>
-            <div class="linha">
-                ${!a.autorizado ? `<button class="btn-sucesso" style="font-size:13px;padding:6px;" onclick="autorizar(${a.id})">✅ Autorizar</button>` : ''}
-                <button class="btn-aviso" style="font-size:13px;padding:6px;" onclick="elogiar(${a.id})">⭐ Elogiar</button>
-                <button class="btn-perigo" style="font-size:13px;padding:6px;" onclick="suspender(${a.id})">🚫 Suspender</button>
-                <button class="btn-perigo" style="font-size:13px;padding:6px;" onclick="excluir(${a.id})">🗑️ Excluir</button>
+cont.innerHTML = cadastrosApoio.map((apo, i) => `
+    <div class="ocorrencia-card">
+        <div class="linha-cadastro">
+            <div class="foto-preview">${apo.foto ? `<img src="${apo.foto}">` : '👤'}</div>
+            <div style="flex:1;">
+                <strong>${apo.nome}</strong><br>
+                📱 ${apo.telefone}<br>
+                🚗 Veículo: ${apo.veiculo || 'Não informado'}<br>
+                🔑 PIX: ${apo.pix}<br>
+                <span class="etiqueta-status ${apo.aprovado ? 'aprovado' : 'pend-aprov'}">
+                    ${apo.aprovado ? '✅ APROVADO' : '⏳ AGUARDANDO'}
+                </span>
             </div>
         </div>
-    `).join('');
-}
-
-function autorizar(id) {
-    const a = apoiadores.find(x => x.id === id);
-    if (a) { a.autorizado = true; salvarDados(); listarApoiadores(); }
-}
-
-function suspender(id) {
-    const a = apoiadores.find(x => x.id === id);
-    if (a) { a.autorizado = false; a.online = false; salvarDados(); listarApoiadores(); }
-}
-
-function excluir(id) {
-    if (confirm('Tem certeza que deseja excluir?')) {
-        apoiadores = apoiadores.filter(x => x.id !== id);
-        salvarDados(); listarApoiadores();
-    }
-}
-
-function elogiar(id) {
-    alert('⭐ Elogio registrado! Obrigado pelo bom trabalho!');
-}
-
-// === CONTADORES ===
-function atualizarContadores() {
-    document.getElementById('qtd-total').textContent = apoiadores.length;
-    document.getElementById('qtd-on').textContent = apoiadores.filter(a => a.online).length;
-    document.getElementById('qtd-off').textContent = apoiadores.filter(a => !a.online).length;
-}
-
-// === RELATÓRIOS ===
-function atualizarRelatorio() {
-    const filtro = document.getElementById('filtro-periodo').value;
-    let filtrado = [...ocorrencias];
-    
-    const hoje = new Date();
-    const dia = hoje.getDate();
-    
-    if (filtro === 'quinzena1') {
-        filtrado = ocorrencias.filter(o => {
-            const d = new Date(o.data.split('/')[0].split(' ')[0].replace(/(\d+)\/(\d+)\/(\d+)/, '$2/$1/$3'));
-            const diaNum = parseInt(o.data.split('/')[0]);
-            return diaNum >= 1 && diaNum <= 15;
-        });
-    } else if (filtro === 'quinzena2') {
-        filtrado = ocorrencias.filter(o => {
-            const diaNum = parseInt(o.data.split('/')[0]);
-            return diaNum >= 16;
-        });
-    } else if (filtro === 'concluidas') {
-        filtrado = ocorrencias.filter(o => o.status === 'concluida');
-    } else if (filtro === 'pendentes') {
-        filtrado = ocorrencias.filter(o => o.status !== 'concluida');
-    }
-    
-    const totalValor = filtrado.reduce((s, o) => s + o.valor, 0);
-    const totalComissao = filtrado.reduce((s, o) => s + (o.comissao || 0), 0);
-    
-    document.getElementById('resumo-valores').innerHTML = `
-        <p><strong>Total de Ocorrências:</strong> ${filtrado.length}</p>
-        <p><strong>💰 Valor Total:</strong> R$ ${totalValor.toFixed(2)}</p>
-        <p><strong>📋 Comissão DRTRACK:</strong> R$ ${totalComissao.toFixed(2)}</p>
-        <p><strong>💵 Líquido aos Apoiadores:</strong> R$ ${(totalValor - totalComissao).toFixed(2)}</p>
-    `;
-    
-    document.getElementById('lista-ocorrencias').innerHTML = filtrado.map(o => `
-        <div class="ocorrencia ${o.status}">
-            <p><strong>${o.endereco}</strong></p>
-            <p>Data: ${o.data} | Valor: R$ ${o.valor.toFixed(2)}</p>
-            <p>Status: ${o.status === 'pendente' ? '⏳ Pendente' : o.status === 'aceita' ? '🔄 Em Andamento' : '✅ Concluída'}</p>
-            ${o.aceitoPor ? `<p>Aceito por: ${o.aceitoPor}</p>` : ''}
-            ${o.relato ? `<p>Relato: ${o.relato}</p>` : ''}
-            ${o.comissao > 0 ? `<p>Comissão DRTRACK: R$ ${o.comissao.toFixed(2)}</p>` : '<p>Sem comissão</p>'}
+        <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
+            ${!apo.aprovado ? `<button class="botao-pequeno botao-verde" onclick="aprovar(${i})">✅ Aprovar</button>` : ''}
+            ${apo.aprovado ? `<button class="botao-pequeno botao-cinza" onclick="suspender(${i})">⚠️ Suspender</button>` : ''}
+            <button class="botao-pequeno botao-azul" onclick="elogiar(${i})">⭐ Elogiar</button>
+            <button class="botao-pequeno botao-amarelo" onclick="gorjeta(${i})">💰 Gorjeta</button>
+            <button class="botao-pequeno botao-vermelho" onclick="excluirApoio(${i})">🗑️ Excluir</button>
         </div>
-    `).join('');
+    </div>`).join('');
 }
 
-// === SALVAR DADOS ===
-function salvarDados() {
-    localStorage.setItem('apoiadores', JSON.stringify(apoiadores));
-    localStorage.setItem('ocorrencias', JSON.stringify(ocorrencias));
+function aprovar(i) { 
+    cadastrosApoio[i].aprovado = true; 
+    salvarDados(); renderizarApoiosAdmin(); atualizarEstatisticas(); 
+    alert(`✅ ${cadastrosApoio[i].nome} foi APROVADO!`);
 }
-
-// === SAIR ===
-function sair() {
-    if (usuarioAtual) {
-        usuarioAtual.online = false;
-        if (watchId) navigator.geolocation.clearWatch(watchId);
-        localizacaoAtiva = false;
-        salvarDados();
+function suspender(i) { 
+    cadastrosApoio[i].aprovado = false; 
+    salvarDados(); renderizarApoiosAdmin(); atualizarEstatisticas();
+    alert(`⚠️ ${cadastrosApoio[i].nome} foi suspenso.`);
+}
+function elogiar(i) { 
+    alert(`⭐ Elogio registrado para ${cadastrosApoio[i].nome}!`); 
+}
+function gorjeta(i) { 
+    alert(`💰 Gorjeta para ${cadastrosApoio[i].nome}\nPIX: ${cadastrosApoio[i].pix}`); 
+}
+function excluirApoio(i) {
+    if (confirm('Excluir este cadastro permanentemente?')) { 
+        cadastrosApoio.splice(i, 1); 
+        salvarDados(); renderizarApoiosAdmin(); atualizarEstatisticas();
     }
-    usuarioAtual = null;
-    mostrarTela('tela-inicio');
 }
-
-// === INICIALIZAÇÃO ===
-document.addEventListener('DOMContentLoaded', () => {
-    const alertaSalvo = localStorage.getItem('tipoAlerta');
-    if (alertaSalvo) document.getElementById('tipo-alerta').value = alertaSalvo;
-});
 </script>
+
 </body>
 </html>

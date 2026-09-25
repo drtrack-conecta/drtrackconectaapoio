@@ -11,13 +11,13 @@
         body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; padding-bottom: 20px; }
         .tela { display: none; padding: 15px; }
         .tela.ativa { display: block; }
-        .cabecalho { text-align: center; padding: 25px 20px; }
-        .logo { font-size: 26px; font-weight: bold; color: #facc15; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .subtitulo { color: #94a3b8; margin-top: 6px; font-size: 14px; }
+        .cabecalho { text-align: center; padding: 40px 20px 30px; }
+        .logo { font-size: 28px; font-weight: bold; color: #facc15; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .subtitulo { color: #94a3b8; margin-top: 8px; font-size: 15px; }
         .container-botoes { padding: 20px; max-width: 420px; margin: 0 auto; }
         .botao-grande {
-            width: 100%; padding: 20px; border: none; border-radius: 16px;
-            font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 16px;
+            width: 100%; padding: 22px; border: none; border-radius: 16px;
+            font-size: 19px; font-weight: bold; cursor: pointer; margin-bottom: 20px;
             transition: transform 0.15s;
         }
         .botao-grande:active { transform: scale(0.97); }
@@ -679,10 +679,10 @@ function sairApoio() { pararRastreamento(); usuarioLogado = null; voltarInicio()
 
 function distKm(c1, c2) {
     if (!c1 || !c2) return 9999;
-    const R = 6371;
+    const R = 6371
+;
     const dLat = (c2.lat - c1.lat) * Math.PI / 180;
-    const dLng = (c
-(c2.lng - c1.lng) * Math.PI / 180;
+    const dLng = (c2.lng - c1.lng) * Math.PI / 180;
     const a = Math.sin(dLat/2)**2 + Math.cos(c1.lat * Math.PI / 180) * Math.cos(c2.lat * Math.PI / 180) * Math.sin(dLng/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
@@ -690,7 +690,9 @@ function distKm(c1, c2) {
 function iniciarMapa() {
     if (!mapa) {
         mapa = L.map('mapa').setView([-23.5505, -46.6333], 11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapa);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+            attribution: '© OpenStreetMap' 
+        }).addTo(mapa);
     }
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -719,7 +721,7 @@ function carregarServicosApoio() {
     
     if (!pendentes.length) {
         cont.innerHTML = '<p class="sem-itens">✅ Nenhuma ocorrência pendente no momento.<br>Aguarde novos lançamentos.</p>';
-        if (mapa) mapa.eachLayer(l => l instanceof L.Marker && l !== minhaPosicaoMarcador && l.remove());
+        if (mapa) mapa.eachLayer(l => l instanceof L.Marker && l.remove());
         return;
     }
     
@@ -729,7 +731,7 @@ function carregarServicosApoio() {
     })).sort((a, b) => a.distancia - b.distancia);
     
     if (mapa) {
-        mapa.eachLayer(l => l instanceof L.Marker && l !== minhaPosicaoMarcador && l.remove());
+        mapa.eachLayer(l => l instanceof L.Marker && l.remove());
         ordenados.forEach(oc => {
             L.marker([oc.coords.lat, oc.coords.lng], {
                 icon: L.divIcon({ html: '📍', className: '', iconSize: [30, 30] })
@@ -784,11 +786,15 @@ function aceitarServico(id) {
     
     if (!mapaDesloc) {
         mapaDesloc = L.map('mapa-deslocamento').setView([atendimentoAtual.coords.lat, atendimentoAtual.coords.lng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapaDesloc);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+            attribution: '© OpenStreetMap' 
+        }).addTo(mapaDesloc);
     } else {
         mapaDesloc.setView([atendimentoAtual.coords.lat, atendimentoAtual.coords.lng], 13);
         mapaDesloc.eachLayer(l => l.remove());
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapaDesloc);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+            attribution: '© OpenStreetMap' 
+        }).addTo(mapaDesloc);
     }
     
     L.marker([atendimentoAtual.coords.lat, atendimentoAtual.coords.lng], {
@@ -909,7 +915,7 @@ function processarFoto(e) {
     if (!file) return;
     
     if (fotosEnviadas.length >= 5) {
-        alert('✅ Já enviou o máximo de 5 fotos!');
+        alert('✅ Já enviou o mínimo de 5 fotos! Pode enviar mais se precisar.');
         return;
     }
     
@@ -969,7 +975,7 @@ function finalizarAtendimento() {
     mensagem += `🔹 *Horário Aceite:* ${atendimentoAtual.horarioAceite}\n`;
     mensagem += `🔹 *Horário Chegada:* ${atendimentoAtual.horarioChegada}\n`;
     mensagem += `🔹 *Conclusão:* ${atendimentoAtual.dataConclusao}\n\n`;
-    mensagem += `📸 *Fotos Enviadas (${fotosEnviadas.length}):*\n`;
+    mensagem += `📸 *Coordenadas das Fotos Enviadas:*\n`;
     
     fotosCoordenadas.forEach((c, i) => {
         mensagem += `Foto ${i+1}: ${c}\n`;
@@ -977,11 +983,11 @@ function finalizarAtendimento() {
     
     mensagem += `\n📝 *Relatório:*\n${relatorioTexto}\n\n`;
     mensagem += `—\n*DRTRACK Conecta* — Segurança e Apoio\n(11) 99494-4410\n\n`;
-    mensagem += `⚠️ *Anexar as fotos manualmente:*\nSalve cada imagem acima e envie como anexo no WhatsApp.\nAs coordenadas já estão incluídas nesta mensagem.`;
+    mensagem += `⚠️ *Anexar as fotos manualmente:*\nSalve cada imagem e envie como anexo no WhatsApp.\nAs coordenadas já estão nesta mensagem.`;
     
     const link = `https://wa.me/55${numDestino}?text=${encodeURIComponent(mensagem)}`;
     
-    alert(`✅ Atendimento concluído!\nAbrindo WhatsApp...\nAs fotos devem ser anexadas manualmente.`);
+    alert(`✅ Atendimento concluído!\nAbrindo WhatsApp...\nAnexe as fotos manualmente.`);
     
     window.open(link, '_blank');
     

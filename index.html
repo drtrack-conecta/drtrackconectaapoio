@@ -16,14 +16,8 @@
         .subtitulo { color: #94a3b8; margin-top: 6px; font-size: 14px; }
         .container-botoes { padding: 20px; max-width: 420px; margin: 0 auto; }
         .botao-grande {
-            width: 100%;
-            padding: 20px;
-            border: none;
-            border-radius: 16px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-bottom: 16px;
+            width: 100%; padding: 20px; border: none; border-radius: 16px;
+            font-size: 18px; font-weight: bold; cursor: pointer; margin-bottom: 16px;
             transition: transform 0.15s;
         }
         .botao-grande:active { transform: scale(0.97); }
@@ -38,33 +32,19 @@
         .caixa h3 { font-size: 15px; margin-bottom: 12px; color: #cbd5e1; }
         label { display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1; }
         input, select, textarea {
-            width: 100%;
-            padding: 13px;
-            border-radius: 10px;
-            border: none;
-            background: #334155;
-            color: white;
-            font-size: 15px;
-            margin-bottom: 12px;
+            width: 100%; padding: 13px; border-radius: 10px; border: none;
+            background: #334155; color: white; font-size: 15px; margin-bottom: 12px;
         }
         textarea { min-height: 100px; resize: vertical; }
         input:focus, select:focus, textarea:focus { outline: 2px solid #facc15; }
         .botao-voltar {
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            font-size: 15px;
-            cursor: pointer;
-            padding: 8px 12px;
-            margin-bottom: 10px;
-            display: inline-block;
+            background: transparent; border: none; color: #94a3b8; font-size: 15px;
+            cursor: pointer; padding: 8px 12px; margin-bottom: 10px; display: inline-block;
         }
         #mapa { height: 220px; border-radius: 12px; margin-bottom: 15px; z-index: 1; }
+        #mapa-deslocamento { height: 200px; border-radius: 12px; margin-bottom: 10px; z-index: 1; }
         .ocorrencia-card, .cadastro-card {
-            background: #0f172a;
-            border-radius: 14px;
-            padding: 15px;
-            margin-bottom: 12px;
+            background: #0f172a; border-radius: 14px; padding: 15px; margin-bottom: 12px;
             border-left: 4px solid #facc15;
         }
         .ocorrencia-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
@@ -72,18 +52,10 @@
         .ocorrencia-valor { font-size: 17px; font-weight: bold; color: #4ade80; }
         .ocorrencia-dados { font-size: 13px; color: #cbd5e1; margin: 6px 0; line-height: 1.5; }
         .distancia { font-size: 12px; color: #60a5fa; display: flex; align-items: center; gap: 4px; margin-top: 4px; }
-        .prioridade { display: inline-block; background: rgba(74, 222, 128, 0.2); color: #4ade80; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; margin-left: 6px; }
         .botao-aceitar {
-            width: 100%;
-            padding: 13px;
-            border: none;
-            border-radius: 10px;
-            background: linear-gradient(90deg, #16a34a, #15803d);
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 10px;
+            width: 100%; padding: 13px; border: none; border-radius: 10px;
+            background: linear-gradient(90deg, #16a34a, #15803d); color: white;
+            font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
         .botao-aceitar:disabled { background: #334155; cursor: not-allowed; opacity: 0.6; }
         .sem-itens { text-align: center; padding: 30px 20px; color: #64748b; font-size: 14px; }
@@ -94,11 +66,8 @@
         .aba.ativa { border-bottom-color: #facc15; color: #facc15; font-weight: bold; }
         .estatisticas { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; justify-content: center; }
         .estat {
-            flex: 1; min-width: 130px;
-            padding: 15px 10px;
-            border-radius: 12px;
-            text-align: center;
-            font-weight: bold;
+            flex: 1; min-width: 130px; padding: 15px 10px; border-radius: 12px;
+            text-align: center; font-weight: bold;
         }
         .estat span { font-size: 22px; display: block; margin-bottom: 3px; }
         .estat-pend { background: rgba(250, 204, 21, 0.15); color: #facc15; }
@@ -116,17 +85,15 @@
         .foto-preview img { width:100%; height:100%; object-fit:cover; }
         .linha-cadastro { display:flex; gap:12px; align-items:flex-start; }
         .oculto { display:none !important; }
-        .aviso { padding: 12px; border-radius: 10px; margin-bottom: 15px; font-size: 13px; }
-        .aviso-amarelo { background: rgba(250, 204, 21, 0.15); border: 1px solid #facc1540; color: #fef3c7; }
         .fotos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0; }
-        .foto-item { aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #94a3b8; }
+        .foto-item { aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #94a3b8; cursor: pointer; }
         .foto-item img { width: 100%; height: 100%; object-fit: cover; }
-        .foto-item.pendente-foto { border: 2px dashed #64748b; cursor: pointer; }
+        .foto-item.pendente-foto { border: 2px dashed #64748b; }
         .foto-item.enviada { border: 2px solid #4ade80; }
         .progresso { height: 8px; background: #334155; border-radius: 4px; margin: 10px 0; overflow: hidden; }
         .progresso-barra { height: 100%; background: linear-gradient(90deg, #16a34a, #4ade80); width: 0%; transition: width 0.3s; }
-        .etapa { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; margin-bottom: 8px; background: #1e293b; }
-        .etapa.concluida { border-left: 3px solid #4ade80; opacity: 1; }
+        .etapa { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; margin-bottom: 8px; background: #1e293b; transition: all 0.3s; }
+        .etapa.concluida { border-left: 3px solid #4ade80; opacity: 1; background: rgba(22, 163, 74, 0.1); }
         .etapa.pendente-etapa { border-left: 3px solid #64748b; opacity: 0.7; }
         .etapa-icone { font-size: 20px; }
     </style>
@@ -304,7 +271,6 @@
         <div class="ocorrencia-dados" id="atend-dados-local"></div>
     </div>
     
-    <!-- Etapas do Atendimento -->
     <div class="caixa">
         <h3 style="margin-bottom:15px;">📊 Progresso do Atendimento</h3>
         
@@ -344,32 +310,28 @@
         </div>
     </div>
     
-    <!-- Mapa de Deslocamento -->
     <div class="caixa" id="caixa-mapa-deslocamento">
         <h3 style="margin-bottom:10px;">🗺️ Seu Deslocamento</h3>
         <div id="mapa-deslocamento"></div>
     </div>
     
-    <!-- Botão Cheguei ao Local -->
     <button class="botao-grande botao-amarelo" id="btn-cheguei" onclick="confirmarChegada()" style="margin-bottom:15px;">
         📍 CHEGUEI AO LOCAL
     </button>
     
-    <!-- Registro Fotográfico -->
     <div class="caixa oculto" id="secao-fotos">
         <h3>📸 Enviar Fotos do Local</h3>
         <p style="font-size:13px; color:#94a3b8; margin-bottom:10px;">Mínimo de 5 fotos obrigatórias</p>
         <div class="fotos-grid" id="grid-fotos"></div>
+        <input type="file" id="input-foto" accept="image/*" style="display:none;" onchange="processarFoto(event)">
     </div>
     
-    <!-- Relatório -->
     <div class="caixa oculto" id="secao-relatorio">
         <h3>📝 Relatório de Atendimento</h3>
         <label>Descreva o que foi encontrado e feito no local:</label>
         <textarea id="campo-relatorio" placeholder="Detalhe o que observou, as condições do local, ações tomadas..."></textarea>
     </div>
     
-    <!-- Finalizar -->
     <button class="botao-grande botao-verde" id="btn-finalizar" onclick="finalizarAtendimento()" style="margin-top:10px;" disabled>
         ✅ FINALIZAR ATENDIMENTO
     </button>
@@ -394,14 +356,17 @@ let listaOcorrencias = [], cadastrosApoio = [];
 let usuarioLogado = null, mapa = null, mapaDesloc = null, minhaPosicao = null;
 let atendimentoAtual = null, fotosEnviadas = [], watchPosicao = null;
 
-// ===== CARREGAR DADOS =====
 function carregarDados() {
     listaOcorrencias = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
     cadastrosApoio = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
 }
 carregarDados();
 
-// ===== TELA INICIAL =====
+function salvarDados() {
+    localStorage.setItem('listaOcorrencias', JSON.stringify(listaOcorrencias));
+    localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
+}
+
 function voltarInicio() {
     pararRastreamento();
     usuarioLogado = null;
@@ -420,13 +385,11 @@ function voltarParaServicos() {
     carregarServicosApoio();
 }
 
-// ===== CAMPO "OUTRO" =====
 function mostrarCampoOutro() {
     const sel = document.getElementById('tipo-serv').value;
     document.getElementById('campo-outro-container').classList.toggle('oculto', sel !== 'outro');
 }
 
-// ===== ACESSO ADMIN =====
 function irParaSenhaAdmin() {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-senha').classList.add('ativa');
@@ -450,7 +413,6 @@ function trocarAbaAdmin(aba) {
     });
     document.querySelector(`[data-aba="${aba}"]`).classList.add('ativa');
     document.getElementById(`conteudo-${aba}`).classList.remove('oculto');
-    
     if (aba === 'servicos') renderizarServicosAdmin();
     if (aba === 'apoios') renderizarApoiosAdmin();
 }
@@ -461,7 +423,6 @@ function atualizarEstatisticas() {
     document.getElementById('qtd-pendaprov').textContent = cadastrosApoio.filter(c => c.aprovado === false).length;
 }
 
-// ===== LANÇAR OCORRÊNCIA =====
 function lancarOcorrencia() {
     const end = document.getElementById('endereco-serv').value.trim();
     const tipo = document.getElementById('tipo-serv').value;
@@ -488,7 +449,6 @@ function lancarOcorrencia() {
         coords: { lat, lng },
         tipo: tipo,
         descricaoExibicao: descricaoCompleta,
-        descricaoPersonalizada: tipo === 'outro' ? document.getElementById('descricao-outro').value.trim() : '',
         solicitante: document.getElementById('nome-solic').value.trim() || 'Administrador',
         telefone: document.getElementById('fone-solic').value.trim() || 'Não informado',
         valor: parseFloat(document.getElementById('valor-serv').value) || 0,
@@ -503,20 +463,16 @@ function lancarOcorrencia() {
     
     salvarDados();
     alert('✅ Lançado com sucesso!');
-    
-    // Limpar
     document.getElementById('endereco-serv').value = '';
     document.getElementById('valor-serv').value = '';
     document.getElementById('coords-serv').value = '';
     document.getElementById('tipo-serv').value = '';
     document.getElementById('descricao-outro').value = '';
     document.getElementById('campo-outro-container').classList.add('oculto');
-    
     atualizarEstatisticas();
     trocarAbaAdmin('servicos');
 }
 
-// ===== GERENCIAR SERVIÇOS (ADMIN) =====
 function renderizarServicosAdmin() {
     const cont = document.getElementById('lista-servicos-admin');
     if (!listaOcorrencias.length) {
@@ -535,12 +491,8 @@ function renderizarServicosAdmin() {
             detalhesExtras += `<div style="margin-top:10px;"><strong>📝 Relatório:</strong><br>
                 <p style="background:#1e293b; padding:10px; border-radius:6px; margin-top:5px; font-size:13px;">${oc.relatorio}</p></div>`;
         }
-        if (oc.horarioChegada) {
-            detalhesExtras += `<div style="margin-top:8px; font-size:12px; color:#4ade80;">📍 Chegada: ${oc.horarioChegada}</div>`;
-        }
-        if (oc.dataConclusao) {
-            detalhesExtras += `<div style="margin-top:4px; font-size:12px; color:#60a5fa;">✅ Concluído: ${oc.dataConclusao}</div>`;
-        }
+        if (oc.horarioChegada) detalhesExtras += `<div style="margin-top:8px; font-size:12px; color:#4ade80;">📍 Chegada: ${oc.horarioChegada}</div>`;
+        if (oc.dataConclusao) detalhesExtras += `<div style="margin-top:4px; font-size:12px; color:#60a5fa;">✅ Concluído: ${oc.dataConclusao}</div>`;
         
         return `
         <div class="ocorrencia-card">
@@ -549,9 +501,7 @@ function renderizarServicosAdmin() {
                 <span class="etiqueta-status ${oc.status}">${oc.status.toUpperCase()}</span>
             </div>
             <div class="ocorrencia-dados">
-                📍 ${oc.endereco}<br>
-                💰 R$ ${oc.valor.toFixed(2)}<br>
-                📅 ${oc.data}<br>
+                📍 ${oc.endereco}<br>💰 R$ ${oc.valor.toFixed(2)}<br>📅 ${oc.data}<br>
                 ${oc.aceitoPor ? `🛵 Aceito por: ${oc.aceitoPor.nome} em ${oc.horarioAceite || '--'}` : '⏳ Aguardando aceite...'}
                 ${detalhesExtras}
             </div>
@@ -560,8 +510,8 @@ function renderizarServicosAdmin() {
                 ${oc.status === 'aceito' ? `<button class="botao-pequeno botao-verde" onclick="concluir(${i})">✓ Concluído</button>` : ''}
                 <button class="botao-pequeno botao-vermelho" onclick="excluirServ(${i})">🗑️ Excluir</button>
             </div>
-        </div>
-    `}).join('');
+        </div>`;
+    }).join('');
     atualizarEstatisticas();
 }
 function reabrir(i) {
@@ -587,7 +537,6 @@ function excluirServ(i) {
     salvarDados(); renderizarServicosAdmin();
 }
 
-// ===== GERENCIAR APOIOS =====
 function renderizarApoiosAdmin() {
     const cont = document.getElementById('lista-apoios-admin');
     if (!cadastrosApoio.length) {
@@ -606,10 +555,7 @@ function renderizarApoiosAdmin() {
                         </span>
                     </div>
                     <div class="ocorrencia-dados">
-                        📱 ${cad.fone}<br>
-                        🚗 ${nomesVeiculos[cad.veiculo]} — ${cad.placa}<br>
-                        💳 PIX: ${cad.pix}<br>
-                        📅 ${cad.dataCadastro}
+                        📱 ${cad.fone}<br>🚗 ${nomesVeiculos[cad.veiculo]} — ${cad.placa}<br>💳 PIX: ${cad.pix}<br>📅 ${cad.dataCadastro}
                     </div>
                 </div>
             </div>
@@ -619,33 +565,14 @@ function renderizarApoiosAdmin() {
                 ${cad.aprovado === 'bloqueado' ? `<button class="botao-pequeno botao-verde" onclick="desbloquear(${i})">✅ Desbloquear</button>` : ''}
                 <button class="botao-pequeno botao-vermelho" onclick="excluirApoio(${i})">🗑️ Excluir</button>
             </div>
-        </div>
-    `).join('');
+        </div>`).join('');
     atualizarEstatisticas();
 }
-function aprovar(i) {
-    cadastrosApoio[i].aprovado = true;
-    salvarDados(); renderizarApoiosAdmin();
-    alert('✅ APROVADO! Agora pode acessar.');
-}
-function bloquear(i) {
-    if (!confirm('Bloquear? Não conseguirá mais entrar.')) return;
-    cadastrosApoio[i].aprovado = 'bloqueado';
-    salvarDados(); renderizarApoiosAdmin();
-    alert('🚫 BLOQUEADO!');
-}
-function desbloquear(i) {
-    cadastrosApoio[i].aprovado = true;
-    salvarDados(); renderizarApoiosAdmin();
-    alert('✅ DESBLOQUEADO!');
-}
-function excluirApoio(i) {
-    if (!confirm('Excluir permanentemente?')) return;
-    cadastrosApoio.splice(i, 1);
-    salvarDados(); renderizarApoiosAdmin();
-}
+function aprovar(i) { cadastrosApoio[i].aprovado = true; salvarDados(); renderizarApoiosAdmin(); alert('✅ APROVADO!'); }
+function bloquear(i) { if (!confirm('Bloquear?')) return; cadastrosApoio[i].aprovado = 'bloqueado'; salvarDados(); renderizarApoiosAdmin(); alert('🚫 BLOQUEADO!'); }
+function desbloquear(i) { cadastrosApoio[i].aprovado = true; salvarDados(); renderizarApoiosAdmin(); alert('✅ DESBLOQUEADO!'); }
+function excluirApoio(i) { if (!confirm('Excluir?')) return; cadastrosApoio.splice(i, 1); salvarDados(); renderizarApoiosAdmin(); }
 
-// ===== ACESSO APOIO =====
 function irParaAcessoApoio() {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById('tela-acesso-apoio').classList.add('ativa');
@@ -675,27 +602,20 @@ function enviarCadastro() {
     const senha = document.getElementById('cad-senha').value;
     const senha2 = document.getElementById('cad-senha2').value;
     
-    if (!nome || !fone || !veiculo || !placa || !pix || !senha) {
-        alert('⚠️ Preencha TODOS os campos!'); return;
-    }
+    if (!nome || !fone || !veiculo || !placa || !pix || !senha) { alert('⚠️ Preencha TODOS os campos!'); return; }
     if (senha.length < 6) { alert('⚠️ Senha com mínimo 6 caracteres!'); return; }
     if (senha !== senha2) { alert('⚠️ Senhas não coincidem!'); return; }
-    if (cadastrosApoio.some(c => c.fone === fone || c.placa === placa)) {
-        alert('⚠️ Já existe cadastro com este telefone ou placa!'); return;
-    }
+    if (cadastrosApoio.some(c => c.fone === fone || c.placa === placa)) { alert('⚠️ Já existe cadastro com este telefone ou placa!'); return; }
     
     const fotoInput = document.getElementById('cad-foto');
-    
     function finalizar(foto) {
         cadastrosApoio.push({
-            id: Date.now(),
-            nome, fone, veiculo, placa, pix, senha,
-            foto: foto,
-            aprovado: false,
+            id: Date.now(), nome, fone, veiculo, placa, pix, senha,
+            foto: foto, aprovado: false,
             dataCadastro: new Date().toLocaleString('pt-BR')
         });
         salvarDados();
-        alert('✅ Cadastro enviado!\nAguarde a aprovação do Administrador.');
+        alert('✅ Cadastro enviado! Aguarde aprovação.');
         trocarAbaAcesso('login');
         document.getElementById('cad-nome').value = '';
         document.getElementById('cad-fone').value = '';
@@ -706,37 +626,21 @@ function enviarCadastro() {
         document.getElementById('cad-senha2').value = '';
         document.getElementById('preview-foto').innerHTML = '👤';
     }
-    
     if (fotoInput.files && fotoInput.files[0]) {
         const reader = new FileReader();
         reader.onload = e => finalizar(e.target.result);
         reader.readAsDataURL(fotoInput.files[0]);
-    } else {
-        finalizar(null);
-    }
+    } else { finalizar(null); }
 }
 function logarApoio() {
     const nome = document.getElementById('login-nome').value.trim();
     const senha = document.getElementById('login-senha').value;
     const msgEl = document.getElementById('msg-erro-login');
-    
     const cad = cadastrosApoio.find(c => c.nome === nome && c.senha === senha);
     
-    if (!cad) {
-        msgEl.textContent = 'Nome ou senha incorretos.';
-        msgEl.style.display = 'block';
-        return;
-    }
-    if (cad.aprovado === false) {
-        msgEl.innerHTML = '⏳ Seu cadastro está em análise.<br>Aguarde a liberação do Administrador.';
-        msgEl.style.display = 'block';
-        return;
-    }
-    if (cad.aprovado === 'bloqueado') {
-        msgEl.textContent = '🚫 Acesso bloqueado. Contate o Administrador.';
-        msgEl.style.display = 'block';
-        return;
-    }
+    if (!cad) { msgEl.textContent = 'Nome ou senha incorretos.'; msgEl.style.display = 'block'; return; }
+    if (cad.aprovado === false) { msgEl.innerHTML = '⏳ Seu cadastro está em análise.<br>Aguarde a liberação.'; msgEl.style.display = 'block'; return; }
+    if (cad.aprovado === 'bloqueado') { msgEl.textContent = '🚫 Acesso bloqueado. Contate o Administrador.'; msgEl.style.display = 'block'; return; }
     
     usuarioLogado = cad;
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
@@ -744,16 +648,263 @@ function logarApoio() {
     document.getElementById('nome-apoio').textContent = cad.nome.split(' ')[0];
     iniciarMapa();
 }
-function sairApoio() {
-    pararRastreamento();
-    usuarioLogado = null;
-    voltarInicio();
-}
+function sairApoio() { pararRastreamento(); usuarioLogado = null; voltarInicio(); }
 
-// ===== MAPA E SERVIÇOS =====
 function distKm(c1, c2) {
     if (!c1 || !c2) return 9999;
     const R = 6371;
     const dLat = (c2.lat - c1.lat) * Math.PI / 180;
     const dLng = (c2.lng - c1.lng) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(c1.lat*Math.PI
+    const a = Math.sin(dLat/2)**2 + Math.cos(c1.lat*Math.PI/180) * Math.cos(c2.lat*Math.PI/180) * Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function iniciarMapa() {
+    if (!mapa) {
+        mapa = L.map('mapa').setView([-23.5505, -46.6333], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapa);
+    }
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                minhaPosicao = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                mapa.setView([minhaPosicao.lat, minhaPosicao.lng], 13);
+                L.marker([minhaPosicao.lat, minhaPosicao.lng], {
+                    icon: L.divIcon({ html: '🛵', className: '', iconSize: [30, 30] })
+                }).addTo(mapa).bindPopup('Você está aqui');
+                carregarServicosApoio();
+            },
+            () => {
+                alert('Não foi possível obter localização. Usando posição padrão.');
+                minhaPosicao = { lat: -23.5505, lng: -46.6333 };
+                carregarServicosApoio();
+            }
+        );
+    } else {
+        minhaPosicao = { lat: -23.5505, lng: -46.6333 };
+        carregarServicosApoio();
+    }
+}
+
+function carregarServicosApoio() {
+    const cont = document.getElementById('lista-servicos-apoio');
+    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente');
+    if (!pendentes.length) {
+        cont.innerHTML = '<p class="sem-itens">✅ Nenhum serviço pendente no momento.<br>Volte mais tarde.</p>';
+        return;
+    }
+    const ordenados = pendentes.map(o => ({
+        ...o,
+        distancia: distKm(minhaPosicao, o.coords)
+    })).sort((a, b) => a.distancia - b.distancia);
+    
+    ordenados.forEach(oc => {
+        L.marker([oc.coords.lat, oc.coords.lng], {
+            icon: L.divIcon({ html: '📍', className: '', iconSize: [25, 25] })
+        }).addTo(mapa).bindPopup(oc.endereco);
+    });
+    
+    cont.innerHTML = ordenados.map(oc => `
+        <div class="ocorrencia-card">
+            <div class="ocorrencia-cabecalho">
+                <span class="ocorrencia-tipo">${oc.descricaoExibicao || nomesTipos[oc.tipo]}</span>
+                <span class="ocorrencia-valor">R$ ${oc.valor.toFixed(2)}</span>
+            </div>
+            <div class="ocorrencia-dados">
+                📍 ${oc.endereco}<br>
+                📱 Solicitante: ${oc.solicitante} — ${oc.telefone}<br>
+                <span class="distancia">📏 ${oc.distancia.toFixed(2)} km de você</span>
+            </div>
+            <button class="botao-aceitar" onclick="aceitarServico(${oc.id})">✅ ACEITAR ESTE SERVIÇO</button>
+        </div>
+    `).join('');
+}
+
+function aceitarServico(id) {
+    const idx = listaOcorrencias.findIndex(o => o.id === id);
+    if (idx === -1) return;
+    if (listaOcorrencias[idx].status !== 'pendente') {
+        alert('⚠️ Este serviço já foi aceito por outro!');
+        return;
+    }
+    
+    listaOcorrencias[idx].status = 'aceito';
+    listaOcorrencias[idx].aceitoPor = usuarioLogado;
+    listaOcorrencias[idx].horarioAceite = new Date().toLocaleString('pt-BR');
+    salvarDados();
+    
+    atendimentoAtual = listaOcorrencias[idx];
+    fotosEnviadas = [];
+    
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('tela-atendimento').classList.add('ativa');
+    
+    document.getElementById('atend-tipo-servico').textContent = atendimentoAtual.descricaoExibicao || nomesTipos[atendimentoAtual.tipo];
+    document.getElementById('atend-valor').textContent = `R$ ${atendimentoAtual.valor.toFixed(2)}`;
+    document.getElementById('atend-dados-local').innerHTML = `
+        📍 ${atendimentoAtual.endereco}<br>
+        📱 ${atendimentoAtual.solicitante} — ${atendimentoAtual.telefone}<br>
+        📅 Lançado: ${atendimentoAtual.data}
+    `;
+    
+    if (!mapaDesloc) {
+        mapaDesloc = L.map('mapa-deslocamento').setView([atendimentoAtual.coords.lat, atendimentoAtual.coords.lng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapaDesloc);
+    } else {
+        mapaDesloc.setView([atendimentoAtual.coords.lat, atendimentoAtual.coords.lng], 13);
+        mapaDesloc.eachLayer(l => l.remove());
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapaDesloc);
+    }
+    
+    L.marker([atendimentoAtual.coords.lat, atendimentoAtual.coords.lng], {
+        icon: L.divIcon({ html: '📍', className: '', iconSize: [30, 30] })
+    }).addTo(mapaDesloc).bindPopup('Local do Atendimento').openPopup();
+    
+    if (minhaPosicao) {
+        L.marker([minhaPosicao.lat, minhaPosicao.lng], {
+            icon: L.divIcon({ html: '🛵', className: '', iconSize: [30, 30] })
+        }).addTo(mapaDesloc).bindPopup('Você');
+        atualizarDistancia();
+    }
+    
+    iniciarRastreamento();
+    atualizarEtapas();
+    atualizarGridFotos();
+}
+
+function iniciarRastreamento() {
+    if (!navigator.geolocation) return;
+    watchPosicao = navigator.geolocation.watchPosition(
+        pos => {
+            minhaPosicao = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            atualizarDistancia();
+            if (mapaDesloc && atendimentoAtual) {
+                mapaDesloc.setView([minhaPosicao.lat, minhaPosicao.lng], 14);
+            }
+        },
+        err => console.log('Erro localização:', err),
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+    );
+}
+
+function pararRastreamento() {
+    if (watchPosicao !== null) {
+        navigator.geolocation.clearWatch(watchPosicao);
+        watchPosicao = null;
+    }
+}
+
+function atualizarDistancia() {
+    if (!minhaPosicao || !atendimentoAtual) return;
+    const d = distKm(minhaPosicao, atendimentoAtual.coords);
+    document.getElementById('atend-distancia-atual').textContent = 
+        d < 1 ? `${(d*1000).toFixed(0)} metros até o local` : `${d.toFixed(2)} km até o local`;
+}
+
+function confirmarChegada() {
+    if (!confirm('Confirmar que chegou ao local?')) return;
+    atendimentoAtual.horarioChegada = new Date().toLocaleString('pt-BR');
+    document.getElementById('horario-chegada').textContent = atendimentoAtual.horarioChegada;
+    document.getElementById('btn-cheguei').disabled = true;
+    document.getElementById('btn-cheguei').style.opacity = '0.5';
+    document.getElementById('secao-fotos').classList.remove('oculto');
+    document.getElementById('secao-fotos').scrollIntoView({ behavior: 'smooth' });
+    atualizarEtapas();
+    pararRastreamento();
+}
+
+function atualizarEtapas() {
+    const etapas = ['deslocamento','chegada','fotos','relatorio'];
+    etapas.forEach(e => {
+        const el = document.getElementById(`etapa-${e}`);
+        el.classList.remove('concluida','pendente-etapa');
+        el.classList.add('pendente-etapa');
+    });
+    
+    if (atendimentoAtual?.horarioAceite) {
+        document.getElementById('etapa-deslocamento').classList.remove('pendente-etapa');
+        document.getElementById('etapa-deslocamento').classList.add('concluida');
+    }
+    if (atendimentoAtual?.horarioChegada) {
+        document.getElementById('etapa-chegada').classList.remove('pendente-etapa');
+        document.getElementById('etapa-chegada').classList.add('concluida');
+    }
+    if (fotosEnviadas.length >= 5) {
+        document.getElementById('etapa-fotos').classList.remove('pendente-etapa');
+        document.getElementById('etapa-fotos').classList.add('concluida');
+    }
+    if (atendimentoAtual?.relatorio) {
+        document.getElementById('etapa-relatorio').classList.remove('pendente-etapa');
+        document.getElementById('etapa-relatorio').classList.add('concluida');
+    }
+    
+    document.getElementById('barra-fotos').style.width = `${(fotosEnviadas.length / 5) * 100}%`;
+    document.getElementById('contador-fotos').textContent = `${fotosEnviadas.length} de 5 fotos`;
+    
+    const podeFinalizar = fotosEnviadas.length >= 5 && document.getElementById('campo-relatorio').value.trim().length > 0;
+    document.getElementById('btn-finalizar').disabled = !podeFinalizar;
+    
+    if (fotosEnviadas.length >= 5) {
+        document.getElementById('secao-relatorio').classList.remove('oculto');
+    }
+}
+
+function atualizarGridFotos() {
+    const grid = document.getElementById('grid-fotos');
+    let html = '';
+    for (let i = 0; i < 5; i++) {
+        if (fotosEnviadas[i]) {
+            html += `<div class="foto-item enviada"><img src="${fotosEnviadas[i]}"></div>`;
+        } else {
+            html += `<div class="foto-item pendente-foto" onclick="clicarInputFoto()">📷</div>`;
+        }
+    }
+    grid.innerHTML = html;
+}
+
+function clicarInputFoto() {
+    document.getElementById('input-foto').click();
+}
+
+function processarFoto(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (fotosEnviadas.length >= 5) {
+        alert('✅ Já enviou o máximo de 5 fotos!');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        fotosEnviadas.push(ev.target.result);
+        atualizarGridFotos();
+        atualizarEtapas();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+}
+
+function finalizarAtendimento() {
+    if (!confirm('Concluir este atendimento? Não será possível alterar depois.')) return;
+    
+    atendimentoAtual.fotos = [...fotosEnviadas];
+    atendimentoAtual.relatorio = document.getElementById('campo-relatorio').value.trim();
+    atendimentoAtual.status = 'concluido';
+    atendimentoAtual.dataConclusao = new Date().toLocaleString('pt-BR');
+    
+    const idx = listaOcorrencias.findIndex(o => o.id === atendimentoAtual.id);
+    if (idx !== -1) listaOcorrencias[idx] = atendimentoAtual;
+    
+    salvarDados();
+    
+    alert(`✅ ATENDIMENTO CONCLUÍDO!\n\nServiço: ${atendimentoAtual.descricaoExibicao || nomesTipos[atendimentoAtual.tipo]}\nValor: R$ ${atendimentoAtual.valor.toFixed(2)}\n\nCombinar recebimento diretamente com o solicitante.`);
+    
+    voltarParaServicos();
+}
+
+document.getElementById('campo-relatorio').addEventListener('input', atualizarEtapas);
+</script>
+
+</body>
+</html>

@@ -458,7 +458,8 @@ function lancarOcorrencia() {
     document.getElementById('campo-outro-container').classList.add('oculto');
     atualizarEstatisticas();
     trocarAbaAdmin('servicos');
-}
+ = oc.fotos && oc.fotos.length > 0 ? oc.fotos.map((_, idx) => idx) : [];
+    }
 
 function renderizarServicosAdmin() {
     let listaFiltrada = listaOcorrencias;
@@ -508,8 +509,7 @@ function renderizarServicosAdmin() {
 function abrirEdicaoRelatorio(indice) {
     indiceEdicao = indice;
     const oc = listaOcorrencias[indice];
-    fotosSelecionadasParaEnvio = oc.fotos && oc.fotos.length > 0 ? oc.fotos.map((_, idx) => idx) : [];
-    
+    fotosSelecionadasParaEnvio
     document.getElementById('edit-tipo-servico').value = oc.descricaoExibicao || nomesTipos[oc.tipo] || '';
     document.getElementById('edit-solicitante').value = oc.solicitante ? `${oc.solicitante} — ${oc.telefone}` : '';
     document.getElementById('edit-endereco').value = oc.endereco || '';
@@ -545,7 +545,7 @@ function abrirEdicaoRelatorio(indice) {
     ['edit-tipo-servico','edit-solicitante','edit-endereco','edit-coords','edit-chegada','edit-concluida','edit-historio'].forEach(id => {
         document.getElementById(id).oninput = atualizarVisualizacaoRelatorio;
     });
-}
+} no
 
 function alternarSelecaoFoto(idx) {
     const el = document.getElementById(`foto-envio-${idx}`);
@@ -800,4 +800,586 @@ function excluirApoio(i) {
 </script>
 
 </body>
+    <!-- ================================================== -->
+<!-- PARTE 3: ÁREA DO APOIO — ATUALIZADA -->
+<!-- ================================================== -->
+
+<!-- Tela Login do Apoio -->
+<div id="tela-login-apoio" class="tela">
+    <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
+    <div class="caixa" style="max-width: 380px; margin: 30px auto;">
+        <h2 style="text-align:center;">🛵 Área do Apoio</h2>
+        <p style="text-align:center; color:#94a3b8; margin-bottom:20px;">Acesse sua conta</p>
+        
+        <label>Telefone com WhatsApp</label>
+        <input type="tel" id="login-telefone" placeholder="(11) 9xxxx-xxxx">
+        
+        <label>Senha</label>
+        <div style="position:relative;">
+            <input type="password" id="login-senha" placeholder="Digite sua senha">
+            <button type="button" style="position:absolute; right:12px; top:12px; background:none; border:none; font-size:18px; cursor:pointer;" onclick="alternarVisibilidadeSenha()">👁️</button>
+        </div>
+        
+        <p style="text-align:right; margin:8px 0 15px; font-size:13px;">
+            <a href="#" onclick="abrirRecuperarSenha(); return false;" style="color:#facc15; text-decoration:underline;">Esqueci minha senha</a>
+        </p>
+        
+        <button class="botao-grande botao-verde" onclick="verificarLoginApoio()" style="margin-top:5px;">🔑 Entrar</button>
+        
+        <p style="text-align:center; margin:20px 0; color:#94a3b8;">— Não tem cadastro ainda? —</p>
+        <button class="botao-grande botao-roxo" onclick="irParaCadastroApoio()">📝 Fazer Cadastro</button>
+        
+        <p id="msg-login-erro" style="color:#f87171; margin-top:10px; display:none; text-align:center;"></p>
+        <p id="msg-nao-aprovado" style="color:#facc15; margin-top:10px; display:none; text-align:center;">⏳ Seu cadastro está aguardando aprovação do Administrador</p>
+    </div>
+</div>
+
+<!-- Tela Recuperar Senha -->
+<div id="tela-recuperar-senha" class="tela">
+    <button class="botao-voltar" onclick="irParaLoginApoio()">← Voltar</button>
+    <div class="caixa" style="max-width: 380px; margin: 30px auto;">
+        <h2 style="text-align:center;">🔓 Recuperar Senha</h2>
+        <p style="text-align:center; color:#94a3b8; margin-bottom:20px;">Digite seu e-mail de cadastro</p>
+        
+        <label>E-mail</label>
+        <input type="email" id="email-recuperar" placeholder="seu@email.com">
+        
+        <button class="botao-grande botao-amarelo" onclick="enviarLinkRecuperacao()">📧 Enviar Instruções</button>
+        <p id="msg-envio-sucesso" style="color:#4ade80; margin-top:15px; display:none; text-align:center;">✅ E-mail enviado! Verifique sua caixa de entrada</p>
+    </div>
+</div>
+
+<!-- Tela Cadastro do Apoio → ATUALIZADA -->
+<div id="tela-cadastro-apoio" class="tela">
+    <button class="botao-voltar" onclick="irParaLoginApoio()">← Voltar</button>
+    <div class="caixa">
+        <h2 style="text-align:center;">📝 Cadastro de Apoio</h2>
+        <p style="text-align:center; color:#94a3b8; margin-bottom:20px;">Preencha todos os campos</p>
+        
+        <label>Nome Completo *</label>
+        <input type="text" id="apoio-nome" placeholder="Seu nome completo">
+        
+        <label>E-mail *</label>
+        <input type="email" id="apoio-email" placeholder="seu@email.com">
+        
+        <label>Telefone / WhatsApp *</label>
+        <input type="tel" id="apoio-telefone" placeholder="(11) 9xxxx-xxxx">
+        
+        <label>Placa do Veículo *</label>
+        <input type="text" id="apoio-placa" placeholder="ABC-1234 ou ABC1D23" style="text-transform:uppercase;">
+        
+        <label>Região / Bairro de Atuação *</label>
+        <select id="apoio-regiao">
+            <option value="">Selecione...</option>
+            <option value="Zona Norte">📍 Zona Norte</option>
+            <option value="Zona Sul">📍 Zona Sul</option>
+            <option value="Zona Leste">📍 Zona Leste</option>
+            <option value="Zona Oeste">📍 Zona Oeste</option>
+            <option value="Centro">📍 Centro</option>
+            <option value="Grande São Paulo">📍 Grande São Paulo</option>
+            <option value="Todas">🌎 Todas as regiões</option>
+        </select>
+        
+        <label>Tipo de Veículo *</label>
+        <select id="apoio-veiculo">
+            <option value="">Selecione...</option>
+            <option value="Moto 🛵">🛵 Moto</option>
+            <option value="Carro 🚗">🚗 Carro</option>
+            <option value="Bicicleta 🚲">🚲 Bicicleta</option>
+            <option value="A pé 🚶">🚶 A pé</option>
+        </select>
+        
+        <label>Chave PIX para recebimento *</label>
+        <input type="text" id="apoio-pix" placeholder="Sua chave PIX">
+        
+        <label>Criar Senha *</label>
+        <div style="position:relative;">
+            <input type="password" id="apoio-senha" placeholder="Crie uma senha">
+            <button type="button" style="position:absolute; right:12px; top:12px; background:none; border:none; font-size:18px; cursor:pointer;" onclick="alternarVisibilidadeSenhaCadastro()">👁️</button>
+        </div>
+        
+        <button class="botao-grande botao-verde" onclick="enviarCadastroApoio()" style="margin-top:15px;">✅ Enviar Cadastro</button>
+    </div>
+</div>
+
+<!-- Tela Principal do Apoio — Ocorrências PISCANDO ⚡ -->
+<div id="tela-apoio-principal" class="tela">
+    <button class="botao-voltar" onclick="sairApoio()">🚪 Sair</button>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h2 style="color:#facc15;">🛵 Ocorrências Próximas</h2>
+        <div style="text-align:right;">
+            <span style="font-size:12px; color:#4ade80;">● Online</span>
+        </div>
+    </div>
+    
+    <!-- Opção de Som -->
+    <div class="caixa" style="padding:12px; margin-bottom:15px;">
+        <label style="margin:0; display:inline;">🔔 Som de Aviso:</label>
+        <select id="tipo-som-apoio" onchange="salvarPreferenciaSom()">
+            <option value="sirene">🚨 Sirene</option>
+            <option value="continuo">🔔 Sinal Contínuo</option>
+            <option value="desligado">🔇 Desligado</option>
+        </select>
+    </div>
+    
+    <!-- Mapa Simulado -->
+    <div id="mapa-apoio" style="height:220px; border-radius:12px; margin-bottom:15px; background:#1e293b; display:flex; align-items:center; justify-content:center; color:#94a3b8;">
+        📍 Mapa — Ocorrências aparecerão aqui
+    </div>
+    
+    <!-- Lista de Ocorrências — PISCANDO ⚡ -->
+    <h3 style="margin-bottom:10px;">Chamados Disponíveis</h3>
+    <div id="lista-ocorrencias-apoio">
+        <p class="sem-itens">Aguardando novos chamados...</p>
+    </div>
+    
+    <!-- Meus Atendimentos -->
+    <h3 style="margin:25px 0 10px;">Meus Atendimentos</h3>
+    <div id="meus-atendimentos-apoio">
+        <p class="sem-itens">Nenhum atendimento aceito ainda.</p>
+    </div>
+</div>
+
+<!-- Tela de Detalhes + DOWNLOAD DAS FOTOS -->
+<div id="tela-atendimento-apoio" class="tela">
+    <button class="botao-voltar" onclick="voltarParaOcorrencias()">← Voltar</button>
+    
+    <h2 style="color:#facc15; margin-bottom:15px;">📍 Detalhes do Atendimento</h2>
+    
+    <div class="caixa">
+        <h3 id="det-tipo-servico">Tipo de Serviço</h3>
+        <p id="det-endereco" style="font-size:15px; margin:8px 0;">📍 Endereço</p>
+        <p id="det-coords" style="font-size:12px; color:#94a3b8;">🌐 Coordenadas</p>
+        <p id="det-solicitante" style="margin:5px 0;">👤 Solicitante</p>
+        <p id="det-valor" style="font-size:18px; font-weight:bold; color:#4ade80; margin-top:10px;">💰 R$ 0,00</p>
+    </div>
+    
+    <!-- Chegada no Local -->
+    <div class="caixa">
+        <h3>✅ Confirmação de Chegada</h3>
+        <button class="botao-grande botao-verde" id="btn-chegada" onclick="registrarChegada()">📍 CHEGUEI NO LOCAL</button>
+        <p id="horario-chegada-apoio" style="margin-top:8px; color:#94a3b8;">Aguardando confirmação...</p>
+    </div>
+    
+    <!-- Envio de Fotos + DOWNLOAD -->
+    <div class="caixa">
+        <h3>📸 Enviar Registro Fotográfico</h3>
+        <p style="font-size:12px; color:#f97316; margin-bottom:10px;">⚠️ Mínimo de 5 fotos obrigatórias</p>
+        
+        <input type="file" id="foto-apoio-1" accept="image/*" capture="environment" onchange="visualizarFoto(1)">
+        <input type="file" id="foto-apoio-2" accept="image/*" capture="environment" onchange="visualizarFoto(2)">
+        <input type="file" id="foto-apoio-3" accept="image/*" capture="environment" onchange="visualizarFoto(3)">
+        <input type="file" id="foto-apoio-4" accept="image/*" capture="environment" onchange="visualizarFoto(4)">
+        <input type="file" id="foto-apoio-5" accept="image/*" capture="environment" onchange="visualizarFoto(5)">
+        <input type="file" id="foto-apoio-extra" accept="image/*" capture="environment" onchange="visualizarFotoExtra()">
+        
+        <div class="fotos-grid" id="preview-fotos-apoio" style="margin:15px 0;">
+            <p style="grid-column:1/-1; color:#94a3b8;">Fotos aparecerão aqui</p>
+        </div>
+        
+        <!-- 🆕 Botões de Download -->
+        <div id="botoes-download-fotos" class="oculto" style="margin:15px 0; display:flex; flex-wrap:wrap; gap:8px;">
+            <h4 style="width:100%; margin-bottom:5px;">💾 Baixar Fotos:</h4>
+        </div>
+        
+        <label>📝 Observações / Relatório do Atendimento</label>
+        <textarea id="relatorio-apoio" rows="4" placeholder="Descreva o que encontrou no local..."></textarea>
+    </div>
+    
+    <button class="botao-grande botao-amarelo" onclick="concluirAtendimentoApoio()">✅ CONCLUIR E ENVIAR</button>
+</div>
+
+<style>
+/* ⚡ ANIMAÇÃO PISCANDO */
+@keyframes piscar {
+    0% { box-shadow: 0 0 5px #facc15, 0 0 10px #facc15; border-color: #facc15; }
+    50% { box-shadow: 0 0 20px #facc15, 0 0 30px #facc15; border-color: #fff; }
+    100% { box-shadow: 0 0 5px #facc15, 0 0 10px #facc15; border-color: #facc15; }
+}
+.ocorrencia-piscando {
+    animation: piscar 1s infinite;
+    border-left-color: #facc15 !important;
+    border-left-width: 5px !important;
+}
+.foto-com-dados {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.foto-com-dados img {
+    border: 2px solid #4ade80;
+}
+.dados-foto {
+    font-size: 10px;
+    color: #cbd5e1;
+    padding: 4px;
+    background: rgba(0,0,0,0.7);
+    border-radius: 0 0 6px 6px;
+    word-break: break-all;
+}
+</style>
+
+<script>
+// ========== VARIÁVEIS DA PARTE 3 ==========
+let apoioLogado = null;
+let servicoAceito = null;
+let fotosApoio = [];
+let fotosExtras = [];
+let preferenciaSom = localStorage.getItem('preferenciaSom') || 'sirene';
+let senhaVisivel = false;
+let senhaCadastroVisivel = false;
+
+// ========== ALTERNAR VISIBILIDADE DE SENHA ==========
+function alternarVisibilidadeSenha() {
+    senhaVisivel = !senhaVisivel;
+    const campo = document.getElementById('login-senha');
+    campo.type = senhaVisivel ? 'text' : 'password';
+}
+function alternarVisibilidadeSenhaCadastro() {
+    senhaCadastroVisivel = !senhaCadastroVisivel;
+    const campo = document.getElementById('apoio-senha');
+    campo.type = senhaCadastroVisivel ? 'text' : 'password';
+}
+
+// ========== RECUPERAR SENHA ==========
+function abrirRecuperarSenha() {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('tela-recuperar-senha').classList.add('ativa');
+    document.getElementById('msg-envio-sucesso').style.display = 'none';
+}
+function enviarLinkRecuperacao() {
+    const email = document.getElementById('email-recuperar').value.trim();
+    if (!email) { alert('⚠️ Digite seu e-mail!'); return; }
+    
+    const encontrado = cadastrosApoio.find(a => a.email === email);
+    if (!encontrado) {
+        alert('⚠️ E-mail não encontrado no cadastro!');
+        return;
+    }
+    
+    // Simulação de envio
+    document.getElementById('msg-envio-sucesso').style.display = 'block';
+    alert(`✅ Enviado para:\n${email}\n\n(Em versão completa: link de redefinição enviado)`);
+}
+
+// ========== NAVEGAÇÃO ==========
+function irParaLoginApoio() {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('tela-login-apoio').classList.add('ativa');
+    document.getElementById('msg-login-erro').style.display = 'none';
+    document.getElementById('msg-nao-aprovado').style.display = 'none';
+}
+function irParaCadastroApoio() {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('tela-cadastro-apoio').classList.add('ativa');
+}
+function irParaPrincipalApoio() {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('tela-apoio-principal').classList.add('ativa');
+    document.getElementById('tipo-som-apoio').value = preferenciaSom;
+    renderizarOcorrenciasParaApoio();
+}
+function sairApoio() {
+    if (confirm('Deseja realmente sair?')) {
+        apoioLogado = null;
+        fotosApoio = [];
+        fotosExtras = [];
+        servicoAceito = null;
+        voltarInicio();
+    }
+}
+
+// ========== CADASTRO ATUALIZADO ==========
+function enviarCadastroApoio() {
+    const nome = document.getElementById('apoio-nome').value.trim();
+    const email = document.getElementById('apoio-email').value.trim();
+    const telefone = document.getElementById('apoio-telefone').value.trim();
+    const placa = document.getElementById('apoio-placa').value.trim().toUpperCase();
+    const regiao = document.getElementById('apoio-regiao').value;
+    const veiculo = document.getElementById('apoio-veiculo').value;
+    const pix = document.getElementById('apoio-pix').value.trim();
+    const senha = document.getElementById('apoio-senha').value.trim();
+    
+    if (!nome || !email || !telefone || !placa || !regiao || !veiculo || !pix || !senha) {
+        alert('⚠️ Preencha TODOS os campos!');
+        return;
+    }
+    if (!email.includes('@')) { alert('⚠️ Digite um e-mail válido!'); return; }
+    if (senha.length < 6) { alert('⚠️ Senha deve ter pelo menos 6 caracteres!'); return; }
+    
+    const telLimpo = telefone.replace(/\D/g,'');
+    const jaExiste = cadastrosApoio.find(a => a.telefone.replace(/\D/g,'') === telLimpo || a.email === email);
+    if (jaExiste) {
+        alert('⚠️ Já existe cadastro com este telefone ou e-mail! Faça login.');
+        irParaLoginApoio();
+        return;
+    }
+    
+    cadastrosApoio.push({
+        id: Date.now(),
+        nome, email, telefone, placa, regiao, veiculo, pix,
+        senha: btoa(senha), // Criptografia simples
+        aprovado: false,
+        dataCadastro: new Date().toLocaleString('pt-BR'),
+        atendimentos: []
+    });
+    
+    salvarDados();
+    alert('✅ Cadastro enviado com sucesso!\n⏳ Aguarde aprovação do Administrador.');
+    irParaLoginApoio();
+}
+
+// ========== LOGIN ATUALIZADO ==========
+function verificarLoginApoio() {
+    const tel = document.getElementById('login-telefone').value.trim().replace(/\D/g,'');
+    const senhaDigitada = document.getElementById('login-senha').value.trim();
+    const msgErro = document.getElementById('msg-login-erro');
+    const msgAguardando = document.getElementById('msg-nao-aprovado');
+    
+    const encontrado = cadastrosApoio.find(a => a.telefone.replace(/\D/g,'') === tel);
+    
+    if (!encontrado) {
+        msgErro.textContent = '❌ Telefone não encontrado.';
+        msgErro.style.display = 'block';
+        msgAguardando.style.display = 'none';
+        return;
+    }
+    
+    if (!encontrado.aprovado) {
+        msgAguardando.style.display = 'block';
+        msgErro.style.display = 'none';
+        return;
+    }
+    
+    if (encontrado.senha && atob(encontrado.senha) !== senhaDigitada) {
+        msgErro.textContent = '❌ Senha incorreta!';
+        msgErro.style.display = 'block';
+        msgAguardando.style.display = 'none';
+        return;
+    }
+    
+    apoioLogado = encontrado;
+    irParaPrincipalApoio();
+}
+
+// ========== SOM ==========
+function salvarPreferenciaSom() {
+    preferenciaSom = document.getElementById('tipo-som-apoio').value;
+    localStorage.setItem('preferenciaSom', preferenciaSom);
+}
+function tocarAvisoSonoro() {
+    if (preferenciaSom === 'desligado') return;
+    alert(preferenciaSom === 'sirene' ? '🚨 NOVA OCORRÊNCIA!' : '🔔 Chamado disponível!');
+}
+
+// ========== OCORRÊNCIAS PISCANDO ⚡ ==========
+function renderizarOcorrenciasParaApoio() {
+    const cont = document.getElementById('lista-ocorrencias-apoio');
+    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente');
+    
+    if (!pendentes.length) {
+        cont.innerHTML = '<p class="sem-itens">Aguardando novos chamados...</p>';
+        return;
+    }
+    
+    cont.innerHTML = pendentes.map((oc, i) => {
+        const distSimulada = Math.floor(Math.random() * 5) + 1;
+        return `
+        <div class="ocorrencia-card ocorrencia-piscando" style="border-left-color:#4ade80;">
+            <div class="ocorrencia-cabecalho">
+                <span class="ocorrencia-tipo">${oc.descricaoExibicao || nomesTipos[oc.tipo]}</span>
+                <span style="color:#4ade80; font-size:13px;">📍 ${distSimulada} km</span>
+            </div>
+            <div class="ocorrencia-dados">
+                ${oc.endereco}<br>💰 R$ ${oc.valor.toFixed(2)}
+            </div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+                <button class="botao-grande botao-verde" style="flex:1;" onclick="aceitarServico(${listaOcorrencias.indexOf(oc)})">✅ ACEITAR</button>
+                <button class="botao-grande botao-vermelho" style="flex:0.4; padding:13px;" onclick="recusarServico(${listaOcorrencias.indexOf(oc)})">❌ RECUSAR</button>
+            </div>
+        </div>`;
+    }).join('');
+    
+    renderizarMeusAtendimentos();
+    tocarAvisoSonoro();
+}
+
+function aceitarServico(indice) {
+    if (!confirm('Confirmar aceite?')) return;
+    servicoAceito = listaOcorrencias[indice];
+    servicoAceito.status = 'aceito';
+    servicoAceito.aceitoPor = { nome: apoioLogado.nome, telefone: apoioLogado.telefone };
+    servicoAceito.horarioAceite = new Date().toLocaleString('pt-BR');
+    apoioLogado.atendimentos.push(servicoAceito.id);
+    salvarDados();
+    abrirTelaAtendimento(indice);
+}
+function recusarServico(indice) {
+    alert('❌ Recusado.');
+    renderizarOcorrenciasParaApoio();
+}
+function abrirTelaAtendimento(indice) {
+    servicoAceito = listaOcorrencias[indice];
+    fotosApoio = []; fotosExtras = [];
+    
+    document.getElementById('det-tipo-servico').textContent = servicoAceito.descricaoExibicao || nomesTipos[servicoAceito.tipo];
+    document.getElementById('det-endereco').textContent = '📍 ' + servicoAceito.endereco;
+    document.getElementById('det-coords').textContent = `🌐 ${servicoAceito.coords.lat.toFixed(6)}, ${servicoAceito.coords.lng.toFixed(6)}`;
+    document.getElementById('det-solicitante').textContent = '👤 ' + servicoAceito.solicitante;
+    document.getElementById('det-valor').textContent = '💰 R$ ' + servicoAceito.valor.toFixed(2);
+    document.getElementById('horario-chegada-apoio').textContent = 'Aguardando...';
+    document.getElementById('relatorio-apoio').value = '';
+    document.getElementById('preview-fotos-apoio').innerHTML = '<p style="grid-column:1/-1; color:#94a3b8;">Selecione as fotos</p>';
+    document.getElementById('botoes-download-fotos').classList.add('oculto');
+    
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.getElementById('tela-atendimento-apoio').classList.add('ativa');
+}
+function voltarParaOcorrencias() {
+    servicoAceito = null; fotosApoio = []; fotosExtras = [];
+    irParaPrincipalApoio();
+}
+
+// ========== CHEGADA ==========
+function registrarChegada() {
+    servicoAceito.horarioChegada = new Date().toLocaleString('pt-BR');
+    document.getElementById('horario-chegada-apoio').innerHTML = '✅ ' + servicoAceito.horarioChegada;
+    document.getElementById('btn-chegada').disabled = true;
+    document.getElementById('btn-chegada').style.opacity = '0.6';
+    salvarDados();
+}
+
+// ========== FOTOS + DOWNLOAD ==========
+function visualizarFoto(num) {
+    const input = document.getElementById(`foto-apoio-${num}`);
+    if (!input.files[0]) return;
+    const leitor = new FileReader();
+    leitor.onload = e => {
+        fotosApoio[num-1] = e.target.result;
+        atualizarPreviewFotos();
+    };
+    leitor.readAsDataURL(input.files[0]);
+}
+function visualizarFotoExtra() {
+    const input = document.getElementById('foto-apoio-extra');
+    if (!input.files[0]) return;
+    const leitor = new FileReader();
+    leitor.onload = e => {
+        fotosExtras.push(e.target.result);
+        atualizarPreviewFotos();
+    };
+    leitor.readAsDataURL(input.files[0]);
+}
+function atualizarPreviewFotos() {
+    const cont = document.getElementById('preview-fotos-apoio');
+    const todas = [...fotosApoio.filter(f=>f), ...fotosExtras];
+    const btnArea = document.getElementById('botoes-download-fotos');
+    
+    if (!todas.length) {
+        cont.innerHTML = '<p style="grid-column:1/-1; color:#94a3b8;">Fotos aparecerão aqui</p>';
+        btnArea.classList.add('oculto');
+        return;
+    }
+    
+    const end = servicoAceito?.endereco || 'Sem endereço';
+    const lat = servicoAceito?.coords?.lat?.toFixed(6) || '---';
+    const lng = servicoAceito?.coords?.lng?.toFixed(6) || '---';
+    
+    cont.innerHTML = todas.map((foto, i) => `
+        <div class="foto-com-dados">
+            <img src="${foto}" alt="Foto ${i+1}">
+            <div class="dados-foto">
+                📍 ${end.substring(0,30)}...<br>
+                🌐 ${lat}, ${lng}
+            </div>
+        </div>
+    `).join('');
+    
+    // Botões de download
+    btnArea.classList.remove('oculto');
+    btnArea.innerHTML = `<h4 style="width:100%; margin-bottom:5px;">💾 Baixar Fotos:</h4>` +
+        todas.map((foto, i) => `
+            <button class="botao-pequeno botao-azul" onclick="baixarFoto(${i})">📷 Foto ${i+1}</button>
+        `).join('');
+}
+
+// 🆕 BAIXAR FOTO COM DADOS
+function baixarFoto(indice) {
+    const todas = [...fotosApoio.filter(f=>f), ...fotosExtras];
+    const foto = todas[indice];
+    if (!foto) return;
+    
+    const end = servicoAceito?.endereco || 'Sem-endereco';
+    const lat = servicoAceito?.coords?.lat?.toFixed(6) || '0';
+    const lng = servicoAceito?.coords?.lng?.toFixed(6) || '0';
+    const nomeArquivo = `Foto${indice+1}_${lat}-${lng}.png`;
+    
+    // Cria imagem com texto sobreposto
+    const img = new Image();
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height + 60;
+        const ctx = canvas.getContext('2d');
+        
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, 60);
+        ctx.fillStyle = '#fff';
+        ctx.font = `${Math.max(12, canvas.width/50)}px Arial`;
+        ctx.fillText(`📍 ${end}`, 10, 25);
+        ctx.fillText(`🌐 ${lat}, ${lng}`, 10, 50);
+        ctx.drawImage(img, 0, 60);
+        
+        const link = document.createElement('a');
+        link.download = nomeArquivo;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    };
+    img.src = foto;
+}
+
+// ========== CONCLUIR ==========
+function concluirAtendimentoApoio() {
+    const todas = [...fotosApoio.filter(f=>f), ...fotosExtras];
+    if (todas.length < 5) { alert(`⚠️ Mínimo 5 fotos! Você enviou ${todas.length}`); return; }
+    if (!servicoAceito.horarioChegada) { alert('⚠️ Confirme chegada!'); return; }
+    
+    const rel = document.getElementById('relatorio-apoio').value.trim();
+    if (!rel) { alert('⚠️ Preencha o relatório!'); return; }
+    
+    servicoAceito.fotos = todas;
+    servicoAceito.fotosCoordenadas = todas.map(() => 
+        `${servicoAceito.coords.lat.toFixed(6)}, ${servicoAceito.coords.lng.toFixed(6)}`
+    );
+    servicoAceito.relatorio = rel;
+    servicoAceito.dataConclusao = new Date().toLocaleString('pt-BR');
+    servicoAceito.status = 'concluido';
+    
+    salvarDados();
+    alert('✅ Enviado! O Administrador já recebeu.');
+    voltarParaOcorrencias();
+}
+
+function renderizarMeusAtendimentos() {
+    const cont = document.getElementById('meus-atendimentos-apoio');
+    if (!apoioLogado?.atendimentos?.length) {
+        cont.innerHTML = '<p class="sem-itens">Nenhum concluído.</p>';
+        return;
+    }
+    const meus = listaOcorrencias.filter(o => o.aceitoPor?.nome === apoioLogado.nome);
+    cont.innerHTML = meus.length ? meus.map(oc => `
+        <div class="ocorrencia-card">
+            <span class="ocorrencia-tipo">${oc.descricaoExibicao || nomesTipos[oc.tipo]}</span>
+            <span class="etiqueta-status ${oc.status}">${oc.status.toUpperCase()}</span>
+            <p style="margin:5px 0;">📍 ${oc.endereco}</p>
+        </div>`).join('') : '<p class="sem-itens">Nenhum encontrado.</p>';
+}
+
+// Inicializar botão
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.querySelector('button[onclick*="Apoio"]');
+    if (btn) btn.setAttribute('onclick', 'irParaLoginApoio()');
+});
+</script>
 </html>

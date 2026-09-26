@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DRTRACK Conecta 🛡️</title>
+    <!-- Leaflet (Mapas) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Chart.js (Gráficos) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
         body { background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 12px; }
         .tela { display: none; max-width: 450px; margin: 0 auto; }
-        .tela-larga { max-width: 900px; }
+        .tela-larga { max-width: 950px; }
         .ativa { display: block; }
         h2, h3 { text-align: center; margin-bottom: 20px; color: #facc15; }
         .caixa { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
@@ -51,11 +57,18 @@
         #mapa { height: 320px; border-radius: 10px; margin: 12px 0; }
         .foto-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .foto-item { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 2px solid #475569; }
-        .dados-foto { font-size: 12px; color: #94a3b8; margin-top: 4px; }
         .botao-pequeno { width: auto; padding: 8px 12px; font-size: 13px; margin: 4px; }
         .oculto { display: none !important; }
-        .rodape-pix { text-align: center; margin-top: 25px; padding: 15px; background: #1e293b; border-radius: 10px; }
-        .chave-pix { font-weight: bold; color: #facc15; font-size: 16px; margin-top: 5px; }
+        .checkbox-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 15px 0; }
+        .checkbox-group label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .checkbox-group input { width: auto; }
+        
+        @media print {
+            body { background: white; color: black; }
+            .btn-voltar, button, select, .checkbox-group, .linha { display: none !important; }
+            .caixa { background: white; color: black; box-shadow: none; border: 1px solid #ccc; }
+            .ocorrencia-card { background: #f8fafc; color: black; border: 1px solid #cbd5e1; }
+        }
     </style>
 </head>
 <body>
@@ -68,10 +81,6 @@
     <div class="caixa">
         <button class="btn-verde" onclick="irParaLoginApoio()">🛵 Sou Apoio — Entrar</button>
         <button class="btn-amarelo" onclick="irParaAdmin()">⚙️ Administrador</button>
-    </div>
-    <div class="rodape-pix">
-        <p>💡 Gostou? Apoie o projeto</p>
-        <p class="chave-pix">PIX: (11) 99494-4410</p>
     </div>
 </div>
 
@@ -132,13 +141,13 @@
         <label>Região / Bairro de Atuação *</label>
         <select id="cad-regiao">
             <option value="">Selecione...</option>
-            <option>Zona Norte — SP</option>
-            <option>Zona Sul — SP</option>
-            <option>Zona Leste — SP</option>
-            <option>Zona Oeste — SP</option>
-            <option>Centro — SP</option>
-            <option>Grande São Paulo</option>
-            <option>Todas as regiões</option>
+            <option value="Zona Norte — SP">Zona Norte — SP</option>
+            <option value="Zona Sul — SP">Zona Sul — SP</option>
+            <option value="Zona Leste — SP">Zona Leste — SP</option>
+            <option value="Zona Oeste — SP">Zona Oeste — SP</option>
+            <option value="Centro — SP">Centro — SP</option>
+            <option value="Grande São Paulo">Grande São Paulo</option>
+            <option value="Todas as regiões">Todas as regiões</option>
         </select>
         
         <label>Tipo de Veículo *</label>
@@ -152,6 +161,10 @@
         
         <label>Chave PIX para recebimento *</label>
         <input type="text" id="cad-pix" placeholder="Sua chave PIX">
+
+        <!-- NOVO CAMPO: Documento para Validação -->
+        <label>Foto do Documento (RG ou CNH com CPF) *</label>
+        <input type="file" id="cad-doc" accept="image/*,application/pdf">
         
         <label>Criar Senha * (mínimo 6 caracteres)</label>
         <div class="senha-campo">
@@ -170,7 +183,7 @@
     <h2>🛵 Bem-vindo, <span id="nome-apoio"></span>!</h2>
     
     <div id="aviso-aprovacao" class="caixa aviso" style="text-align:center;">
-        ⏳ Seu cadastro está aguardando aprovação do Administrador
+        ⏳ Seu cadastro está aguardando verificação de documentos e aprovação do Administrador.
     </div>
 
     <div id="conteudo-aprovado" class="oculto">
@@ -242,11 +255,6 @@
             <div id="meus-atendimentos"></div>
         </div>
     </div>
-
-    <div class="rodape-pix">
-        <p>💡 Gostou? Apoie o projeto</p>
-        <p class="chave-pix">PIX: (11) 99494-4410 — DRTRACK Conecta</p>
-    </div>
 </div>
 
 <!-- ====================================== LOGIN ADMIN -->
@@ -269,7 +277,7 @@
     <div class="linha" style="margin-bottom:15px;">
         <button class="btn-verde" onclick="mostrarAba('aba-lancar')">📤 Lançar Ocorrência</button>
         <button class="btn-azul" onclick="mostrarAba('aba-apoiadores')">👥 Apoiadores</button>
-        <button class="btn-amarelo" onclick="mostrarAba('aba-relatorios')">📊 Relatórios</button>
+        <button class="btn-amarelo" onclick="mostrarAba('aba-relatorios')">📊 Relatórios e Dashboard</button>
     </div>
 
     <!-- ABA LANÇAR OCORRÊNCIA -->
@@ -278,6 +286,16 @@
         <label>Endereço Completo *</label>
         <input type="text" id="ocor-endereco" placeholder="Rua, número, bairro — Cidade/UF">
         
+        <label>Região / Zona da Ocorrência *</label>
+        <select id="ocor-regiao">
+            <option value="Zona Norte — SP">Zona Norte — SP</option>
+            <option value="Zona Sul — SP">Zona Sul — SP</option>
+            <option value="Zona Leste — SP">Zona Leste — SP</option>
+            <option value="Zona Oeste — SP">Zona Oeste — SP</option>
+            <option value="Centro — SP">Centro — SP</option>
+            <option value="Grande São Paulo">Grande São Paulo</option>
+        </select>
+
         <div class="linha">
             <div style="flex:1;">
                 <label>Latitude</label>
@@ -310,30 +328,51 @@
         <div id="lista-apoiadores"></div>
     </div>
 
-    <!-- ABA RELATÓRIOS -->
+    <!-- ABA RELATÓRIOS E DASHBOARD -->
     <div id="aba-relatorios" class="caixa aba-conteudo oculto">
-        <h3>📊 Relatórios & Fechamento</h3>
+        <h3>📈 Volume de Ocorrências por Região</h3>
+        <div style="background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <canvas id="graficoRegioes" height="100"></canvas>
+        </div>
+
+        <hr style="border-color: #334155; margin: 20px 0;">
+
+        <h3>📊 Gerar Relatórios Personalizados</h3>
+        <label>Selecione o Período:</label>
         <select id="filtro-periodo" onchange="atualizarRelatorio()">
-            <option value="todos">Todas as Ocorrências</option>
-            <option value="quinzena1">1ª Quinzena (1 a 15)</option>
-            <option value="quinzena2">2ª Quinzena (16 ao fim)</option>
-            <option value="concluidas">✅ Concluídas</option>
-            <option value="pendentes">⏳ Pendentes</option>
+            <option value="mes_atual">Mês Atual Inteiro</option>
+            <option value="quinzena1">1ª Quinzena (Dia 1 ao 15)</option>
+            <option value="quinzena2">2ª Quinzena (Dia 16 ao Fim do Mês)</option>
+            <option value="todos">Todas do Histórico</option>
         </select>
+
+        <label style="margin-top:15px;">Escolha os dados que devem constar no relatório:</label>
+        <div class="checkbox-group">
+            <label><input type="checkbox" id="chk-valores" checked onchange="atualizarRelatorio()"> Valores R$</label>
+            <label><input type="checkbox" id="chk-comissao" checked onchange="atualizarRelatorio()"> Comissões (8%)</label>
+            <label><input type="checkbox" id="chk-atendentes" checked onchange="atualizarRelatorio()"> Quem Atendeu</label>
+            <label><input type="checkbox" id="chk-relato" checked onchange="atualizarRelatorio()"> Relatos de Campo</label>
+            <label><input type="checkbox" id="chk-datas" checked onchange="atualizarRelatorio()"> Data e Horários</label>
+            <label><input type="checkbox" id="chk-fotos-qtd" checked onchange="atualizarRelatorio()"> Qtd. Fotos Enviadas</label>
+        </div>
+
+        <button class="btn-azul" onclick="window.print()" style="margin-bottom:15px;">🖨️ Imprimir / Salvar PDF do Relatório</button>
+
         <div id="resumo-valores" style="margin:15px 0; font-size:16px;"></div>
         <div id="lista-ocorrencias-admin"></div>
     </div>
-
-    <div class="rodape-pix">
-        <p>💡 Gostou? Apoie o projeto</p>
-        <p class="chave-pix">PIX: (11) 99494-4410 — DRTRACK Conecta</p>
-    </div>
 </div>
 
-    </div>
+</div>
 
 <script>
-// ====================================== DADOS GLOBAIS
+// ====================================== CONFIGURAÇÃO SUPABASE
+// Substitua pelas suas credenciais do painel Supabase
+const SUPABASE_URL = "https://SEU-PROJETO.supabase.co";
+const SUPABASE_ANON_KEY = "SUA-CHAVE-ANON-PUBLIC";
+const supabase = (SUPABASE_URL.includes("SEU-PROJETO")) ? null : supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ====================================== DADOS GLOBAIS DE FALLBACK (LOCALSTORAGE)
 const senhaAdmin = "drtrack2026";
 let cadastrosApoio = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
 let listaOcorrencias = JSON.parse(localStorage.getItem('ocorrencias') || '[]');
@@ -344,6 +383,7 @@ let watchId = null;
 let servicoAceito = null;
 let fotosApoio = [];
 let fotosExtras = [];
+let meuGrafico = null;
 
 // ====================================== NAVEGAÇÃO
 function mostrarTela(id) {
@@ -371,6 +411,7 @@ function irParaAdmin() { mostrarTela('tela-admin-login'); }
 function mostrarAba(idAba) {
     document.querySelectorAll('.aba-conteudo').forEach(a => a.classList.add('oculto'));
     document.getElementById(idAba).classList.remove('oculto');
+    if(idAba === 'aba-relatorios') renderizarGrafico();
 }
 function limparMensagens() {
     ['msg-login','msg-cadastro','msg-recuperar','msg-comprovante','msg-lancamento'].forEach(id => {
@@ -386,7 +427,7 @@ function alternarSenha(idCampo, botao) {
 }
 
 // ====================================== CADASTRO
-function enviarCadastro() {
+async function enviarCadastro() {
     const nome = document.getElementById('cad-nome').value.trim();
     const email = document.getElementById('cad-email').value.trim();
     const telefone = document.getElementById('cad-tel').value.trim().replace(/\D/g,'');
@@ -394,37 +435,60 @@ function enviarCadastro() {
     const regiao = document.getElementById('cad-regiao').value;
     const veiculo = document.getElementById('cad-veiculo').value;
     const pix = document.getElementById('cad-pix').value.trim();
+    const docFile = document.getElementById('cad-doc').files[0];
     const senha = document.getElementById('cad-senha').value;
     const msg = document.getElementById('msg-cadastro');
 
-    if (!nome || !email || !telefone || !placa || !regiao || !veiculo || !pix || !senha) {
-        msg.className = 'msg erro'; msg.textContent = '⚠️ Preencha TODOS os campos!'; return;
+    if (!nome || !email || !telefone || !placa || !regiao || !veiculo || !pix || !senha || !docFile) {
+        msg.className = 'msg erro'; msg.textContent = '⚠️ Preencha TODOS os campos e envie o documento!'; return;
     }
-    if (!email.includes('@')) {
-        msg.className = 'msg erro'; msg.textContent = '⚠️ E-mail inválido!'; return;
-    }
-    if (senha.length < 6) {
-        msg.className = 'msg erro'; msg.textContent = '⚠️ Senha com mínimo 6 caracteres!'; return;
-    }
-    const existe = cadastrosApoio.find(c => c.telefone === telefone || c.email === email);
-    if (existe) {
-        msg.className = 'msg erro'; msg.textContent = '⚠️ Já existe cadastro com este telefone ou e-mail!'; return;
+
+    let docUrl = "doc_simulado.jpg";
+
+    // Envio do arquivo ao Supabase Storage (caso configurado)
+    if (supabase) {
+        msg.className = 'msg aviso'; msg.textContent = 'Enviando documento...';
+        const fileExt = docFile.name.split('.').pop();
+        const fileName = `${telefone}_doc.${fileExt}`;
+        const { data, error } = await supabase.storage.from('documentos').upload(fileName, docFile);
+        if (!error && data) {
+            docUrl = data.path;
+        }
     }
 
     const novo = {
         id: Date.now(),
         nome, email, telefone, placa, regiao, veiculo, pix,
+        documentoUrl: docUrl,
         senha: btoa(senha),
         aprovado: false,
         dataCadastro: new Date().toLocaleString('pt-BR'),
         atendimentos: []
     };
+
     cadastrosApoio.push(novo);
     salvarDados();
+
+    // Notificação automática ao administrador
+    notificarAdministrador(novo);
     
     msg.className = 'msg sucesso';
-    msg.textContent = '✅ Cadastro enviado! Aguarde aprovação do Administrador.';
+    msg.textContent = '✅ Cadastro enviado! Documento em verificação pelo Administrador.';
     setTimeout(() => irParaLoginApoio(), 2500);
+}
+
+// Disparador de Notificação
+function notificarAdministrador(usuario) {
+    // 1. Notificação In-App via Webhook/Supabase Function ou Alerta local no console
+    console.log(`🔔 NOTIFICAÇÃO ADMIN: Novo apoio cadastrado (${usuario.nome}). Documento enviado.`);
+    
+    // 2. Opcional: Integrar Webhook do WhatsApp/E-mail (Ex: Z-API / SendGrid)
+    /*
+    fetch('https://sua-api-whatsapp.com/send', {
+        method: 'POST',
+        body: JSON.stringify({ message: `Novo cadastro de ${usuario.nome} aguardando aprovação.` })
+    });
+    */
 }
 
 // ====================================== LOGIN
@@ -467,11 +531,10 @@ function enviarRecuperacao() {
         msg.className = 'msg erro'; msg.textContent = '❌ E-mail não encontrado.'; return;
     }
     msg.className = 'msg sucesso';
-    msg.textContent = `✅ Enviado para ${email}`;
-    alert(`📧 Simulação de e-mail:\n\nSua senha: ${atob(usuario.senha)}\n\nAltere assim que possível!`);
+    msg.textContent = `✅ Instruções enviadas para ${email}`;
 }
 
-// ====================================== ADMIN — LOGIN & GERENCIAR
+// ====================================== ADMIN — GERENCIAMENTO
 function loginAdmin() {
     const senha = document.getElementById('admin-senha').value;
     if (senha === senhaAdmin) {
@@ -499,11 +562,12 @@ function listarApoiadores() {
             <p style="font-size:13px;">📧 ${c.email} | 📱 ${c.telefone}</p>
             <p style="font-size:13px;">🚗 ${c.placa} | 📍 ${c.regiao} | ${c.veiculo}</p>
             <p style="font-size:13px;">💳 PIX: ${c.pix}</p>
+            <p style="font-size:13px;">📄 Documento: ${c.documentoUrl ? `<a href="${c.documentoUrl}" target="_blank" style="color:#facc15;">Ver Documento Enivado</a>` : 'Não enviado'}</p>
             <p style="margin-top:8px;">
                 ${c.aprovado 
                     ? '<span class="etiqueta et-aprovado">✅ APROVADO</span>'
                     : `<span class="etiqueta et-pend-aprov">⏳ PENDENTE</span>
-                       <button class="botao-pequeno btn-verde" onclick="aprovar(${c.id})">✅ Aprovar</button>`
+                       <button class="botao-pequeno btn-verde" onclick="aprovar(${c.id})">✅ Aprovar Documento e Apoio</button>`
                 }
                 <button class="botao-pequeno btn-vermelho" onclick="excluirApoiador(${c.id})">🗑️ Excluir</button>
             </p>
@@ -518,7 +582,7 @@ function aprovar(id) {
         salvarDados();
         atualizarContadoresAdmin();
         listarApoiadores();
-        alert(`✅ ${usuario.nome} foi aprovado!`);
+        alert(`✅ ${usuario.nome} foi verificado e aprovado!`);
     }
 }
 
@@ -534,6 +598,7 @@ function excluirApoiador(id) {
 // ====================================== LANÇAR OCORRÊNCIA
 function lancarOcorrencia() {
     const endereco = document.getElementById('ocor-endereco').value.trim();
+    const regiao = document.getElementById('ocor-regiao').value;
     const lat = document.getElementById('ocor-lat').value.trim();
     const lng = document.getElementById('ocor-lng').value.trim();
     const desc = document.getElementById('ocor-desc').value.trim();
@@ -548,12 +613,14 @@ function lancarOcorrencia() {
     const nova = {
         id: Date.now(),
         endereco,
+        regiao,
         lat: lat || null,
         lng: lng || null,
         descricao: desc,
         valor,
         comissao: comissaoAtiva ? (valor * 0.08) : 0,
-        data: new Date().toLocaleString('pt-BR'),
+        data: new Date().toLocaleDateString('pt-BR'),
+        hora: new Date().toLocaleTimeString('pt-BR'),
         status: 'pendente',
         aceitoPor: null,
         fotos: [],
@@ -565,9 +632,8 @@ function lancarOcorrencia() {
     salvarDados();
     
     msg.className = 'msg sucesso';
-    msg.textContent = '✅ Ocorrência lançada! Aparece para os apoiadores aprovados.';
+    msg.textContent = '✅ Ocorrência lançada para a região!';
     
-    // Limpar campos
     document.getElementById('ocor-endereco').value = '';
     document.getElementById('ocor-lat').value = '';
     document.getElementById('ocor-lng').value = '';
@@ -575,65 +641,46 @@ function lancarOcorrencia() {
     document.getElementById('ocor-valor').value = '';
     document.getElementById('ocor-comissao').checked = false;
 
-    // Dispara alerta visual (simulação para todos)
     dispararAlerta(nova);
-    
     setTimeout(() => { msg.textContent = ''; }, 4000);
 }
 
 function dispararAlerta(ocorrencia) {
-    // Simulação — na versão multi-usuário real usaria banco em tempo real
     const painel = document.getElementById('painel-alerta');
     const conteudo = document.getElementById('alerta-conteudo');
     
     conteudo.innerHTML = `
-        <p><strong>📍 ${ocorrencia.endereco}</strong></p>
-        ${ocorrencia.lat ? `<p>Coordenadas: ${ocorrencia.lat}, ${ocorrencia.lng}</p>` : ''}
+        <p><strong>📍 ${ocorrencia.endereco} (${ocorrencia.regiao})</strong></p>
         ${ocorrencia.descricao ? `<p>Detalhes: ${ocorrencia.descricao}</p>` : ''}
         <p>💰 Valor: R$ ${ocorrencia.valor.toFixed(2)}</p>
-        <p>📅 ${ocorrencia.data}</p>
+        <p>📅 ${ocorrencia.data} às ${ocorrencia.hora}</p>
     `;
     
     painel.classList.remove('oculto');
-    
-    // Som de alerta conforme preferência salva
     const tipoAlerta = localStorage.getItem('tipoAlerta') || 'sirene';
-    if (tipoAlerta === 'sirene') tocarSirene();
-    else tocarSinalContinuo();
-    
-    // Auto-fecha em 30s se não aceito
-    setTimeout(() => {
-        if (!servicoAceito) painel.classList.add('oculto');
-    }, 30000);
+    if (tipoAlerta === 'sirene') tocarSirene(); else tocarSinalContinuo();
 }
 
 function tocarSirene() {
     try {
         const audio = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audio.createOscillator();
-        const gain = audio.createGain();
+        const osc = audio.createOscillator(); const gain = audio.createGain();
         osc.connect(gain); gain.connect(audio.destination);
         osc.frequency.setValueAtTime(880, audio.currentTime);
         osc.frequency.setValueAtTime(440, audio.currentTime + 0.2);
-        osc.frequency.setValueAtTime(880, audio.currentTime + 0.4);
         gain.gain.setValueAtTime(0.3, audio.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.6);
-        osc.start(audio.currentTime);
-        osc.stop(audio.currentTime + 0.6);
+        osc.start(audio.currentTime); osc.stop(audio.currentTime + 0.6);
     } catch(e) {}
 }
 
 function tocarSinalContinuo() {
     try {
         const audio = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audio.createOscillator();
-        const gain = audio.createGain();
+        const osc = audio.createOscillator(); const gain = audio.createGain();
         osc.connect(gain); gain.connect(audio.destination);
         osc.frequency.value = 600;
         gain.gain.setValueAtTime(0.2, audio.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 1.5);
-        osc.start(audio.currentTime);
-        osc.stop(audio.currentTime + 1.5);
+        osc.start(audio.currentTime); osc.stop(audio.currentTime + 1.5);
     } catch(e) {}
 }
 
@@ -644,45 +691,31 @@ function salvarPreferenciaAlerta() {
 // ====================================== ACEITAR / RECUSAR
 function aceitarOcorrencia() {
     if (!usuarioAtual) return;
-    
     const ultimaPendente = listaOcorrencias.find(o => o.status === 'pendente');
-    if (!ultimaPendente) {
-        alert('Nenhuma ocorrência disponível no momento.');
-        return;
-    }
+    if (!ultimaPendente) { alert('Nenhuma ocorrência disponível.'); return; }
     
     servicoAceito = ultimaPendente;
     servicoAceito.status = 'aceita';
     servicoAceito.aceitoPor = usuarioAtual.nome;
     servicoAceito.horarioAceite = new Date().toLocaleString('pt-BR');
     
-    // Salva no histórico do apoiador
     usuarioAtual.atendimentos.push(servicoAceito.id);
-    cadastrosApoio = cadastrosApoio.map(c => 
-        c.id === usuarioAtual.id ? usuarioAtual : c
-    );
-    
+    cadastrosApoio = cadastrosApoio.map(c => c.id === usuarioAtual.id ? usuarioAtual : c);
     salvarDados();
     
     document.getElementById('painel-alerta').classList.add('oculto');
     document.getElementById('area-comprovante').classList.remove('oculto');
-    
-    alert(`✅ Você aceitou!\n📍 ${servicoAceito.endereco}`);
+    alert(`✅ Serviço Aceito!\n📍 ${servicoAceito.endereco}`);
     carregarChamados();
 }
 
 function recusarOcorrencia() {
     document.getElementById('painel-alerta').classList.add('oculto');
-    alert('❌ Recusado. Aguardando próximo chamado.');
 }
 
-// ====================================== LOCALIZAÇÃO
+// ====================================== LOCALIZAÇÃO & MAPA
 function ativarLocalizacao() {
-    if (!navigator.geolocation) {
-        alert('Geolocalização não suportada no aparelho.');
-        return;
-    }
-    
+    if (!navigator.geolocation) return;
     if (localizacaoAtiva) {
         navigator.geolocation.clearWatch(watchId);
         localizacaoAtiva = false;
@@ -690,214 +723,131 @@ function ativarLocalizacao() {
         document.getElementById('btn-localizacao').textContent = '📍 Ativar Localização em Tempo Real';
         return;
     }
-    
     localizacaoAtiva = true;
     document.getElementById('btn-localizacao').textContent = '📍 Desativar Localização';
-    
-    watchId = navigator.geolocation.watchPosition(
-        (pos) => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            document.getElementById('status-localizacao').innerHTML = 
-                `<span style="color:#4ade80;">✅ Ativa — ${lat.toFixed(6)}, ${lng.toFixed(6)}</span>`;
-            
-            // Atualiza mapa se carregado
-            if (mapa) {
-                mapa.setView([lat, lng], 14);
-                carregarChamados();
-            }
-        },
-        (erro) => {
-            document.getElementById('status-localizacao').innerHTML = 
-                `<span style="color:#f87171;">Erro: ${erro.message}</span>`;
-        },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
-    );
+    watchId = navigator.geolocation.watchPosition((pos) => {
+        const lat = pos.coords.latitude; const lng = pos.coords.longitude;
+        document.getElementById('status-localizacao').innerHTML = `<span style="color:#4ade80;">✅ Ativa — ${lat.toFixed(4)}, ${lng.toFixed(4)}</span>`;
+        if (mapa) { mapa.setView([lat, lng], 14); carregarChamados(); }
+    }, null, { enableHighAccuracy: true });
 }
 
-// ====================================== MAPA
 function inicializarMapa() {
     if (mapa) return;
     mapa = L.map('mapa').setView([-23.5505, -46.6333], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© DRTRACK Conecta'
-    }).addTo(mapa);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
 }
 
 function carregarChamados() {
     if (!usuarioAtual?.aprovado) return;
     inicializarMapa();
-    
-    // Limpar marcadores antigos
     mapa.eachLayer(l => { if (l instanceof L.Marker) mapa.removeLayer(l); });
     
     const pendentes = listaOcorrencias.filter(o => o.status === 'pendente' && o.lat && o.lng);
     pendentes.forEach(o => {
-        L.marker([parseFloat(o.lat), parseFloat(o.lng)])
-            .addTo(mapa)
-            .bindPopup(`<b>${o.endereco}</b><br>R$ ${o.valor.toFixed(2)}<br>${o.descricao || ''}`);
+        L.marker([parseFloat(o.lat), parseFloat(o.lng)]).addTo(mapa)
+            .bindPopup(`<b>${o.endereco}</b><br>R$ ${o.valor.toFixed(2)}`);
     });
     
-    // Lista em texto
     const lista = document.getElementById('lista-chamados');
     if (!pendentes.length) {
-        lista.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:15px;">Nenhuma ocorrência aberta no momento.</p>';
-        return;
+        lista.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:15px;">Nenhuma ocorrência aberta.</p>'; return;
     }
-    lista.innerHTML = pendentes.map((o, i) => `
+    lista.innerHTML = pendentes.map(o => `
         <div class="ocorrencia-card pendente">
-            <p><strong>📍 ${o.endereco}</strong></p>
-            ${o.descricao ? `<p style="font-size:13px;">${o.descricao}</p>` : ''}
+            <p><strong>📍 ${o.endereco} (${o.regiao})</strong></p>
             <p>💰 R$ ${o.valor.toFixed(2)} | 📅 ${o.data}</p>
-            <button class="btn-verde botao-pequeno" onclick="aceitarOcorrencia()">✅ Aceitar este serviço</button>
+            <button class="btn-verde botao-pequeno" onclick="aceitarOcorrencia()">✅ Aceitar serviço</button>
         </div>
     `).join('');
 }
 
-// ====================================== FOTOS — PREVIEW E DOWNLOAD
+// ====================================== COMPROVANTES
 function atualizarPreview() {
     fotosApoio = []; fotosExtras = [];
-    
-    // Fotos obrigatórias
     for (let i = 1; i <= 5; i++) {
         const input = document.getElementById(`foto${i}`);
         if (input.files[0]) fotosApoio.push(input.files[0]);
     }
-    // Fotos extras
     const inputExtra = document.getElementById('fotos-extras');
-    if (inputExtra.files.length > 0) {
+    if (inputExtra.files.length) {
         for (let f of inputExtra.files) fotosExtras.push(f);
     }
-    
-    // Preview
-    const div = document.getElementById('preview-fotos');
-    div.innerHTML = '';
+    const div = document.getElementById('preview-fotos'); div.innerHTML = '';
     [...fotosApoio, ...fotosExtras].forEach(foto => {
         const leitor = new FileReader();
         leitor.onload = e => {
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.className = 'foto-item';
-            div.appendChild(img);
+            const img = document.createElement('img'); img.src = e.target.result; img.className = 'foto-item'; div.appendChild(img);
         };
         leitor.readAsDataURL(foto);
     });
 }
 
-function baixarFotoComDados(indice) {
-    const todas = [...fotosApoio, ...fotosExtras];
-    const foto = todas[indice];
-    if (!foto || !servicoAceito) return;
-    
-    const endereco = servicoAceito.endereco || 'Local não informado';
-    const lat = servicoAceito.lat || '---';
-    const lng = servicoAceito.lng || '---';
-    const data = new Date().toLocaleString('pt-BR');
-    
-    const img = new Image();
-    img.onload = function() {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height + 70;
-        const ctx = canvas.getContext('2d');
-        
-        // Fundo escuro para texto
-        ctx.fillStyle = '#000000cc';
-        ctx.fillRect(0, 0, canvas.width, 70);
-        
-        // Desenha imagem
-        ctx.drawImage(img, 0, 70);
-        
-        // Texto branco
-        ctx.fillStyle = '#ffffff';
-        ctx.font = `bold ${Math.max(12, canvas.width / 45)}px Arial`;
-        ctx.fillText(`📍 ${endereco.substring(0, 45)}`, 10, 28);
-        ctx.fillText(`🌍 ${lat}, ${lng}`, 10, 50);
-        ctx.fillText(`🕒 ${data}`, 10, 68);
-        
-        // Download
-        const link = document.createElement('a');
-        link.download = `Foto_${indice+1}_DRTRACK.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    };
-    img.src = URL.createObjectURL(foto);
-}
-
-// ====================================== ENVIAR COMPROVANTE
 function enviarComprovante() {
     if (!servicoAceito || !usuarioAtual) return;
-    
-    if (fotosApoio.length < 5) {
-        alert(`⚠️ Envie no mínimo 5 fotos! (Enviadas: ${fotosApoio.length})`);
-        return;
-    }
-    
+    if (fotosApoio.length < 5) { alert('⚠️ Envie no mínimo 5 fotos!'); return; }
     const relato = document.getElementById('relato-apoio').value.trim();
-    if (!relato) {
-        alert('⚠️ Descreva o que encontrou no local!');
-        return;
-    }
+    if (!relato) { alert('⚠️ Descreva o relato!'); return; }
     
-    // Salvar dados do atendimento
     servicoAceito.fotos = [...fotosApoio.map(f => f.name), ...fotosExtras.map(f => f.name)];
     servicoAceito.relato = relato;
     servicoAceito.dataConclusao = new Date().toLocaleString('pt-BR');
     servicoAceito.status = 'concluida';
-    
-    // Salvar localização atual como comprovação
-    if (navigator.geolocation && localizacaoAtiva) {
-        // Se estiver ativa, já tem a posição atualizada
-    }
-    
     salvarDados();
     
-    // Mostrar botões de download
-    const areaDownload = document.getElementById('area-download');
-    const botoes = document.getElementById('botoes-download');
-    areaDownload.classList.remove('oculto');
-    botoes.innerHTML = '';
-    [...fotosApoio, ...fotosExtras].forEach((_, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'botao-pequeno btn-azul';
-        btn.textContent = `📷 Baixar Foto ${i+1}`;
-        btn.onclick = () => baixarFotoComDados(i);
-        botoes.appendChild(btn);
-    });
-    
     document.getElementById('msg-comprovante').className = 'msg sucesso';
-    document.getElementById('msg-comprovante').textContent = '✅ Comprovante enviado! O Administrador já foi notificado.';
-    
-    // Atualizar listas
-    carregarChamados();
-    carregarMeusAtendimentos();
+    document.getElementById('msg-comprovante').textContent = '✅ Comprovante enviado com sucesso!';
+    carregarChamados(); carregarMeusAtendimentos();
 }
 
-// ====================================== MEUS ATENDIMENTOS
 function carregarMeusAtendimentos() {
     if (!usuarioAtual) return;
     const div = document.getElementById('meus-atendimentos');
-    
     const meusIds = usuarioAtual.atendimentos || [];
-    const meus = listaOcorrencias.filter(o => meusIds.includes(o.id) && o.aceitoPor === usuarioAtual.nome);
-    
-    if (!meus.length) {
-        div.innerHTML = '<p style="color:#94a3b8; text-align:center;">Nenhum atendimento ainda.</p>';
-        return;
-    }
+    const meus = listaOcorrencias.filter(o => meusIds.includes(o.id));
+    if (!meus.length) { div.innerHTML = '<p style="color:#94a3b8; text-align:center;">Nenhum atendimento.</p>'; return; }
     
     div.innerHTML = meus.map(o => `
         <div class="ocorrencia-card ${o.status === 'concluida' ? 'concluida' : 'pendente'}">
             <p><strong>${o.endereco}</strong></p>
             <p>💰 R$ ${o.valor.toFixed(2)} | 📅 ${o.data}</p>
             <p>Status: ${o.status === 'concluida' ? '✅ Concluída' : '🔄 Em Andamento'}</p>
-            ${o.relato ? `<p style="font-size:13px; margin-top:5px;">📝 ${o.relato}</p>` : ''}
-            ${o.fotos?.length ? `<p style="font-size:12px; color:#94a3b8;">📸 ${o.fotos.length} fotos enviadas</p>` : ''}
         </div>
     `).join('');
 }
 
-// ====================================== RELATÓRIOS ADMIN
+// ====================================== DASHBOARD GRÁFICO POR REGIÃO
+function renderizarGrafico() {
+    const regioes = ["Zona Norte — SP", "Zona Sul — SP", "Zona Leste — SP", "Zona Oeste — SP", "Centro — SP", "Grande São Paulo"];
+    const contagem = regioes.map(r => listaOcorrencias.filter(o => o.regiao === r).length);
+
+    const ctx = document.getElementById('graficoRegioes').getContext('2d');
+    if (meuGrafico) meuGrafico.destroy();
+
+    meuGrafico = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: regioes,
+            datasets: [{
+                label: 'Volume de Ocorrências',
+                data: contagem,
+                backgroundColor: '#3b82f6',
+                borderColor: '#60a5fa',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#e2e8f0', stepSize: 1 } },
+                x: { ticks: { color: '#e2e8f0' } }
+            },
+            plugins: { legend: { labels: { color: '#e2e8f0' } } }
+        }
+    });
+}
+
+// ====================================== RELATÓRIOS ADMIN COM CHECKBOXES
 function atualizarRelatorio() {
     const filtro = document.getElementById('filtro-periodo').value;
     let filtrado = [...listaOcorrencias];
@@ -907,82 +857,69 @@ function atualizarRelatorio() {
     if (filtro === 'quinzena1') {
         filtrado = listaOcorrencias.filter(o => {
             const partes = o.data.split('/');
-            const dia = parseInt(partes[0]);
-            const mes = parseInt(partes[1]);
-            return dia >= 1 && dia <= 15 && mes === mesAtual;
+            return parseInt(partes[0]) <= 15 && parseInt(partes[1]) === mesAtual;
         });
-    } else if (filtro === 'quinzena2') {
-        filtr
     } else if (filtro === 'quinzena2') {
         filtrado = listaOcorrencias.filter(o => {
             const partes = o.data.split('/');
-            const dia = parseInt(partes[0]);
-            const mes = parseInt(partes[1]);
-            return dia >= 16 && mes === mesAtual;
+            return parseInt(partes[0]) >= 16 && parseInt(partes[1]) === mesAtual;
         });
-    } else if (filtro === 'concluidas') {
-        filtrado = listaOcorrencias.filter(o => o.status === 'concluida');
-    } else if (filtro === 'pendentes') {
-        filtrado = listaOcorrencias.filter(o => o.status !== 'concluida');
+    } else if (filtro === 'mes_atual') {
+        filtrado = listaOcorrencias.filter(o => parseInt(o.data.split('/')[1]) === mesAtual);
     }
 
-    // Cálculos de valores
+    // Configuração dos Checkboxes do relatório
+    const exValores = document.getElementById('chk-valores').checked;
+    const exComissao = document.getElementById('chk-comissao').checked;
+    const exAte = document.getElementById('chk-atendentes').checked;
+    const exRelato = document.getElementById('chk-relato').checked;
+    const exDatas = document.getElementById('chk-datas').checked;
+    const exFotos = document.getElementById('chk-fotos-qtd').checked;
+
+    // Resumo de cálculo
     const totalGeral = filtrado.reduce((s, o) => s + o.valor, 0);
     const totalComissao = filtrado.reduce((s, o) => s + (o.comissao || 0), 0);
     const liquido = totalGeral - totalComissao;
 
-    // Exibir resumo
     document.getElementById('resumo-valores').innerHTML = `
         <div class="caixa" style="background:#1e293b; padding:15px;">
-            <p>💰 <strong>Valor Total:</strong> R$ ${totalGeral.toFixed(2)}</p>
-            <p>📊 <strong>Comissão DRTRACK (8% quando aplicável):</strong> R$ ${totalComissao.toFixed(2)}</p>
-            <p>💵 <strong>Valor Líquido aos Apoios:</strong> R$ ${liquido.toFixed(2)}</p>
-            <p style="margin-top:8px; font-size:13px; color:#94a3b8;">Período: ${filtro === 'todos' ? 'Todos os registros' : filtro.replace('quinzena', 'ª Quinzena — mês atual')}</p>
+            ${exValores ? `<p>💰 <strong>Valor Total das Ocorrências:</strong> R$ ${totalGeral.toFixed(2)}</p>` : ''}
+            ${exComissao ? `<p>📊 <strong>Comissão Retida DRTRACK (8%):</strong> R$ ${totalComissao.toFixed(2)}</p>` : ''}
+            ${exValores && exComissao ? `<p>💵 <strong>Valor Líquido Repassado:</strong> R$ ${liquido.toFixed(2)}</p>` : ''}
+            <p style="margin-top:5px; font-size:13px; color:#94a3b8;">Total de Registros: ${filtrado.length}</p>
         </div>
     `;
 
-    // Listar ocorrências
     const divLista = document.getElementById('lista-ocorrencias-admin');
     if (!filtrado.length) {
-        divLista.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:15px;">Nenhuma ocorrência no período selecionado.</p>';
-        return;
+        divLista.innerHTML = '<p style="color:#94a3b8; text-align:center;">Nenhum registro encontrado no período.</p>'; return;
     }
 
     divLista.innerHTML = filtrado.map(o => `
         <div class="ocorrencia-card ${o.status === 'concluida' ? 'concluida' : 'pendente'}">
-            <p><strong>📍 ${o.endereco}</strong></p>
-            <p>💰 R$ ${o.valor.toFixed(2)} 
-               ${o.comissao > 0 ? `| 📊 Comissão: R$ ${o.comissao.toFixed(2)}` : '| Sem comissão'}
-            </p>
-            <p>👤 Atendido por: ${o.aceitoPor || 'Aguardando'}</p>
-            <p>📅 ${o.data} ${o.dataConclusao ? `→ ${o.dataConclusao}` : ''}</p>
-            <p>Status: ${o.status === 'concluida' ? '✅ Concluída' : o.status === 'aceita' ? '🔄 Em Andamento' : '⏳ Pendente'}</p>
-            ${o.relato ? `<p style="font-size:13px; margin-top:5px;">📝 ${o.relato}</p>` : ''}
-            ${o.fotos?.length ? `<p style="font-size:12px; color:#94a3b8;">📸 ${o.fotos.length} fotos enviadas</p>` : ''}
+            <p><strong>📍 ${o.endereco} (${o.regiao})</strong></p>
+            ${exValores ? `<p>💰 R$ ${o.valor.toFixed(2)}${exComissao ? `| Comisión: R$ ${o.comissao.toFixed(2)}` : ''}</p>` : ''}
+            ${exAte ? `<p>👤 Atendente: ${o.aceitoPor || 'Não atribuído'}</p>` : ''}
+            ${exDatas ? `<p>📅 Lançamento: ${o.data} ${o.hora \vert{}\vert{} ''}${o.dataConclusao ? `| Conclusão: ${o.dataConclusao}` : ''}</p>` : ''}
+            ${exRelato && o.relato ? `<p style="font-size:13px; margin-top:5px;">📝 Relato: ${o.relato}</p>` : ''}
+            ${exFotos && o.fotos?.length ? `<p style="font-size:12px; color:#94a3b8;">📸 Fotos: ${o.fotos.length} arquivos enviados</p>` : ''}
         </div>
     `).join('');
 }
 
-// ====================================== SALVAR DADOS
+// ====================================== SALVAR & SAIR
 function salvarDados() {
     localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
     localStorage.setItem('ocorrencias', JSON.stringify(listaOcorrencias));
 }
 
-// ====================================== SAIR
 function sair() {
-    usuarioAtual = null;
-    servicoAceito = null;
-    fotosApoio = [];
-    fotosExtras = [];
+    usuarioAtual = null; servicoAceito = null;
     if (watchId) navigator.geolocation.clearWatch(watchId);
-    localizacaoAtiva = false;
-    voltarInicio();
+    localizacaoAtiva = false; voltarInicio();
 }
 
-// ====================================== INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', () => {
-    // Carregar preferência de alerta salva
     const tipoSalvo = localStorage.getItem('tipoAlerta') || 'sirene';
     document.getElementById('tipo-alerta').value = tipoSalvo;
 });

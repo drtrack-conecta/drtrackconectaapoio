@@ -2,1429 +2,990 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DRTRACK Conecta</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRTRACK Conecta 🛡️</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: white; padding-bottom: 20px; }
-        .tela { display: none; padding: 15px; }
-        .tela.ativa { display: block; }
-        .cabecalho { text-align: center; padding: 40px 20px 30px; }
-        .logo { font-size: 28px; font-weight: bold; color: #facc15; display: flex; align-items: center; justify-content: center; gap: 12px; }
-        .subtitulo { color: #94a3b8; margin-top: 8px; font-size: 15px; }
-        .container-botoes { padding: 20px; max-width: 420px; margin: 0 auto; }
-        .botao-grande {
-            width: 100%; padding: 22px; border: none; border-radius: 16px;
-            font-size: 19px; font-weight: bold; cursor: pointer; margin-bottom: 20px;
-            transition: transform 0.15s;
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #0f172a; color: #e2e8f0; min-height: 100vh; padding: 12px; }
+        .tela { display: none; max-width: 450px; margin: 0 auto; }
+        .tela-larga { max-width: 900px; }
+        .ativa { display: block; }
+        h2, h3 { text-align: center; margin-bottom: 20px; color: #facc15; }
+        .caixa { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        label { display: block; margin: 12px 0 5px; font-size: 14px; color: #cbd5e1; }
+        input, select, textarea { width: 100%; padding: 12px; border-radius: 8px; border: none; background: #334155; color: white; font-size: 15px; }
+        button { width: 100%; padding: 13px; border-radius: 8px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-verde { background: #22c55e; color: white; }
+        .btn-verde:hover { background: #16a34a; }
+        .btn-roxo { background: #8b5cf6; color: white; }
+        .btn-amarelo { background: #facc15; color: #000; }
+        .btn-vermelho { background: #ef4444; color: white; }
+        .btn-azul { background: #3b82f6; color: white; }
+        .btn-cinza { background: #475569; color: white; }
+        .btn-voltar { background: transparent; color: #94a3b8; border: none; padding: 8px; width: auto; margin: 0 0 12px; }
+        .linha { display: flex; gap: 10px; flex-wrap: wrap; }
+        .linha button { flex: 1; }
+        .senha-campo { position: relative; }
+        .olho { position: absolute; right: 12px; top: 35px; background: none; border: none; font-size: 20px; width: auto; padding: 0; color: #94a3b8; }
+        .link-recuperar { text-align: right; margin-top: 6px; font-size: 13px; }
+        .link-recuperar a { color: #facc15; text-decoration: none; }
+        .msg { margin-top: 10px; text-align: center; font-size: 14px; }
+        .erro { color: #f87171; }
+        .sucesso { color: #4ade80; }
+        .aviso { color: #facc15; }
+        @keyframes piscar {
+            0% { box-shadow: 0 0 5px #facc15; }
+            50% { box-shadow: 0 0 25px #facc15; }
+            100% { box-shadow: 0 0 5px #facc15; }
         }
-        .botao-grande:active { transform: scale(0.97); }
-        .botao-amarelo { background: linear-gradient(90deg, #facc15, #eab308); color: #000; }
-        .botao-roxo { background: linear-gradient(90deg, #7c3aed, #a855f7); color: white; }
-        .botao-verde { background: linear-gradient(90deg, #16a34a, #15803d); color: white; }
-        .botao-vermelho { background: linear-gradient(90deg, #dc2626, #b91c1c); color: white; }
-        .botao-whatsapp { background: linear-gradient(90deg, #25D366, #128C7E); color: white; }
-        .botao-azul { background: linear-gradient(90deg, #3b82f6, #2563eb); color: white; }
-        .botao-cinza { background: #475569; color: #cbd5e1; }
-        .botao-pequeno { padding: 10px 14px; font-size: 13px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; margin: 4px; }
-        .caixa { background: rgba(30, 41, 59, 0.8); border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #334155; }
-        .caixa h2 { font-size: 18px; margin-bottom: 15px; color: #facc15; }
-        .caixa h3 { font-size: 15px; margin-bottom: 12px; color: #cbd5e1; }
-        label { display:block; margin-bottom:5px; font-size:13px; color:#cbd5e1; }
-        input, select, textarea {
-            width: 100%; padding: 13px; border-radius: 10px; border: none;
-            background: #334155; color: white; font-size: 15px; margin-bottom: 12px;
-        }
-        textarea { min-height: 100px; resize: vertical; }
-        input:focus, select:focus, textarea:focus { outline: 2px solid #facc15; }
-        .botao-voltar {
-            background: transparent; border: none; color: #94a3b8; font-size: 15px;
-            cursor: pointer; padding: 8px 12px; margin-bottom: 10px; display: inline-block;
-        }
-        .ocorrencia-card, .cadastro-card {
-            background: #0f172a; border-radius: 14px; padding: 15px; margin-bottom: 12px;
-            border-left: 4px solid #facc15;
-        }
-        .ocorrencia-cabecalho { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
-        .ocorrencia-tipo { font-weight: bold; font-size: 15px; }
-        .ocorrencia-dados { font-size: 13px; color: #cbd5e1; margin: 6px 0; line-height: 1.5; }
-        .sem-itens { text-align: center; padding: 30px 20px; color: #64748b; font-size: 14px; }
-        .navegacao-abas {
-            display: flex; justify-content: center; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px;
-        }
-        .aba { padding: 10px 15px; cursor: pointer; border-bottom: 3px solid transparent; font-size: 14px; font-weight: 500; }
-        .aba.ativa { border-bottom-color: #facc15; color: #facc15; font-weight: bold; }
-        .estatisticas { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; justify-content: center; }
-        .estat {
-            flex: 1; min-width: 130px; padding: 15px 10px; border-radius: 12px;
-            text-align: center; font-weight: bold; cursor: pointer;
-        }
-        .estat span { font-size: 22px; display: block; margin-bottom: 3px; }
-        .estat-pend { background: rgba(250, 204, 21, 0.15); color: #facc15; }
-        .estat-aceit { background: rgba(96, 165, 250, 0.15); color: #60a5fa; }
-        .estat-ativ { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
-        .estat-pendaprov { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-        .etiqueta-status { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; }
-        .pendente { background: rgba(250, 204, 21, 0.2); color: #facc15; }
-        .aceito { background: rgba(96, 165, 250, 0.2); color: #60a5fa; }
-        .concluido { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
-        .aprovado { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
-        .pend-aprov { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-        .foto-preview { width: 70px; height: 70px; border-radius: 50%; background: #334155; display:flex; align-items:center; justify-content:center; margin:8px 0; font-size: 30px; overflow:hidden; flex-shrink:0; }
-        .foto-preview img { width:100%; height:100%; object-fit:cover; }
-        .linha-cadastro { display:flex; gap:12px; align-items:flex-start; }
-        .oculto { display:none !important; }
-        .fotos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
-        .foto-miniatura { width: 100%; aspect-ratio: 1/1; border-radius: 8px; overflow: hidden; cursor: pointer; border: 3px solid transparent; }
-        .foto-miniatura.selecionada { border-color: #facc15; }
-        .foto-miniatura img { width: 100%; height: 100%; object-fit: cover; }
-        .editor-relatorio { background: #1e293b; border: 1px solid #475569; border-radius: 10px; padding: 15px; margin: 10px 0; }
-        .editor-relatorio h4 { color: #facc15; margin-bottom: 10px; font-size: 14px; }
-        .painel-envio { background: rgba(250, 204, 21, 0.08); border: 1px solid #facc15; border-radius: 12px; padding: 15px; margin-top: 15px; }
-        .painel-envio h4 { color: #facc15; margin-bottom: 12px; }
-        .opcoes-exportacao { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-        .visualizacao-relatorio { background: #e2e8f0; padding: 20px; border-radius: 12px; overflow-x: auto; }
-        .folha-a4 {
-            width: 210mm; min-height: 297mm; padding: 20mm; margin: 0 auto;
-            background: white; color: #000; box-shadow: 0 0 10px rgba(0,0,0,0.15);
-        }
-        .folha-a4 h2 { color: #eab308; border-bottom: 2px solid #eab308; padding-bottom: 10px; margin-bottom: 20px; text-align: center; font-size: 18px; }
-        .secao { margin-bottom: 12px; }
-        .etiqueta { font-weight: bold; color: #475569; display: inline-block; min-width: 120px; }
-        .grid-fotos-relatorio { 
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 15px;
-        }
-        .grid-fotos-relatorio img { 
-            width: 100%; height: auto; border-radius: 6px; border: 1px solid #ddd;
-        }
-        .check-item { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
-        .check-item input[type="checkbox"] { width: auto; margin: 0; }
-        .info-coords { font-size: 11px; color: #94a3b8; margin-top: 4px; }
-        @media print {
-            .folha-a4 { box-shadow: none; margin: 0; width: 100%; }
-        }
+        .alerta-piscando { animation: piscar 0.8s infinite; border: 2px solid #facc15; }
+        .ocorrencia-card { background: #334155; border-radius: 8px; padding: 12px; margin: 10px 0; border-left: 4px solid #3b82f6; }
+        .ocorrencia-card.pendente { border-left-color: #facc15; }
+        .ocorrencia-card.concluida { border-left-color: #22c55e; }
+        .etiqueta { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; margin: 3px; }
+        .et-pendente { background: #facc15; color: #000; }
+        .et-aprovado { background: #22c55e; color: white; }
+        .et-pend-aprov { background: #facc15; color: #000; }
+        #mapa { height: 320px; border-radius: 10px; margin: 12px 0; }
+        .foto-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .foto-item { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 2px solid #475569; }
+        .dados-foto { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+        .botao-pequeno { width: auto; padding: 8px 12px; font-size: 13px; margin: 4px; }
+        .oculto { display: none !important; }
+        .rodape-pix { text-align: center; margin-top: 25px; padding: 15px; background: #1e293b; border-radius: 10px; }
+        .chave-pix { font-weight: bold; color: #facc15; font-size: 16px; margin-top: 5px; }
     </style>
 </head>
 <body>
+    <div class="container">
 
-<!-- Tela Inicial -->
+<!-- ====================================== TELA INICIAL -->
 <div id="tela-inicio" class="tela ativa">
-    <div class="cabecalho">
-        <div class="logo">🛡️ DRTRACK Conecta</div>
-        <p class="subtitulo">Sistema de Apoio e Segurança</p>
-    </div>
-    <div class="container-botoes">
-        <button class="botao-grande botao-amarelo" onclick="irParaSenhaAdmin()">
-            ⚙️ Painel Administrativo
-        </button>
-        <button class="botao-grande botao-roxo" onclick="alert('Área do Apoio — Em desenvolvimento')">
-            🛵 Área do Apoio
-        </button>
-    </div>
-</div>
-
-<!-- Tela Senha Administrador -->
-<div id="tela-senha" class="tela">
-    <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
-    <div class="caixa" style="max-width: 360px; margin: 40px auto;">
-        <h2 style="text-align:center;">🔐 Acesso Restrito</h2>
-        <p style="text-align:center; margin-bottom:20px; color:#94a3b8;">Digite a senha do Administrador</p>
-        <input type="password" id="senha-admin" placeholder="Senha...">
-        <button class="botao-grande botao-verde" onclick="verificarSenha()">Entrar 🔑</button>
-        <p id="erro-senha" style="color:#f87171; margin-top:10px; display:none; text-align:center;">Senha incorreta!</p>
-    </div>
-</div>
-
-<!-- Painel Administrativo -->
-<div id="tela-admin" class="tela">
-    <button class="botao-voltar" onclick="voltarInicio()">← Sair</button>
-    
-    <h2 style="text-align:center; color:#facc15; margin-bottom:15px;">⚙️ Painel de Controle</h2>
-    
+    <h1 style="text-align:center; color:#facc15; margin-bottom:5px;">🛡️ DRTRACK Conecta</h1>
+    <p style="text-align:center; margin-bottom:25px; color:#94a3b8;">Rede de Apoio e Segurança em Tempo Real</p>
     <div class="caixa">
-        <h3>📲 Configuração do WhatsApp de Envio</h3>
-        <label>Número WhatsApp para envio dos relatórios</label>
-        <input type="tel" id="whatsapp-destino" placeholder="(11) 99494-4410" value="(11) 99494-4410">
-        <p class="info-coords">Padrão: (11) 99494-4410 — altere e clique em Salvar</p>
-        <button class="botao-grande botao-whatsapp" onclick="salvarWhatsappConfig()" style="padding:12px; font-size:15px; margin-top:8px;">💾 Salvar Número</button>
+        <button class="btn-verde" onclick="irParaLoginApoio()">🛵 Sou Apoio — Entrar</button>
+        <button class="btn-amarelo" onclick="irParaAdmin()">⚙️ Administrador</button>
     </div>
-    
-    <div class="estatisticas">
-        <div class="estat estat-pend" onclick="filtrarServicos('pendente')">
-            <span id="qtd-pend">0</span>Pendentes
-        </div>
-        <div class="estat estat-aceit" onclick="filtrarServicos('aceito')">
-            <span id="qtd-aceit">0</span>Aceitos/Concluídos
-        </div>
-        <div class="estat estat-ativ" onclick="filtrarServicos('todos')">
-            <span id="qtd-total">0</span>Total
-        </div>
-        <div class="estat estat-pendaprov">
-            <span id="qtd-pendaprov">0</span>Aguardando
-        </div>
-    </div>
-    
-    <div class="navegacao-abas">
-        <div class="aba ativa" data-aba="lancar" onclick="trocarAbaAdmin('lancar')">➕ Lançar</div>
-        <div class="aba" data-aba="servicos" onclick="trocarAbaAdmin('servicos')">📊 Serviços</div>
-        <div class="aba" data-aba="apoios" onclick="trocarAbaAdmin('apoios')">👥 Apoios</div>
-    </div>
-    
-    <div id="conteudo-lancar">
-        <div class="caixa">
-            <h3>Lançar Nova Ocorrência</h3>
-            <label>Solicitante / Responsável</label>
-            <input type="text" id="nome-solic" placeholder="Seu nome">
-            <label>Telefone / WhatsApp</label>
-            <input type="tel" id="fone-solic" placeholder="(11) 9xxxx-xxxx">
-            <label>Endereço do Atendimento *</label>
-            <input type="text" id="endereco-serv" placeholder="Rua, número, bairro, cidade">
-            <label>Coordenadas (opcional — deixe vazio para usar centro de SP)</label>
-            <input type="text" id="coords-serv" placeholder="-23.xxxx, -46.xxxx">
-            <label>Tipo de Serviço *</label>
-            <select id="tipo-serv" onchange="mostrarCampoOutro()">
-                <option value="">Selecione...</option>
-                <option value="alarme">🚨 Verificação de Alarme</option>
-                <option value="veiculo">🚗 Verificação de Veículo</option>
-                <option value="ronda">👀 Ronda / Presença</option>
-                <option value="foto">📷 Registro Fotográfico</option>
-                <option value="outro">📝 Outro</option>
-            </select>
-            <div id="campo-outro-container" class="oculto">
-                <label>Especifique o serviço *</label>
-                <input type="text" id="descricao-outro" placeholder="Descreva o que precisa ser feito...">
-            </div>
-            <label>Valor R$</label>
-            <input type="number" id="valor-serv" placeholder="0,00" step="0.01">
-            <button class="botao-grande botao-verde" onclick="lancarOcorrencia()" style="margin-top:10px;">🚀 LANÇAR</button>
-        </div>
-    </div>
-    
-    <div id="conteudo-servicos" class="oculto">
-        <h3 style="margin-bottom:12px;">📊 Ocorrências — <span id="filtro-ativo">Todos</span></h3>
-        <div id="lista-servicos-admin">
-            <p class="sem-itens">Nenhuma ocorrência lançada ainda.</p>
-        </div>
-    </div>
-    
-    <div id="conteudo-apoios" class="oculto">
-        <h3 style="margin-bottom:12px;">👥 Controle de Apoios</h3>
-        <div id="lista-apoios-admin">
-            <p class="sem-itens">Nenhum cadastro recebido.<br>Quando alguém se cadastrar, aparecerá aqui.</p>
-        </div>
+    <div class="rodape-pix">
+        <p>💡 Gostou? Apoie o projeto</p>
+        <p class="chave-pix">PIX: (11) 99494-4410</p>
     </div>
 </div>
 
-<!-- Tela de Edição/Relatório Completo -->
-<div id="tela-editar-relatorio" class="tela">
-    <button class="botao-voltar" onclick="fecharEdicaoRelatorio()">← Voltar à Lista</button>
-    
-    <h2 style="color:#facc15; margin-bottom:15px;">📝 Editar & Enviar Relatório</h2>
-    
-    <div id="form-edicao-relatorio">
-        <div class="caixa">
-            <h3>✅ Campos a Incluir no Relatório</h3>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-tipo" checked> 📋 Tipo de Serviço
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-solicitante" checked> 👤 Solicitante / Responsável
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-endereco" checked> 📍 Endereço / Local
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-coords" checked> 🌐 Coordenadas
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-chegada" checked> 📍 Horário de Chegada
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-concluida" checked> ✅ Data/Hora de Conclusão
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-historio" checked> 📝 Histórico / Relatório
-            </label>
-            <label class="check-item">
-                <input type="checkbox" id="incluir-fotos" checked> 📸 Fotos Selecionadas
-            </label>
-            <p style="font-size:12px; color:#f97316; margin-top:8px;">ℹ️ O valor NÃO aparece no envio pelo WhatsApp</p>
-        </div>
-        
-        <div class="caixa">
-            <h3>📍 Dados do Atendimento</h3>
-            <label>Tipo de Serviço</label>
-            <input type="text" id="edit-tipo-servico">
-            <label>Solicitante / Responsável</label>
-            <input type="text" id="edit-solicitante">
-            <label>Endereço / Local</label>
-            <textarea id="edit-endereco" rows="2"></textarea>
-            <label>Coordenadas</label>
-            <input type="text" id="edit-coords">
-            <label>Valor R$ (controle interno)</label>
-            <input type="number" id="edit-valor" step="0.01">
-            <label>Horário de Chegada</label>
-            <input type="text" id="edit-chegada" placeholder="--/--/---- --:--">
-            <label>Data/Hora de Conclusão</label>
-            <input type="text" id="edit-concluida" placeholder="--/--/---- --:--">
-        </div>
-        
-        <div class="caixa editor-relatorio">
-            <h4>📝 Histórico / Relatório — Editar abaixo:</h4>
-            <textarea id="edit-historio" rows="6" placeholder="Detalhes, observações..."></textarea>
-        </div>
-        
-        <div class="caixa">
-            <h3>📸 Fotos — Selecione quais encaminhar</h3>
-            <p style="font-size:12px; color:#94a3b8; margin-bottom:8px;">Clique para selecionar/desmarcar — duas lado a lado no relatório</p>
-            <div class="fotos-grid" id="grid-fotos-edicao">
-                <p style="grid-column:1/-1; color:#94a3b8;">Simulação — após envio do Apoio, aparecerão aqui</p>
-            </div>
-        </div>
-        
-        <div class="visualizacao-relatorio" id="area-visualizacao">
-            <div class="folha-a4">
-                <h2>🛡️ RELATÓRIO DE ATENDIMENTO — DRTRACK Conecta</h2>
-                <div id="conteudo-visualizacao">
-                    <p style="text-align:center; color:#666;">Preencha os dados acima para ver a pré-visualização...</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="painel-envio">
-            <h4>📤 Salvar e Enviar</h4>
-            <div class="opcoes-exportacao">
-                <button class="botao-pequeno botao-azul" onclick="salvarComoPDF()">📄 Salvar PDF A4</button>
-                <button class="botao-pequeno botao-amarelo" onclick="salvarComoJPEG()">🖼️ Salvar Imagem</button>
-                <button class="botao-pequeno botao-whatsapp" onclick="enviarPorWhatsAppRelatorio()">📲 Relatório + Fotos</button>
-                <button class="botao-pequeno botao-roxo" onclick="enviarFotosSeparadasWhatsApp()">📸 Fotos Separadas</button>
-                <button class="botao-pequeno botao-verde" onclick="salvarAlteracoes()">💾 Salvar</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-const SENHA_ADMIN = 'DRTRACK2026';
-const nomesTipos = {
-    alarme: '🚨 Verificação de Alarme',
-    veiculo: '🚗 Verificação de Veículo',
-    ronda: '👀 Ronda / Presença',
-    foto: '📷 Registro Fotográfico',
-    outro: '📝 Outro'
-};
-
-let listaOcorrencias = [], cadastrosApoio = [];
-let indiceEdicao = -1;
-let fotosSelecionadasParaEnvio = [];
-let filtroAtual = 'todos';
-
-function carregarDados() {
-    listaOcorrencias = JSON.parse(localStorage.getItem('listaOcorrencias') || '[]');
-    cadastrosApoio = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
-    const salvo = localStorage.getItem('whatsappDestino');
-    if (salvo) document.getElementById('whatsapp-destino').value = salvo;
-}
-carregarDados();
-
-function salvarDados() {
-    localStorage.setItem('listaOcorrencias', JSON.stringify(listaOcorrencias));
-    localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
-}
-
-function salvarWhatsappConfig() {
-    const num = document.getElementById('whatsapp-destino').value.trim();
-    localStorage.setItem('whatsappDestino', num);
-    alert(`✅ Número salvo: ${num}`);
-}
-
-function formatarNumeroWhatsapp(num) {
-    return num.replace(/\D/g, '');
-}
-
-function voltarInicio() {
-    indiceEdicao = -1;
-    fotosSelecionadasParaEnvio = [];
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('tela-inicio').classList.add('ativa');
-}
-
-function fecharEdicaoRelatorio() {
-    indiceEdicao = -1;
-    fotosSelecionadasParaEnvio = [];
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('tela-admin').classList.add('ativa');
-    trocarAbaAdmin('servicos');
-}
-
-function mostrarCampoOutro() {
-    const sel = document.getElementById('tipo-serv').value;
-    document.getElementById('campo-outro-container').classList.toggle('oculto', sel !== 'outro');
-}
-
-function irParaSenhaAdmin() {
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('tela-senha').classList.add('ativa');
-    document.getElementById('senha-admin').value = '';
-    document.getElementById('erro-senha').style.display = 'none';
-}
-
-function verificarSenha() {
-    if (document.getElementById('senha-admin').value === SENHA_ADMIN) {
-        document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-        document.getElementById('tela-admin').classList.add('ativa');
-        trocarAbaAdmin('lancar');
-        atualizarEstatisticas();
-    } else {
-        document.getElementById('erro-senha').style.display = 'block';
-    }
-}
-
-function trocarAbaAdmin(aba) {
-    ['lancar','servicos','apoios'].forEach(a => {
-        document.querySelector(`[data-aba="${a}"]`)?.classList.remove('ativa');
-        document.getElementById(`conteudo-${a}`)?.classList.add('oculto');
-    });
-    document.querySelector(`[data-aba="${aba}"]`).classList.add('ativa');
-    document.getElementById(`conteudo-${aba}`).classList.remove('oculto');
-    if (aba === 'servicos') { filtroAtual = 'todos'; renderizarServicosAdmin(); }
-    if (aba === 'apoios') renderizarApoiosAdmin();
-}
-
-function filtrarServicos(filtro) {
-    filtroAtual = filtro;
-    const nomesFiltro = { pendente: 'Pendentes', aceito: 'Aceitos/Concluídos', todos: 'Todos' };
-    document.getElementById('filtro-ativo').textContent = nomesFiltro[filtro];
-    renderizarServicosAdmin();
-}
-
-function atualizarEstatisticas() {
-    document.getElementById('qtd-pend').textContent = listaOcorrencias.filter(o => o.status === 'pendente').length;
-    document.getElementById('qtd-aceit').textContent = listaOcorrencias.filter(o => o.status === 'aceito' || o.status === 'concluido').length;
-    document.getElementById('qtd-total').textContent = listaOcorrencias.length;
-    document.getElementById('qtd-pendaprov').textContent = cadastrosApoio.filter(c => c.aprovado === false).length;
-}
-
-function lancarOcorrencia() {
-    const end = document.getElementById('endereco-serv').value.trim();
-    const tipo = document.getElementById('tipo-serv').value;
-    if (!end || !tipo) { alert('⚠️ Preencha endereço e tipo de serviço!'); return; }
-    
-    let descricaoCompleta = nomesTipos[tipo];
-    if (tipo === 'outro') {
-        const descOutro = document.getElementById('descricao-outro').value.trim();
-        if (!descOutro) { alert('⚠️ Descreva o serviço!'); return; }
-        descricaoCompleta = `📝 ${descOutro}`;
-    }
-    
-    let lat = -23.5505, lng = -46.6333;
-    const coordsTxt = document.getElementById('coords-serv').value.trim();
-    if (coordsTxt && coordsTxt.includes(',')) {
-        const p = coordsTxt.split(',').map(x => parseFloat(x.trim()));
-        if (p.length === 2 && !isNaN(p[0]) && !isNaN(p[1])) { lat = p[0]; lng = p[1]; }
-    }
-    
-    listaOcorrencias.unshift({
-        id: Date.now(),
-        data: new Date().toLocaleString('pt-BR'),
-        endereco: end,
-        coords: { lat, lng },
-        tipo: tipo,
-        descricaoExibicao: descricaoCompleta,
-        solicitante: document.getElementById('nome-solic').value.trim() || 'Administrador',
-        telefone: document.getElementById('fone-solic').value.trim() || 'Não informado',
-        valor: parseFloat(document.getElementById('valor-serv').value) || 0,
-        status: 'pendente',
-        aceitoPor: null,
-        horarioAceite: null,
-        horarioChegada: '--/--/---- --:--',
-        fotos: [],
-        fotosCoordenadas: [],
-        relatorio: '',
-        dataConclusao: '--/--/---- --:--',
-        observacoesAdmin: ''
-    });
-    
-    salvarDados();
-    alert('✅ Lançado com sucesso!');
-    document.getElementById('endereco-serv').value = '';
-    document.getElementById('valor-serv').value = '';
-    document.getElementById('coords-serv').value = '';
-    document.getElementById('tipo-serv').value = '';
-    document.getElementById('descricao-outro').value = '';
-    document.getElementById('campo-outro-container').classList.add('oculto');
-    atualizarEstatisticas();
-    trocarAbaAdmin('servicos');
-}
-
-function renderizarServicosAdmin() {
-    let listaFiltrada = listaOcorrencias;
-    if (filtroAtual === 'pendente') {
-        listaFiltrada = listaOcorrencias.filter(o => o.status === 'pendente');
-    } else if (filtroAtual === 'aceito') {
-        listaFiltrada = listaOcorrencias.filter(o => o.status === 'aceito' || o.status === 'concluido');
-    }
-    
-    const cont = document.getElementById('lista-servicos-admin');
-    if (!listaFiltrada.length) {
-        cont.innerHTML = `<p class="sem-itens">Nenhuma ocorrência ${filtroAtual === 'todos' ? '' : 'com este status '}encontrada.</p>`;
-        atualizarEstatisticas();
-        return;
-    }
-    
-    cont.innerHTML = listaFiltrada.map((oc, i) => {
-        const indiceReal = listaOcorrencias.indexOf(oc);
-        let resumo = '';
-        if (oc.horarioChegada && oc.horarioChegada !== '--/--/---- --:--') resumo += `📍 Chegada: ${oc.horarioChegada}<br>`;
-        if (oc.dataConclusao && oc.dataConclusao !== '--/--/---- --:--') resumo += `✅ Concluído: ${oc.dataConclusao}<br>`;
-        if (oc.fotos && oc.fotos.length > 0) resumo += `📸 ${oc.fotos.length} foto(s)<br>`;
-        if (oc.relatorio) resumo += `📝 Relatório disponível`;
-        
-        return `
-        <div class="ocorrencia-card">
-            <div class="ocorrencia-cabecalho">
-                <span class="ocorrencia-tipo">${oc.descricaoExibicao || nomesTipos[oc.tipo]}</span>
-                <span class="etiqueta-status ${oc.status}">${oc.status.toUpperCase()}</span>
-            </div>
-            <div class="ocorrencia-dados">
-                📍 ${oc.endereco}<br>💰 R$ ${oc.valor.toFixed(2)}<br>📅 ${oc.data}<br>
-                ${oc.aceitoPor ? `🛵 Aceito por: ${oc.aceitoPor.nome} em ${oc.horarioAceite || '--'}` : '⏳ Aguardando aceite'}
-                ${resumo ? `<br><br>${resumo}` : ''}
-            </div>
-            <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
-                <button class="botao-pequeno botao-azul" onclick="abrirEdicaoRelatorio(${indiceReal})">📝 Editar & Enviar</button>
-                ${oc.status === 'pendente' ? `<button class="botao-pequeno botao-cinza" onclick="reabrir(${indiceReal})">↻ Reabrir</button>` : ''}
-                ${oc.status === 'aceito' ? `<button class="botao-pequeno botao-verde" onclick="concluir(${indiceReal})">✓ Marcar Concluído</button>` : ''}
-                <button class="botao-pequeno botao-vermelho" onclick="excluirServ(${indiceReal})">🗑️ Excluir</button>
-            </div>
-        </div>`;
-    }).join('');
-    atualizarEstatisticas();
-}
-
-function abrirEdicaoRelatorio(indice) {
-    indiceEdicao = indice;
-    const oc = listaOcorrencias[indice];
-    fotosSelecionadasParaEnvio = oc.fotos && oc.fotos.length > 0 ? oc.fotos.map((_, idx) => idx) : [];
-    
-    document.getElementById('edit-tipo-servico').value = oc.descricaoExibicao || nomesTipos[oc.tipo] || '';
-    document.getElementById('edit-solicitante').value = oc.solicitante ? `${oc.solicitante} — ${oc.telefone}` : '';
-    document.getElementById('edit-endereco').value = oc.endereco || '';
-    document.getElementById('edit-coords').value = oc.coords ? `${oc.coords.lat.toFixed(6)}, ${oc.coords.lng.toFixed(6)}` : '';
-    document.getElementById('edit-valor').value = oc.valor || 0;
-    document.getElementById('edit-chegada').value = oc.horarioChegada || '--/--/---- --:--';
-    document.getElementById('edit-concluida').value = oc.dataConclusao || '--/--/---- --:--';
-    
-    let relatorioCompleto = '';
-    if (oc.relatorio) relatorioCompleto += `--- Relatório do Apoio ---\n${oc.relatorio}\n\n`;
-    if (oc.observacoesAdmin) relatorioCompleto += `--- Observações Administrativas ---\n${oc.observacoesAdmin}`;
-    document.getElementById('edit-historio').value = relatorioCompleto;
-    
-    const gridFotos = document.getElementById('grid-fotos-edicao');
-    if (oc.fotos && oc.fotos.length > 0) {
-        gridFotos.innerHTML = oc.fotos.map((foto, idx) => `
-            <div class="foto-miniatura ${fotosSelecionadasParaEnvio.includes(idx) ? 'selecionada' : ''}" 
-                 id="foto-envio-${idx}" onclick="alternarSelecaoFoto(${idx})">
-                <img src="${foto}" alt="Foto ${idx+1}">
-            </div>
-        `).join('');
-    } else {
-        gridFotos.innerHTML = '<p style="grid-column:1/-1; color:#94a3b8;">Nenhuma foto enviada ainda</p>';
-    }
-    
-    atualizarVisualizacaoRelatorio();
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('tela-editar-relatorio').classList.add('ativa');
-    
-    ['incluir-tipo','incluir-solicitante','incluir-endereco','incluir-coords','incluir-chegada','incluir-concluida','incluir-historio','incluir-fotos'].forEach(id => {
-        document.getElementById(id).onchange = atualizarVisualizacaoRelatorio;
-    });
-    ['edit-tipo-servico','edit-solicitante','edit-endereco','edit-coords','edit-chegada','edit-concluida','edit-historio'].forEach(id => {
-        document.getElementById(id).oninput = atualizarVisualizacaoRelatorio;
-    });
-}
-
-function alternarSelecaoFoto(idx) {
-    const el = document.getElementById(`foto-envio-${idx}`);
-    if (!el) return;
-    const pos = fotosSelecionadasParaEnvio.indexOf(idx);
-    if (pos === -1) {
-        fotosSelecionadasParaEnvio.push(idx);
-        el.classList.add('selecionada');
-    } else {
-        fotosSelecionadasParaEnvio.splice(pos, 1);
-        el.classList.remove('selecionada');
-    }
-    atualizarVisualizacaoRelatorio();
-}
-
-function atualizarVisualizacaoRelatorio() {
-    const incTipo = document.getElementById('incluir-tipo').checked;
-    const incSolic = document.getElementById('incluir-solicitante').checked;
-    const incEnd = document.getElementById('incluir-endereco').checked;
-    const incCoords = document.getElementById('incluir-coords').checked;
-    const incCheg = document.getElementById('incluir-chegada').checked;
-    const incConc = document.getElementById('incluir-concluida').checked;
-    const incHist = document.getElementById('incluir-historio').checked;
-    const incFoto = document.getElementById('incluir-fotos').checked;
-    
-    const tipo = document.getElementById('edit-tipo-servico').value;
-    const solicitante = document.getElementById('edit-solicitante').value;
-    const endereco = document.getElementById('edit-endereco').value;
-    const coords = document.getElementById('edit-coords').value;
-    const chegada = document.getElementById('edit-chegada').value;
-    const concluida = document.getElementById('edit-concluida').value;
-    const historico = document.getElementById('edit-historio').value;
-    const oc = listaOcorrencias[indiceEdicao];
-    
-    let html = '';
-    if (incTipo) html += `<div class="secao"><span class="etiqueta">Serviço:</span> ${tipo}</div>`;
-    if (incSolic) html += `<div class="secao"><span class="etiqueta">Solicitante:</span> ${solicitante}</div>`;
-    if (incEnd) html += `<div class="secao"><span class="etiqueta">Local:</span> ${endereco}</div>`;
-    if (incCoords) html += `<div class="secao"><span class="etiqueta">Coordenadas:</span> ${coords}</div>`;
-    if (incCheg) html += `<div class="secao"><span class="etiqueta">Chegada:</span> ${chegada}</div>`;
-    if (incConc) html += `<div class="secao"><span class="etiqueta">Conclusão:</span> ${concluida}</div>`;
-    if (incHist && historico) html += `<div class="secao"><span class="etiqueta">Relatório:</span><br><br>${historico.replace(/\n/g, '<br>')}</div>`;
-    
-    if (incFoto && oc && oc.fotos && fotosSelecionadasParaEnvio.length > 0) {
-        html += `<div class="secao" style="margin-top:20px;"><strong>📸 Fotos Anexadas:</strong><br><br>
-            <div class="grid-fotos-relatorio">`;
-        fotosSelecionadasParaEnvio.forEach(idx => {
-            html += `<img src="${oc.fotos[idx]}" alt="Foto ${idx+1}">`;
-        });
-        html += `</div></div>`;
-    }
-    
-    html += `<div style="margin-top:40px; padding-top:15px; border-top:1px solid #ccc; font-size:12px; color:#555; text-align:center;">
-        Relatório gerado por DRTRACK Conecta — Segurança e Apoio<br>
-        📞 (11) 99494-4410
-    </div>`;
-    
-    document.getElementById('conteudo-visualizacao').innerHTML = html || '<p style="text-align:center; color:#666;">Preencha os dados acima...</p>';
-}
-
-function salvarAlteracoes() {
-    if (indiceEdicao === -1) return;
-    const oc = listaOcorrencias[indiceEdicao];
-    
-    oc.descricaoExibicao = document.getElementById('edit-tipo-servico').value;
-    oc.solicitante = document.getElementById('edit-solicitante').value.split('—')[0].trim();
-    oc.telefone = document.getElementById('edit-solicitante').value.split('—')[1]?.trim() || oc.telefone;
-    oc.endereco = document.getElementById('edit-endereco').value;
-    oc.valor = parseFloat(document.getElementById('edit-valor').value) || 0;
-    oc.horarioChegada = document.getElementById('edit-chegada').value;
-    oc.dataConclusao = document.getElementById('edit-concluida').value;
-    
-    const textoHist = document.getElementById('edit-historio').value;
-    if (textoHist.includes('--- Observações Administrativas ---')) {
-        const partes = textoHist.split('--- Observações Administrativas ---');
-        oc.relatorio = partes[0].replace('--- Relatório do Apoio ---', '').trim();
-        oc.observacoesAdmin = partes[1] || '';
-    } else {
-        oc.observacoesAdmin = textoHist;
-    }
-    
-    salvarDados();
-    alert('✅ Alterações salvas!');
-    atualizarVisualizacaoRelatorio();
-}
-
-async function salvarComoPDF() {
-    salvarAlteracoes();
-    const { jsPDF } = window.jspdf;
-    const area = document.querySelector('.folha-a4');
-    const canvas = await html2canvas(area, { scale: 2, useCORS: true, width: 794, height: 1123 });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const w = pdf.internal.pageSize.getWidth();
-    pdf.addImage(imgData, 'PNG', 0, 0, w, 0);
-    pdf.save(`relatorio-drtrack-${Date.now()}.pdf`);
-    alert('✅ PDF A4 salvo!');
-}
-
-async function salvarComoJPEG() {
-    salvarAlteracoes();
-    const area = document.querySelector('.folha-a4');
-    const canvas = await html2canvas(area, { scale: 2, useCORS: true });
-    const link = document.createElement('a');
-    link.download = `relatorio-drtrack-${Date.now()}.jpg`;
-    link.href = canvas.toDataURL('image/jpeg', 0.9);
-    link.click();
-    alert('✅ Imagem salva!');
-}
-
-function enviarPorWhatsAppRelatorio() {
-    salvarAlteracoes();
-    const incTipo = document.getElementById('incluir-tipo').checked;
-    const incSolic = document.getElementById('incluir-solicitante').checked;
-    const incEnd = document.getElementById('incluir-endereco').checked;
-    const incCoords = document.getElementById('incluir-coords').checked;
-    const incCheg = document.getElementById('incluir-chegada').checked;
-    const incConc = document.getElementById('incluir-concluida').checked;
-    const incHist = document.getElementById('incluir-historio').checked;
-    const incFoto = document.getElementById('incluir-fotos').checked;
-    
-    const tipo = document.getElementById('edit-tipo-servico').value;
-    const solicitante = document.getElementById('edit-solicitante').value;
-    const endereco = document.getElementById('edit-endereco').value;
-    const coords = document.getElementById('edit-coords').value;
-    const chegada = document.getElementById('edit-chegada').value;
-    const concluida = document.getElementById('edit-concluida').value;
-    const historico = document.getElementById('edit-historio').value;
-    const oc = listaOcorrencias[indiceEdicao];
-    
-    let msg = `🛡️ *RELATÓRIO DE ATENDIMENTO — DRTRACK Conecta*\n\n`;
-    if (incTipo) msg += `📋 *Serviço:* ${tipo}\n`;
-    if (incSolic) msg += `👤 *Solicitante:* ${solicitante}\n`;
-    if (incEnd) msg += `📍 *Local:* ${endereco}\n`;
-    if (incCoords) msg += `🌐 *Coordenadas:* ${coords}\n`;
-    if (incCheg) msg += `📍 *Chegada:* ${chegada}\n`;
-    if (incConc) msg += `✅ *Conclusão:* ${concluida}\n`;
-    if (incHist && historico) msg += `\n📝 *Relatório:*\n${historico}\n`;
-    if (incFoto && oc && oc.fotos && fotosSelecionadasParaEnvio.length > 0) {
-        msg += `\n📸 *Fotos anexadas:* ${fotosSelecionadasParaEnvio.length} foto(s)\n`;
-        fotosSelecionadasParaEnvio.forEach(idx => {
-            if (oc.fotosCoordenadas && oc.fotosCoordenadas[idx]) {
-                msg += `Foto ${idx+1}: ${oc.fotosCoordenadas[idx]}\n`;
-            }
-        });
-    }
-    msg += `\n—\n*DRTRACK Conecta — Segurança e Apoio*\n📞 (11) 99494-4410`;
-    
-    const numDestino = formatarNumeroWhatsapp(document.getElementById('whatsapp-destino').value || '5511994944410');
-    window.open(`https://wa.me/${numDestino}?text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-function enviarFotosSeparadasWhatsApp() {
-    if (indiceEdicao === -1) return;
-    const oc = listaOcorrencias[indiceEdicao];
-    
-    if (!oc.fotos || fotosSelecionadasParaEnvio.length === 0) {
-        alert('⚠️ Selecione pelo menos uma foto primeiro!');
-        return;
-    }
-    
-    let msg = `📸
-*FOTOS DO ATENDIMENTO — DRTRACK Conecta*\n\n`;
-    msg += `📍 Local: ${oc.endereco}\n`;
-    msg += `📋 Serviço: ${oc.descricaoExibicao || nomesTipos[oc.tipo]}\n`;
-    msg += `📅 Data: ${oc.data}\n\n`;
-    
-    fotosSelecionadasParaEnvio.forEach((idx, pos) => {
-        msg += `———\n📷 Foto ${pos+1} de ${fotosSelecionadasParaEnvio.length}\n`;
-        if (oc.fotosCoordenadas && oc.fotosCoordenadas[idx]) {
-            msg += `📍 ${oc.fotosCoordenadas[idx]}\n`;
-        }
-        msg += `(imagem anexada)\n`;
-    });
-    
-    msg += `\n—\n*DRTRACK Conecta*\n📞 (11) 99494-4410`;
-    
-    const numDestino = formatarNumeroWhatsapp(document.getElementById('whatsapp-destino').value || '5511994944410');
-    window.open(`https://wa.me/${numDestino}?text=${encodeURIComponent(msg)}`, '_blank');
-    
-    alert('✅ A mensagem foi aberta! \n\n📲 No WhatsApp, clique no ícone de "📎 Anexar" e selecione as fotos manualmente — o texto já está pronto!');
-}
-
-function reabrir(i) {
-    listaOcorrencias[i].status = 'pendente';
-    salvarDados(); renderizarServicosAdmin();
-}
-function concluir(i) {
-    listaOcorrencias[i].status = 'concluido';
-    listaOcorrencias[i].dataConclusao = new Date().toLocaleString('pt-BR');
-    salvarDados(); renderizarServicosAdmin();
-}
-function excluirServ(i) {
-    if (confirm('Excluir permanentemente?')) {
-        listaOcorrencias.splice(i, 1);
-        salvarDados(); renderizarServicosAdmin();
-    }
-}
-
-function renderizarApoiosAdmin() {
-    const cont = document.getElementById('lista-apoios-admin');
-    if (!cadastrosApoio.length) {
-        cont.innerHTML = '<p class="sem-itens">Nenhum cadastro recebido.<br>Quando alguém se cadastrar, aparecerá aqui.</p>';
-        return;
-    }
-    cont.innerHTML = cadastrosApoio.map((apo, i) => `
-    <div class="ocorrencia-card">
-        <div class="linha-cadastro">
-            <div class="foto-preview">${apo.foto ? `<img src="${apo.foto}">` : '👤'}</div>
-            <div style="flex:1;">
-                <strong>${apo.nome}</strong><br>
-                📱 ${apo.telefone}<br>
-                🚗 Veículo: ${apo.veiculo || 'Não informado'}<br>
-                🔑 PIX: ${apo.pix}<br>
-                <span class="etiqueta-status ${apo.aprovado ? 'aprovado' : 'pend-aprov'}">
-                    ${apo.aprovado ? '✅ APROVADO' : '⏳ AGUARDANDO'}
-                </span>
-            </div>
-        </div>
-        <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
-            ${!apo.aprovado ? `<button class="botao-pequeno botao-verde" onclick="aprovar(${i})">✅ Aprovar</button>` : ''}
-            ${apo.aprovado ? `<button class="botao-pequeno botao-cinza" onclick="suspender(${i})">⚠️ Suspender</button>` : ''}
-            <button class="botao-pequeno botao-azul" onclick="elogiar(${i})">⭐ Elogiar</button>
-            <button class="botao-pequeno botao-amarelo" onclick="gorjeta(${i})">💰 Gorjeta</button>
-            <button class="botao-pequeno botao-vermelho" onclick="excluirApoio(${i})">🗑️ Excluir</button>
-        </div>
-    </div>`).join('');
-}
-
-function aprovar(i) { 
-    cadastrosApoio[i].aprovado = true; 
-    salvarDados(); renderizarApoiosAdmin(); atualizarEstatisticas(); 
-    alert(`✅ ${cadastrosApoio[i].nome} foi APROVADO!`);
-}
-function suspender(i) { 
-    cadastrosApoio[i].aprovado = false; 
-    salvarDados(); renderizarApoiosAdmin(); atualizarEstatisticas();
-    alert(`⚠️ ${cadastrosApoio[i].nome} foi suspenso.`);
-}
-function elogiar(i) { 
-    alert(`⭐ Elogio registrado para ${cadastrosApoio[i].nome}!`); 
-}
-function gorjeta(i) { 
-    alert(`💰 Gorjeta para ${cadastrosApoio[i].nome}\nPIX: ${cadastrosApoio[i].pix}`); 
-}
-function excluirApoio(i) {
-    if (confirm('Excluir este cadastro permanentemente?')) { 
-        cadastrosApoio.splice(i, 1); 
-        salvarDados(); renderizarApoiosAdmin(); atualizarEstatisticas();
-    }
-}
-</script>
-
-</body>
-    <!-- ================================================== -->
-<!-- PARTE 3: ÁREA DO APOIO — ATUALIZADA -->
-<!-- ================================================== -->
-
-<!-- Tela Login do Apoio -->
+<!-- ====================================== LOGIN APOIO -->
 <div id="tela-login-apoio" class="tela">
-    <button class="botao-voltar" onclick="voltarInicio()">← Voltar</button>
-    <div class="caixa" style="max-width: 380px; margin: 30px auto;">
-        <h2 style="text-align:center;">🛵 Área do Apoio</h2>
-        <p style="text-align:center; color:#94a3b8; margin-bottom:20px;">Acesse sua conta</p>
-        
+    <button class="btn-voltar" onclick="voltarInicio()">← Voltar</button>
+    <div class="caixa">
+        <h2>🔐 Entrar</h2>
         <label>Telefone com WhatsApp</label>
-        <input type="tel" id="login-telefone" placeholder="(11) 9xxxx-xxxx">
+        <input type="tel" id="login-tel" placeholder="11999999999">
         
         <label>Senha</label>
-        <div style="position:relative;">
-            <input type="password" id="login-senha" placeholder="Digite sua senha">
-            <button type="button" style="position:absolute; right:12px; top:12px; background:none; border:none; font-size:18px; cursor:pointer;" onclick="alternarVisibilidadeSenha()">👁️</button>
+        <div class="senha-campo">
+            <input type="password" id="login-senha" placeholder="Sua senha">
+            <button class="olho" onclick="alternarSenha('login-senha', this)">👁️</button>
         </div>
         
-        <p style="text-align:right; margin:8px 0 15px; font-size:13px;">
-            <a href="#" onclick="abrirRecuperarSenha(); return false;" style="color:#facc15; text-decoration:underline;">Esqueci minha senha</a>
-        </p>
+        <p class="link-recuperar"><a href="#" onclick="irRecuperarSenha(); return false;">Esqueci minha senha</a></p>
         
-        <button class="botao-grande botao-verde" onclick="verificarLoginApoio()" style="margin-top:5px;">🔑 Entrar</button>
+        <button class="btn-verde" onclick="fazerLogin()">🔑 Entrar</button>
+        <p id="msg-login" class="msg"></p>
         
-        <p style="text-align:center; margin:20px 0; color:#94a3b8;">— Não tem cadastro ainda? —</p>
-        <button class="botao-grande botao-roxo" onclick="irParaCadastroApoio()">📝 Fazer Cadastro</button>
-        
-        <p id="msg-login-erro" style="color:#f87171; margin-top:10px; display:none; text-align:center;"></p>
-        <p id="msg-nao-aprovado" style="color:#facc15; margin-top:10px; display:none; text-align:center;">⏳ Seu cadastro está aguardando aprovação do Administrador</p>
+        <p style="text-align:center; margin:20px 0; color:#94a3b8;">— Não tem cadastro? —</p>
+        <button class="btn-roxo" onclick="irParaCadastro()">📝 Fazer Cadastro</button>
     </div>
 </div>
 
-<!-- Tela Recuperar Senha -->
-<div id="tela-recuperar-senha" class="tela">
-    <button class="botao-voltar" onclick="irParaLoginApoio()">← Voltar</button>
-    <div class="caixa" style="max-width: 380px; margin: 30px auto;">
-        <h2 style="text-align:center;">🔓 Recuperar Senha</h2>
-        <p style="text-align:center; color:#94a3b8; margin-bottom:20px;">Digite seu e-mail de cadastro</p>
-        
-        <label>E-mail</label>
-        <input type="email" id="email-recuperar" placeholder="seu@email.com">
-        
-        <button class="botao-grande botao-amarelo" onclick="enviarLinkRecuperacao()">📧 Enviar Instruções</button>
-        <p id="msg-envio-sucesso" style="color:#4ade80; margin-top:15px; display:none; text-align:center;">✅ E-mail enviado! Verifique sua caixa de entrada</p>
-    </div>
-</div>
-
-<!-- Tela Cadastro do Apoio → ATUALIZADA -->
-<div id="tela-cadastro-apoio" class="tela">
-    <button class="botao-voltar" onclick="irParaLoginApoio()">← Voltar</button>
+<!-- ====================================== RECUPERAR SENHA -->
+<div id="tela-recuperar" class="tela">
+    <button class="btn-voltar" onclick="irParaLoginApoio()">← Voltar</button>
     <div class="caixa">
-        <h2 style="text-align:center;">📝 Cadastro de Apoio</h2>
-        <p style="text-align:center; color:#94a3b8; margin-bottom:20px;">Preencha todos os campos</p>
+        <h2>🔓 Recuperar Senha</h2>
+        <label>E-mail cadastrado</label>
+        <input type="email" id="email-recuperar" placeholder="seu@email.com">
+        <button class="btn-amarelo" onclick="enviarRecuperacao()">📧 Enviar</button>
+        <p id="msg-recuperar" class="msg"></p>
+    </div>
+</div>
+
+<!-- ====================================== CADASTRO APOIO -->
+<div id="tela-cadastro" class="tela">
+    <button class="btn-voltar" onclick="irParaLoginApoio()">← Voltar</button>
+    <div class="caixa">
+        <h2>📝 Cadastro de Apoio</h2>
         
         <label>Nome Completo *</label>
-        <input type="text" id="apoio-nome" placeholder="Seu nome completo">
+        <input type="text" id="cad-nome" placeholder="Seu nome completo">
         
         <label>E-mail *</label>
-        <input type="email" id="apoio-email" placeholder="seu@email.com">
+        <input type="email" id="cad-email" placeholder="seu@email.com">
         
         <label>Telefone / WhatsApp *</label>
-        <input type="tel" id="apoio-telefone" placeholder="(11) 9xxxx-xxxx">
+        <input type="tel" id="cad-tel" placeholder="11999999999">
         
         <label>Placa do Veículo *</label>
-        <input type="text" id="apoio-placa" placeholder="ABC-1234 ou ABC1D23" style="text-transform:uppercase;">
+        <input type="text" id="cad-placa" placeholder="ABC-1234" style="text-transform: uppercase;">
         
         <label>Região / Bairro de Atuação *</label>
-        <select id="apoio-regiao">
+        <select id="cad-regiao">
             <option value="">Selecione...</option>
-            <option value="Zona Norte">📍 Zona Norte</option>
-            <option value="Zona Sul">📍 Zona Sul</option>
-            <option value="Zona Leste">📍 Zona Leste</option>
-            <option value="Zona Oeste">📍 Zona Oeste</option>
-            <option value="Centro">📍 Centro</option>
-            <option value="Grande São Paulo">📍 Grande São Paulo</option>
-            <option value="Todas">🌎 Todas as regiões</option>
+            <option>Zona Norte — SP</option>
+            <option>Zona Sul — SP</option>
+            <option>Zona Leste — SP</option>
+            <option>Zona Oeste — SP</option>
+            <option>Centro — SP</option>
+            <option>Grande São Paulo</option>
+            <option>Todas as regiões</option>
         </select>
         
         <label>Tipo de Veículo *</label>
-        <select id="apoio-veiculo">
+        <select id="cad-veiculo">
             <option value="">Selecione...</option>
-            <option value="Moto 🛵">🛵 Moto</option>
-            <option value="Carro 🚗">🚗 Carro</option>
-            <option value="Bicicleta 🚲">🚲 Bicicleta</option>
-            <option value="A pé 🚶">🚶 A pé</option>
+            <option>Moto 🛵</option>
+            <option>Carro 🚗</option>
+            <option>Bicicleta 🚲</option>
+            <option>A pé 🚶</option>
         </select>
         
         <label>Chave PIX para recebimento *</label>
-        <input type="text" id="apoio-pix" placeholder="Sua chave PIX">
+        <input type="text" id="cad-pix" placeholder="Sua chave PIX">
         
-        <label>Criar Senha *</label>
-        <div style="position:relative;">
-            <input type="password" id="apoio-senha" placeholder="Crie uma senha">
-            <button type="button" style="position:absolute; right:12px; top:12px; background:none; border:none; font-size:18px; cursor:pointer;" onclick="alternarVisibilidadeSenhaCadastro()">👁️</button>
+        <label>Criar Senha * (mínimo 6 caracteres)</label>
+        <div class="senha-campo">
+            <input type="password" id="cad-senha" placeholder="Crie sua senha">
+            <button class="olho" onclick="alternarSenha('cad-senha', this)">👁️</button>
         </div>
         
-        <button class="botao-grande botao-verde" onclick="enviarCadastroApoio()" style="margin-top:15px;">✅ Enviar Cadastro</button>
+        <button class="btn-verde" onclick="enviarCadastro()">✅ Enviar Cadastro</button>
+        <p id="msg-cadastro" class="msg"></p>
     </div>
 </div>
 
-<!-- Tela Principal do Apoio — Ocorrências PISCANDO ⚡ -->
-<div id="tela-apoio-principal" class="tela">
-    <button class="botao-voltar" onclick="sairApoio()">🚪 Sair</button>
+<!-- ====================================== ÁREA PRINCIPAL APOIO -->
+<div id="tela-apoio" class="tela tela-larga">
+    <button class="btn-voltar" onclick="sair()">🚪 Sair</button>
+    <h2>🛵 Bem-vindo, <span id="nome-apoio"></span>!</h2>
     
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h2 style="color:#facc15;">🛵 Ocorrências Próximas</h2>
-        <div style="text-align:right;">
-            <span style="font-size:12px; color:#4ade80;">● Online</span>
+    <div id="aviso-aprovacao" class="caixa aviso" style="text-align:center;">
+        ⏳ Seu cadastro está aguardando aprovação do Administrador
+    </div>
+
+    <div id="conteudo-aprovado" class="oculto">
+        <div class="caixa">
+            <label style="display:flex; align-items:center; gap:8px;">
+                Tipo de Alerta:
+                <select id="tipo-alerta" onchange="salvarPreferenciaAlerta()">
+                    <option value="sirene">🚨 Sirene</option>
+                    <option value="continuo">🔔 Sinal Contínuo</option>
+                </select>
+            </label>
+            <button class="btn-azul" id="btn-localizacao" onclick="ativarLocalizacao()">📍 Ativar Localização em Tempo Real</button>
+            <p id="status-localizacao" style="font-size:13px; margin-top:5px; color:#94a3b8;">Não ativa</p>
+        </div>
+
+        <!-- ALERTA DE NOVA OCORRÊNCIA -->
+        <div id="painel-alerta" class="caixa oculto alerta-piscando">
+            <h3>🚨 NOVA OCORRÊNCIA! 🚨</h3>
+            <div id="alerta-conteudo"></div>
+            <div class="linha" style="margin-top:15px;">
+                <button class="btn-verde" onclick="aceitarOcorrencia()">✅ Aceitar</button>
+                <button class="btn-vermelho" onclick="recusarOcorrencia()">❌ Recusar</button>
+            </div>
+        </div>
+
+        <!-- MAPA E LISTA -->
+        <div class="caixa">
+            <h3>🗺️ Ocorrências Abertas</h3>
+            <div id="mapa"></div>
+            <div id="lista-chamados"></div>
+        </div>
+
+        <!-- ENVIAR COMPROVANTE -->
+        <div id="area-comprovante" class="caixa oculto">
+            <h3>📸 Enviar Comprovante de Atendimento</h3>
+            <p style="color:#facc15; font-size:13px;">Mínimo 5 fotos obrigatórias</p>
+            
+            <label>Foto 1 *</label>
+            <input type="file" id="foto1" accept="image/*" onchange="atualizarPreview()">
+            <label>Foto 2 *</label>
+            <input type="file" id="foto2" accept="image/*" onchange="atualizarPreview()">
+            <label>Foto 3 *</label>
+            <input type="file" id="foto3" accept="image/*" onchange="atualizarPreview()">
+            <label>Foto 4 *</label>
+            <input type="file" id="foto4" accept="image/*" onchange="atualizarPreview()">
+            <label>Foto 5 *</label>
+            <input type="file" id="foto5" accept="image/*" onchange="atualizarPreview()">
+            
+            <label>Fotos Extras (opcional)</label>
+            <input type="file" id="fotos-extras" accept="image/*" multiple onchange="atualizarPreview()">
+            
+            <div class="foto-preview" id="preview-fotos"></div>
+            
+            <label>Relato / Observações no local</label>
+            <textarea id="relato-apoio" rows="3" placeholder="Descreva o que encontrou..."></textarea>
+            
+            <button class="btn-verde" onclick="enviarComprovante()">📤 Enviar Comprovante</button>
+            <p id="msg-comprovante" class="msg"></p>
+            
+            <div id="area-download" class="oculto">
+                <h4 style="margin-top:20px;">⬇️ Baixar fotos com dados embutidos</h4>
+                <div id="botoes-download"></div>
+            </div>
+        </div>
+
+        <!-- MEUS ATENDIMENTOS -->
+        <div class="caixa">
+            <h3>📋 Meus Atendimentos</h3>
+            <div id="meus-atendimentos"></div>
         </div>
     </div>
+
+    <div class="rodape-pix">
+        <p>💡 Gostou? Apoie o projeto</p>
+        <p class="chave-pix">PIX: (11) 99494-4410 — DRTRACK Conecta</p>
+    </div>
+</div>
+
+<!-- ====================================== LOGIN ADMIN -->
+<div id="tela-admin-login" class="tela">
+    <button class="btn-voltar" onclick="voltarInicio()">← Voltar</button>
+    <div class="caixa">
+        <h2>⚙️ Administrador</h2>
+        <label>Senha Administrativa</label>
+        <input type="password" id="admin-senha" placeholder="Digite a senha">
+        <button class="btn-amarelo" onclick="loginAdmin()">🔑 Acessar</button>
+        <p style="font-size:13px; color:#94a3b8; text-align:center; margin-top:10px;">Padrão: drtrack2026</p>
+    </div>
+</div>
+
+<!-- ====================================== PAINEL ADMIN -->
+<div id="tela-admin" class="tela tela-larga">
+    <button class="btn-voltar" onclick="voltarInicio()">← Voltar</button>
+    <h2>⚙️ Painel Administrativo — DRTRACK</h2>
     
-    <!-- Opção de Som -->
-    <div class="caixa" style="padding:12px; margin-bottom:15px;">
-        <label style="margin:0; display:inline;">🔔 Som de Aviso:</label>
-        <select id="tipo-som-apoio" onchange="salvarPreferenciaSom()">
-            <option value="sirene">🚨 Sirene</option>
-            <option value="continuo">🔔 Sinal Contínuo</option>
-            <option value="desligado">🔇 Desligado</option>
+    <div class="linha" style="margin-bottom:15px;">
+        <button class="btn-verde" onclick="mostrarAba('aba-lancar')">📤 Lançar Ocorrência</button>
+        <button class="btn-azul" onclick="mostrarAba('aba-apoiadores')">👥 Apoiadores</button>
+        <button class="btn-amarelo" onclick="mostrarAba('aba-relatorios')">📊 Relatórios</button>
+    </div>
+
+    <!-- ABA LANÇAR OCORRÊNCIA -->
+    <div id="aba-lancar" class="caixa aba-conteudo">
+        <h3>📤 Lançar Nova Ocorrência</h3>
+        <label>Endereço Completo *</label>
+        <input type="text" id="ocor-endereco" placeholder="Rua, número, bairro — Cidade/UF">
+        
+        <div class="linha">
+            <div style="flex:1;">
+                <label>Latitude</label>
+                <input type="text" id="ocor-lat" placeholder="-23.456789">
+            </div>
+            <div style="flex:1;">
+                <label>Longitude</label>
+                <input type="text" id="ocor-lng" placeholder="-46.654321">
+            </div>
+        </div>
+        
+        <label>Descrição / Detalhes do Serviço</label>
+        <textarea id="ocor-desc" rows="3" placeholder="O que precisa ser verificado..."></textarea>
+        
+        <label>Valor do Serviço R$ *</label>
+        <input type="number" id="ocor-valor" step="0.01" placeholder="0,00">
+        
+        <label style="font-weight:normal; display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="ocor-comissao"> Aplicar comissão de 8% (deixe desmarcado = sem comissão)
+        </label>
+        
+        <button class="btn-verde" onclick="lancarOcorrencia()">🚨 Enviar para a Rede</button>
+        <p id="msg-lancamento" class="msg"></p>
+    </div>
+
+    <!-- ABA APOIADORES -->
+    <div id="aba-apoiadores" class="caixa aba-conteudo oculto">
+        <h3>👥 Gerenciar Apoiadores</h3>
+        <p style="margin-bottom:10px;">Total: <span id="qtd-total">0</span> | Aprovados: <span id="qtd-aprovados">0</span> | Pendentes: <span id="qtd-pendentes">0</span></p>
+        <div id="lista-apoiadores"></div>
+    </div>
+
+    <!-- ABA RELATÓRIOS -->
+    <div id="aba-relatorios" class="caixa aba-conteudo oculto">
+        <h3>📊 Relatórios & Fechamento</h3>
+        <select id="filtro-periodo" onchange="atualizarRelatorio()">
+            <option value="todos">Todas as Ocorrências</option>
+            <option value="quinzena1">1ª Quinzena (1 a 15)</option>
+            <option value="quinzena2">2ª Quinzena (16 ao fim)</option>
+            <option value="concluidas">✅ Concluídas</option>
+            <option value="pendentes">⏳ Pendentes</option>
         </select>
+        <div id="resumo-valores" style="margin:15px 0; font-size:16px;"></div>
+        <div id="lista-ocorrencias-admin"></div>
     </div>
-    
-    <!-- Mapa Simulado -->
-    <div id="mapa-apoio" style="height:220px; border-radius:12px; margin-bottom:15px; background:#1e293b; display:flex; align-items:center; justify-content:center; color:#94a3b8;">
-        📍 Mapa — Ocorrências aparecerão aqui
-    </div>
-    
-    <!-- Lista de Ocorrências — PISCANDO ⚡ -->
-    <h3 style="margin-bottom:10px;">Chamados Disponíveis</h3>
-    <div id="lista-ocorrencias-apoio">
-        <p class="sem-itens">Aguardando novos chamados...</p>
-    </div>
-    
-    <!-- Meus Atendimentos -->
-    <h3 style="margin:25px 0 10px;">Meus Atendimentos</h3>
-    <div id="meus-atendimentos-apoio">
-        <p class="sem-itens">Nenhum atendimento aceito ainda.</p>
+
+    <div class="rodape-pix">
+        <p>💡 Gostou? Apoie o projeto</p>
+        <p class="chave-pix">PIX: (11) 99494-4410 — DRTRACK Conecta</p>
     </div>
 </div>
 
-<!-- Tela de Detalhes + DOWNLOAD DAS FOTOS -->
-<div id="tela-atendimento-apoio" class="tela">
-    <button class="botao-voltar" onclick="voltarParaOcorrencias()">← Voltar</button>
-    
-    <h2 style="color:#facc15; margin-bottom:15px;">📍 Detalhes do Atendimento</h2>
-    
-    <div class="caixa">
-        <h3 id="det-tipo-servico">Tipo de Serviço</h3>
-        <p id="det-endereco" style="font-size:15px; margin:8px 0;">📍 Endereço</p>
-        <p id="det-coords" style="font-size:12px; color:#94a3b8;">🌐 Coordenadas</p>
-        <p id="det-solicitante" style="margin:5px 0;">👤 Solicitante</p>
-        <p id="det-valor" style="font-size:18px; font-weight:bold; color:#4ade80; margin-top:10px;">💰 R$ 0,00</p>
     </div>
-    
-    <!-- Chegada no Local -->
-    <div class="caixa">
-        <h3>✅ Confirmação de Chegada</h3>
-        <button class="botao-grande botao-verde" id="btn-chegada" onclick="registrarChegada()">📍 CHEGUEI NO LOCAL</button>
-        <p id="horario-chegada-apoio" style="margin-top:8px; color:#94a3b8;">Aguardando confirmação...</p>
-    </div>
-    
-    <!-- Envio de Fotos + DOWNLOAD -->
-    <div class="caixa">
-        <h3>📸 Enviar Registro Fotográfico</h3>
-        <p style="font-size:12px; color:#f97316; margin-bottom:10px;">⚠️ Mínimo de 5 fotos obrigatórias</p>
-        
-        <input type="file" id="foto-apoio-1" accept="image/*" capture="environment" onchange="visualizarFoto(1)">
-        <input type="file" id="foto-apoio-2" accept="image/*" capture="environment" onchange="visualizarFoto(2)">
-        <input type="file" id="foto-apoio-3" accept="image/*" capture="environment" onchange="visualizarFoto(3)">
-        <input type="file" id="foto-apoio-4" accept="image/*" capture="environment" onchange="visualizarFoto(4)">
-        <input type="file" id="foto-apoio-5" accept="image/*" capture="environment" onchange="visualizarFoto(5)">
-        <input type="file" id="foto-apoio-extra" accept="image/*" capture="environment" onchange="visualizarFotoExtra()">
-        
-        <div class="fotos-grid" id="preview-fotos-apoio" style="margin:15px 0;">
-            <p style="grid-column:1/-1; color:#94a3b8;">Fotos aparecerão aqui</p>
-        </div>
-        
-        <!-- 🆕 Botões de Download -->
-        <div id="botoes-download-fotos" class="oculto" style="margin:15px 0; display:flex; flex-wrap:wrap; gap:8px;">
-            <h4 style="width:100%; margin-bottom:5px;">💾 Baixar Fotos:</h4>
-        </div>
-        
-        <label>📝 Observações / Relatório do Atendimento</label>
-        <textarea id="relatorio-apoio" rows="4" placeholder="Descreva o que encontrou no local..."></textarea>
-    </div>
-    
-    <button class="botao-grande botao-amarelo" onclick="concluirAtendimentoApoio()">✅ CONCLUIR E ENVIAR</button>
-</div>
-
-<style>
-/* ⚡ ANIMAÇÃO PISCANDO */
-@keyframes piscar {
-    0% { box-shadow: 0 0 5px #facc15, 0 0 10px #facc15; border-color: #facc15; }
-    50% { box-shadow: 0 0 20px #facc15, 0 0 30px #facc15; border-color: #fff; }
-    100% { box-shadow: 0 0 5px #facc15, 0 0 10px #facc15; border-color: #facc15; }
-}
-.ocorrencia-piscando {
-    animation: piscar 1s infinite;
-    border-left-color: #facc15 !important;
-    border-left-width: 5px !important;
-}
-.foto-com-dados {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-}
-.foto-com-dados img {
-    border: 2px solid #4ade80;
-}
-.dados-foto {
-    font-size: 10px;
-    color: #cbd5e1;
-    padding: 4px;
-    background: rgba(0,0,0,0.7);
-    border-radius: 0 0 6px 6px;
-    word-break: break-all;
-}
-</style>
 
 <script>
-// ========== VARIÁVEIS DA PARTE 3 ==========
-let apoioLogado = null;
+// ====================================== DADOS GLOBAIS
+const senhaAdmin = "drtrack2026";
+let cadastrosApoio = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
+let listaOcorrencias = JSON.parse(localStorage.getItem('ocorrencias') || '[]');
+let usuarioAtual = null;
+let mapa = null;
+let localizacaoAtiva = false;
+let watchId = null;
 let servicoAceito = null;
 let fotosApoio = [];
 let fotosExtras = [];
-let preferenciaSom = localStorage.getItem('preferenciaSom') || 'sirene';
-let senhaVisivel = false;
-let senhaCadastroVisivel = false;
 
-// ========== ALTERNAR VISIBILIDADE DE SENHA ==========
-function alternarVisibilidadeSenha() {
-    senhaVisivel = !senhaVisivel;
-    const campo = document.getElementById('login-senha');
-    campo.type = senhaVisivel ? 'text' : 'password';
-}
-function alternarVisibilidadeSenhaCadastro() {
-    senhaCadastroVisivel = !senhaCadastroVisivel;
-    const campo = document.getElementById('apoio-senha');
-    campo.type = senhaCadastroVisivel ? 'text' : 'password';
-}
-
-// ========== RECUPERAR SENHA ==========
-function abrirRecuperarSenha() {
+// ====================================== NAVEGAÇÃO
+function mostrarTela(id) {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('tela-recuperar-senha').classList.add('ativa');
-    document.getElementById('msg-envio-sucesso').style.display = 'none';
-}
-function enviarLinkRecuperacao() {
-    const email = document.getElementById('email-recuperar').value.trim();
-    if (!email) { alert('⚠️ Digite seu e-mail!'); return; }
+    document.getElementById(id).classList.add('ativa');
     
-    const encontrado = cadastrosApoio.find(a => a.email === email);
-    if (!encontrado) {
-        alert('⚠️ E-mail não encontrado no cadastro!');
-        return;
+    if (id === 'tela-apoio' && usuarioAtual) {
+        document.getElementById('nome-apoio').textContent = usuarioAtual.nome;
+        ajustarTelaAprovacao();
+        if (usuarioAtual.aprovado) inicializarMapa();
+        carregarChamados();
+        carregarMeusAtendimentos();
     }
-    
-    // Simulação de envio
-    document.getElementById('msg-envio-sucesso').style.display = 'block';
-    alert(`✅ Enviado para:\n${email}\n\n(Em versão completa: link de redefinição enviado)`);
-}
-
-// ========== NAVEGAÇÃO ==========
-function irParaLoginApoio() {
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('tela-login-apoio').classList.add('ativa');
-    document.getElementById('msg-login-erro').style.display = 'none';
-    document.getElementById('msg-nao-aprovado').style.display = 'none';
-}
-function irParaCadastroApoio() {
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('tela-cadastro-apoio').classList.add('ativa');
-}
-function irParaPrincipalApoio() {
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('tela-apoio-principal').classList.add('ativa');
-    document.getElementById('tipo-som-apoio').value = preferenciaSom;
-    renderizarOcorrenciasParaApoio();
-}
-function sairApoio() {
-    if (confirm('Deseja realmente sair?')) {
-        apoioLogado = null;
-        fotosApoio = [];
-        fotosExtras = [];
-        servicoAceito = null;
-        voltarInicio();
+    if (id === 'tela-admin') {
+        atualizarContadoresAdmin();
+        listarApoiadores();
+        atualizarRelatorio();
     }
 }
+function voltarInicio() { mostrarTela('tela-inicio'); }
+function irParaLoginApoio() { mostrarTela('tela-login-apoio'); limparMensagens(); }
+function irParaCadastro() { mostrarTela('tela-cadastro'); limparMensagens(); }
+function irRecuperarSenha() { mostrarTela('tela-recuperar'); }
+function irParaAdmin() { mostrarTela('tela-admin-login'); }
+function mostrarAba(idAba) {
+    document.querySelectorAll('.aba-conteudo').forEach(a => a.classList.add('oculto'));
+    document.getElementById(idAba).classList.remove('oculto');
+}
+function limparMensagens() {
+    ['msg-login','msg-cadastro','msg-recuperar','msg-comprovante','msg-lancamento'].forEach(id => {
+        const el = document.getElementById(id); if(el) el.textContent = '';
+    });
+}
 
-// ========== CADASTRO ATUALIZADO ==========
-function enviarCadastroApoio() {
-    const nome = document.getElementById('apoio-nome').value.trim();
-    const email = document.getElementById('apoio-email').value.trim();
-    const telefone = document.getElementById('apoio-telefone').value.trim();
-    const placa = document.getElementById('apoio-placa').value.trim().toUpperCase();
-    const regiao = document.getElementById('apoio-regiao').value;
-    const veiculo = document.getElementById('apoio-veiculo').value;
-    const pix = document.getElementById('apoio-pix').value.trim();
-    const senha = document.getElementById('apoio-senha').value.trim();
-    
+// ====================================== SENHA
+function alternarSenha(idCampo, botao) {
+    const campo = document.getElementById(idCampo);
+    campo.type = campo.type === 'password' ? 'text' : 'password';
+    botao.textContent = campo.type === 'password' ? '👁️' : '🙈';
+}
+
+// ====================================== CADASTRO
+function enviarCadastro() {
+    const nome = document.getElementById('cad-nome').value.trim();
+    const email = document.getElementById('cad-email').value.trim();
+    const telefone = document.getElementById('cad-tel').value.trim().replace(/\D/g,'');
+    const placa = document.getElementById('cad-placa').value.trim().toUpperCase();
+    const regiao = document.getElementById('cad-regiao').value;
+    const veiculo = document.getElementById('cad-veiculo').value;
+    const pix = document.getElementById('cad-pix').value.trim();
+    const senha = document.getElementById('cad-senha').value;
+    const msg = document.getElementById('msg-cadastro');
+
     if (!nome || !email || !telefone || !placa || !regiao || !veiculo || !pix || !senha) {
-        alert('⚠️ Preencha TODOS os campos!');
-        return;
+        msg.className = 'msg erro'; msg.textContent = '⚠️ Preencha TODOS os campos!'; return;
     }
-    if (!email.includes('@')) { alert('⚠️ Digite um e-mail válido!'); return; }
-    if (senha.length < 6) { alert('⚠️ Senha deve ter pelo menos 6 caracteres!'); return; }
-    
-    const telLimpo = telefone.replace(/\D/g,'');
-    const jaExiste = cadastrosApoio.find(a => a.telefone.replace(/\D/g,'') === telLimpo || a.email === email);
-    if (jaExiste) {
-        alert('⚠️ Já existe cadastro com este telefone ou e-mail! Faça login.');
-        irParaLoginApoio();
-        return;
+    if (!email.includes('@')) {
+        msg.className = 'msg erro'; msg.textContent = '⚠️ E-mail inválido!'; return;
     }
-    
-    cadastrosApoio.push({
+    if (senha.length < 6) {
+        msg.className = 'msg erro'; msg.textContent = '⚠️ Senha com mínimo 6 caracteres!'; return;
+    }
+    const existe = cadastrosApoio.find(c => c.telefone === telefone || c.email === email);
+    if (existe) {
+        msg.className = 'msg erro'; msg.textContent = '⚠️ Já existe cadastro com este telefone ou e-mail!'; return;
+    }
+
+    const novo = {
         id: Date.now(),
         nome, email, telefone, placa, regiao, veiculo, pix,
-        senha: btoa(senha), // Criptografia simples
+        senha: btoa(senha),
         aprovado: false,
         dataCadastro: new Date().toLocaleString('pt-BR'),
         atendimentos: []
-    });
-    
-    salvarDados();
-    alert('✅ Cadastro enviado com sucesso!\n⏳ Aguarde aprovação do Administrador.');
-    irParaLoginApoio();
-}
-
-// ========== LOGIN ATUALIZADO ==========
-function verificarLoginApoio() {
-    const tel = document.getElementById('login-telefone').value.trim().replace(/\D/g,'');
-    const senhaDigitada = document.getElementById('login-senha').value.trim();
-    const msgErro = document.getElementById('msg-login-erro');
-    const msgAguardando = document.getElementById('msg-nao-aprovado');
-    
-    const encontrado = cadastrosApoio.find(a => a.telefone.replace(/\D/g,'') === tel);
-    
-    if (!encontrado) {
-        msgErro.textContent = '❌ Telefone não encontrado.';
-        msgErro.style.display = 'block';
-        msgAguardando.style.display = 'none';
-        return;
-    }
-    
-    if (!encontrado.aprovado) {
-        msgAguardando.style.display = 'block';
-        msgErro.style.display = 'none';
-        return;
-    }
-    
-    if (encontrado.senha && atob(encontrado.senha) !== senhaDigitada) {
-        msgErro.textContent = '❌ Senha incorreta!';
-        msgErro.style.display = 'block';
-        msgAguardando.style.display = 'none';
-        return;
-    }
-    
-    apoioLogado = encontrado;
-    irParaPrincipalApoio();
-}
-
-// ========== SOM ==========
-function salvarPreferenciaSom() {
-    preferenciaSom = document.getElementById('tipo-som-apoio').value;
-    localStorage.setItem('preferenciaSom', preferenciaSom);
-}
-function tocarAvisoSonoro() {
-    if (preferenciaSom === 'desligado') return;
-    alert(preferenciaSom === 'sirene' ? '🚨 NOVA OCORRÊNCIA!' : '🔔 Chamado disponível!');
-}
-
-// ========== OCORRÊNCIAS PISCANDO ⚡ ==========
-function renderizarOcorrenciasParaApoio() {
-    const cont = document.getElementById('lista-ocorrencias-apoio');
-    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente');
-    
-    if (!pendentes.length) {
-        cont.innerHTML = '<p class="sem-itens">Aguardando novos chamados...</p>';
-        return;
-    }
-    
-    cont.innerHTML = pendentes.map((oc, i) => {
-        const distSimulada = Math.floor(Math.random() * 5) + 1;
-        return `
-        <div class="ocorrencia-card ocorrencia-piscando" style="border-left-color:#4ade80;">
-            <div class="ocorrencia-cabecalho">
-                <span class="ocorrencia-tipo">${oc.descricaoExibicao || nomesTipos[oc.tipo]}</span>
-                <span style="color:#4ade80; font-size:13px;">📍 ${distSimulada} km</span>
-            </div>
-            <div class="ocorrencia-dados">
-                ${oc.endereco}<br>💰 R$ ${oc.valor.toFixed(2)}
-            </div>
-            <div style="display:flex; gap:8px; margin-top:12px;">
-                <button class="botao-grande botao-verde" style="flex:1;" onclick="aceitarServico(${listaOcorrencias.indexOf(oc)})">✅ ACEITAR</button>
-                <button class="botao-grande botao-vermelho" style="flex:0.4; padding:13px;" onclick="recusarServico(${listaOcorrencias.indexOf(oc)})">❌ RECUSAR</button>
-            </div>
-        </div>`;
-    }).join('');
-    
-    renderizarMeusAtendimentos();
-    tocarAvisoSonoro();
-}
-
-function aceitarServico(indice) {
-    if (!confirm('Confirmar aceite?')) return;
-    servicoAceito = listaOcorrencias[indice];
-    servicoAceito.status = 'aceito';
-    servicoAceito.aceitoPor = { nome: apoioLogado.nome, telefone: apoioLogado.telefone };
-    servicoAceito.horarioAceite = new Date().toLocaleString('pt-BR');
-    apoioLogado.atendimentos.push(servicoAceito.id);
-    salvarDados();
-    abrirTelaAtendimento(indice);
-}
-function recusarServico(indice) {
-    alert('❌ Recusado.');
-    renderizarOcorrenciasParaApoio();
-}
-function abrirTelaAtendimento(indice) {
-    servicoAceito = listaOcorrencias[indice];
-    fotosApoio = []; fotosExtras = [];
-    
-    document.getElementById('det-tipo-servico').textContent = servicoAceito.descricaoExibicao || nomesTipos[servicoAceito.tipo];
-    document.getElementById('det-endereco').textContent = '📍 ' + servicoAceito.endereco;
-    document.getElementById('det-coords').textContent = `🌐 ${servicoAceito.coords.lat.toFixed(6)}, ${servicoAceito.coords.lng.toFixed(6)}`;
-    document.getElementById('det-solicitante').textContent = '👤 ' + servicoAceito.solicitante;
-    document.getElementById('det-valor').textContent = '💰 R$ ' + servicoAceito.valor.toFixed(2);
-    document.getElementById('horario-chegada-apoio').textContent = 'Aguardando...';
-    document.getElementById('relatorio-apoio').value = '';
-    document.getElementById('preview-fotos-apoio').innerHTML = '<p style="grid-column:1/-1; color:#94a3b8;">Selecione as fotos</p>';
-    document.getElementById('botoes-download-fotos').classList.add('oculto');
-    
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById('tela-atendimento-apoio').classList.add('ativa');
-}
-function voltarParaOcorrencias() {
-    servicoAceito = null; fotosApoio = []; fotosExtras = [];
-    irParaPrincipalApoio();
-}
-
-// ========== CHEGADA ==========
-function registrarChegada() {
-    servicoAceito.horarioChegada = new Date().toLocaleString('pt-BR');
-    document.getElementById('horario-chegada-apoio').innerHTML = '✅ ' + servicoAceito.horarioChegada;
-    document.getElementById('btn-chegada').disabled = true;
-    document.getElementById('btn-chegada').style.opacity = '0.6';
-    salvarDados();
-}
-
-// ========== FOTOS + DOWNLOAD ==========
-function visualizarFoto(num) {
-    const input = document.getElementById(`foto-apoio-${num}`);
-    if (!input.files[0]) return;
-    const leitor = new FileReader();
-    leitor.onload = e => {
-        fotosApoio[num-1] = e.target.result;
-        atualizarPreviewFotos();
     };
-    leitor.readAsDataURL(input.files[0]);
-}
-function visualizarFotoExtra() {
-    const input = document.getElementById('foto-apoio-extra');
-    if (!input.files[0]) return;
-    const leitor = new FileReader();
-    leitor.onload = e => {
-        fotosExtras.push(e.target.result);
-        atualizarPreviewFotos();
-    };
-    leitor.readAsDataURL(input.files[0]);
-}
-function atualizarPreviewFotos() {
-    const cont = document.getElementById('preview-fotos-apoio');
-    const todas = [...fotosApoio.filter(f=>f), ...fotosExtras];
-    const btnArea = document.getElementById('botoes-download-fotos');
+    cadastrosApoio.push(novo);
+    salvarDados();
     
-    if (!todas.length) {
-        cont.innerHTML = '<p style="grid-column:1/-1; color:#94a3b8;">Fotos aparecerão aqui</p>';
-        btnArea.classList.add('oculto');
-        return;
+    msg.className = 'msg sucesso';
+    msg.textContent = '✅ Cadastro enviado! Aguarde aprovação do Administrador.';
+    setTimeout(() => irParaLoginApoio(), 2500);
+}
+
+// ====================================== LOGIN
+function fazerLogin() {
+    const tel = document.getElementById('login-tel').value.trim().replace(/\D/g,'');
+    const senha = document.getElementById('login-senha').value;
+    const msg = document.getElementById('msg-login');
+
+    const usuario = cadastrosApoio.find(c => c.telefone === tel);
+    if (!usuario) {
+        msg.className = 'msg erro'; msg.textContent = '❌ Telefone não encontrado. Faça o cadastro.'; return;
     }
+    if (atob(usuario.senha) !== senha) {
+        msg.className = 'msg erro'; msg.textContent = '❌ Senha incorreta!'; return;
+    }
+
+    usuarioAtual = usuario;
+    mostrarTela('tela-apoio');
+}
+
+function ajustarTelaAprovacao() {
+    const aviso = document.getElementById('aviso-aprovacao');
+    const conteudo = document.getElementById('conteudo-aprovado');
+    if (usuarioAtual.aprovado) {
+        aviso.classList.add('oculto');
+        conteudo.classList.remove('oculto');
+    } else {
+        aviso.classList.remove('oculto');
+        conteudo.classList.add('oculto');
+    }
+}
+
+// ====================================== RECUPERAR SENHA
+function enviarRecuperacao() {
+    const email = document.getElementById('email-recuperar').value.trim();
+    const msg = document.getElementById('msg-recuperar');
+    const usuario = cadastrosApoio.find(c => c.email === email);
     
-    const end = servicoAceito?.endereco || 'Sem endereço';
-    const lat = servicoAceito?.coords?.lat?.toFixed(6) || '---';
-    const lng = servicoAceito?.coords?.lng?.toFixed(6) || '---';
-    
-    cont.innerHTML = todas.map((foto, i) => `
-        <div class="foto-com-dados">
-            <img src="${foto}" alt="Foto ${i+1}">
-            <div class="dados-foto">
-                📍 ${end.substring(0,30)}...<br>
-                🌐 ${lat}, ${lng}
-            </div>
+    if (!usuario) {
+        msg.className = 'msg erro'; msg.textContent = '❌ E-mail não encontrado.'; return;
+    }
+    msg.className = 'msg sucesso';
+    msg.textContent = `✅ Enviado para ${email}`;
+    alert(`📧 Simulação de e-mail:\n\nSua senha: ${atob(usuario.senha)}\n\nAltere assim que possível!`);
+}
+
+// ====================================== ADMIN — LOGIN & GERENCIAR
+function loginAdmin() {
+    const senha = document.getElementById('admin-senha').value;
+    if (senha === senhaAdmin) {
+        mostrarTela('tela-admin');
+        mostrarAba('aba-lancar');
+    } else {
+        alert('❌ Senha incorreta!');
+    }
+}
+
+function atualizarContadoresAdmin() {
+    document.getElementById('qtd-total').textContent = cadastrosApoio.length;
+    document.getElementById('qtd-aprovados').textContent = cadastrosApoio.filter(c => c.aprovado).length;
+    document.getElementById('qtd-pendentes').textContent = cadastrosApoio.filter(c => !c.aprovado).length;
+}
+
+function listarApoiadores() {
+    const div = document.getElementById('lista-apoiadores');
+    if (!cadastrosApoio.length) {
+        div.innerHTML = '<p style="color:#94a3b8; text-align:center;">Nenhum cadastro ainda.</p>'; return;
+    }
+    div.innerHTML = cadastrosApoio.map(c => `
+        <div class="ocorrencia-card">
+            <p><strong>${c.nome}</strong></p>
+            <p style="font-size:13px;">📧 ${c.email} | 📱 ${c.telefone}</p>
+            <p style="font-size:13px;">🚗 ${c.placa} | 📍 ${c.regiao} | ${c.veiculo}</p>
+            <p style="font-size:13px;">💳 PIX: ${c.pix}</p>
+            <p style="margin-top:8px;">
+                ${c.aprovado 
+                    ? '<span class="etiqueta et-aprovado">✅ APROVADO</span>'
+                    : `<span class="etiqueta et-pend-aprov">⏳ PENDENTE</span>
+                       <button class="botao-pequeno btn-verde" onclick="aprovar(${c.id})">✅ Aprovar</button>`
+                }
+                <button class="botao-pequeno btn-vermelho" onclick="excluirApoiador(${c.id})">🗑️ Excluir</button>
+            </p>
         </div>
     `).join('');
-    
-    // Botões de download
-    btnArea.classList.remove('oculto');
-    btnArea.innerHTML = `<h4 style="width:100%; margin-bottom:5px;">💾 Baixar Fotos:</h4>` +
-        todas.map((foto, i) => `
-            <button class="botao-pequeno botao-azul" onclick="baixarFoto(${i})">📷 Foto ${i+1}</button>
-        `).join('');
 }
 
-// 🆕 BAIXAR FOTO COM DADOS
-function baixarFoto(indice) {
-    const todas = [...fotosApoio.filter(f=>f), ...fotosExtras];
+function aprovar(id) {
+    const usuario = cadastrosApoio.find(c => c.id === id);
+    if (usuario) {
+        usuario.aprovado = true;
+        salvarDados();
+        atualizarContadoresAdmin();
+        listarApoiadores();
+        alert(`✅ ${usuario.nome} foi aprovado!`);
+    }
+}
+
+function excluirApoiador(id) {
+    if (confirm('Tem certeza?')) {
+        cadastrosApoio = cadastrosApoio.filter(c => c.id !== id);
+        salvarDados();
+        atualizarContadoresAdmin();
+        listarApoiadores();
+    }
+}
+
+// ====================================== LANÇAR OCORRÊNCIA
+function lancarOcorrencia() {
+    const endereco = document.getElementById('ocor-endereco').value.trim();
+    const lat = document.getElementById('ocor-lat').value.trim();
+    const lng = document.getElementById('ocor-lng').value.trim();
+    const desc = document.getElementById('ocor-desc').value.trim();
+    const valor = parseFloat(document.getElementById('ocor-valor').value) || 0;
+    const comissaoAtiva = document.getElementById('ocor-comissao').checked;
+    const msg = document.getElementById('msg-lancamento');
+
+    if (!endereco || valor <= 0) {
+        msg.className = 'msg erro'; msg.textContent = '⚠️ Preencha endereço e valor!'; return;
+    }
+
+    const nova = {
+        id: Date.now(),
+        endereco,
+        lat: lat || null,
+        lng: lng || null,
+        descricao: desc,
+        valor,
+        comissao: comissaoAtiva ? (valor * 0.08) : 0,
+        data: new Date().toLocaleString('pt-BR'),
+        status: 'pendente',
+        aceitoPor: null,
+        fotos: [],
+        relato: '',
+        dataConclusao: null
+    };
+
+    listaOcorrencias.unshift(nova);
+    salvarDados();
+    
+    msg.className = 'msg sucesso';
+    msg.textContent = '✅ Ocorrência lançada! Aparece para os apoiadores aprovados.';
+    
+    // Limpar campos
+    document.getElementById('ocor-endereco').value = '';
+    document.getElementById('ocor-lat').value = '';
+    document.getElementById('ocor-lng').value = '';
+    document.getElementById('ocor-desc').value = '';
+    document.getElementById('ocor-valor').value = '';
+    document.getElementById('ocor-comissao').checked = false;
+
+    // Dispara alerta visual (simulação para todos)
+    dispararAlerta(nova);
+    
+    setTimeout(() => { msg.textContent = ''; }, 4000);
+}
+
+function dispararAlerta(ocorrencia) {
+    // Simulação — na versão multi-usuário real usaria banco em tempo real
+    const painel = document.getElementById('painel-alerta');
+    const conteudo = document.getElementById('alerta-conteudo');
+    
+    conteudo.innerHTML = `
+        <p><strong>📍 ${ocorrencia.endereco}</strong></p>
+        ${ocorrencia.lat ? `<p>Coordenadas: ${ocorrencia.lat}, ${ocorrencia.lng}</p>` : ''}
+        ${ocorrencia.descricao ? `<p>Detalhes: ${ocorrencia.descricao}</p>` : ''}
+        <p>💰 Valor: R$ ${ocorrencia.valor.toFixed(2)}</p>
+        <p>📅 ${ocorrencia.data}</p>
+    `;
+    
+    painel.classList.remove('oculto');
+    
+    // Som de alerta conforme preferência salva
+    const tipoAlerta = localStorage.getItem('tipoAlerta') || 'sirene';
+    if (tipoAlerta === 'sirene') tocarSirene();
+    else tocarSinalContinuo();
+    
+    // Auto-fecha em 30s se não aceito
+    setTimeout(() => {
+        if (!servicoAceito) painel.classList.add('oculto');
+    }, 30000);
+}
+
+function tocarSirene() {
+    try {
+        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.connect(gain); gain.connect(audio.destination);
+        osc.frequency.setValueAtTime(880, audio.currentTime);
+        osc.frequency.setValueAtTime(440, audio.currentTime + 0.2);
+        osc.frequency.setValueAtTime(880, audio.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.3, audio.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.6);
+        osc.start(audio.currentTime);
+        osc.stop(audio.currentTime + 0.6);
+    } catch(e) {}
+}
+
+function tocarSinalContinuo() {
+    try {
+        const audio = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audio.createOscillator();
+        const gain = audio.createGain();
+        osc.connect(gain); gain.connect(audio.destination);
+        osc.frequency.value = 600;
+        gain.gain.setValueAtTime(0.2, audio.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 1.5);
+        osc.start(audio.currentTime);
+        osc.stop(audio.currentTime + 1.5);
+    } catch(e) {}
+}
+
+function salvarPreferenciaAlerta() {
+    localStorage.setItem('tipoAlerta', document.getElementById('tipo-alerta').value);
+}
+
+// ====================================== ACEITAR / RECUSAR
+function aceitarOcorrencia() {
+    if (!usuarioAtual) return;
+    
+    const ultimaPendente = listaOcorrencias.find(o => o.status === 'pendente');
+    if (!ultimaPendente) {
+        alert('Nenhuma ocorrência disponível no momento.');
+        return;
+    }
+    
+    servicoAceito = ultimaPendente;
+    servicoAceito.status = 'aceita';
+    servicoAceito.aceitoPor = usuarioAtual.nome;
+    servicoAceito.horarioAceite = new Date().toLocaleString('pt-BR');
+    
+    // Salva no histórico do apoiador
+    usuarioAtual.atendimentos.push(servicoAceito.id);
+    cadastrosApoio = cadastrosApoio.map(c => 
+        c.id === usuarioAtual.id ? usuarioAtual : c
+    );
+    
+    salvarDados();
+    
+    document.getElementById('painel-alerta').classList.add('oculto');
+    document.getElementById('area-comprovante').classList.remove('oculto');
+    
+    alert(`✅ Você aceitou!\n📍 ${servicoAceito.endereco}`);
+    carregarChamados();
+}
+
+function recusarOcorrencia() {
+    document.getElementById('painel-alerta').classList.add('oculto');
+    alert('❌ Recusado. Aguardando próximo chamado.');
+}
+
+// ====================================== LOCALIZAÇÃO
+function ativarLocalizacao() {
+    if (!navigator.geolocation) {
+        alert('Geolocalização não suportada no aparelho.');
+        return;
+    }
+    
+    if (localizacaoAtiva) {
+        navigator.geolocation.clearWatch(watchId);
+        localizacaoAtiva = false;
+        document.getElementById('status-localizacao').innerHTML = '<span style="color:#94a3b8;">Desativada</span>';
+        document.getElementById('btn-localizacao').textContent = '📍 Ativar Localização em Tempo Real';
+        return;
+    }
+    
+    localizacaoAtiva = true;
+    document.getElementById('btn-localizacao').textContent = '📍 Desativar Localização';
+    
+    watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            document.getElementById('status-localizacao').innerHTML = 
+                `<span style="color:#4ade80;">✅ Ativa — ${lat.toFixed(6)}, ${lng.toFixed(6)}</span>`;
+            
+            // Atualiza mapa se carregado
+            if (mapa) {
+                mapa.setView([lat, lng], 14);
+                carregarChamados();
+            }
+        },
+        (erro) => {
+            document.getElementById('status-localizacao').innerHTML = 
+                `<span style="color:#f87171;">Erro: ${erro.message}</span>`;
+        },
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+    );
+}
+
+// ====================================== MAPA
+function inicializarMapa() {
+    if (mapa) return;
+    mapa = L.map('mapa').setView([-23.5505, -46.6333], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© DRTRACK Conecta'
+    }).addTo(mapa);
+}
+
+function carregarChamados() {
+    if (!usuarioAtual?.aprovado) return;
+    inicializarMapa();
+    
+    // Limpar marcadores antigos
+    mapa.eachLayer(l => { if (l instanceof L.Marker) mapa.removeLayer(l); });
+    
+    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente' && o.lat && o.lng);
+    pendentes.forEach(o => {
+        L.marker([parseFloat(o.lat), parseFloat(o.lng)])
+            .addTo(mapa)
+            .bindPopup(`<b>${o.endereco}</b><br>R$ ${o.valor.toFixed(2)}<br>${o.descricao || ''}`);
+    });
+    
+    // Lista em texto
+    const lista = document.getElementById('lista-chamados');
+    if (!pendentes.length) {
+        lista.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:15px;">Nenhuma ocorrência aberta no momento.</p>';
+        return;
+    }
+    lista.innerHTML = pendentes.map((o, i) => `
+        <div class="ocorrencia-card pendente">
+            <p><strong>📍 ${o.endereco}</strong></p>
+            ${o.descricao ? `<p style="font-size:13px;">${o.descricao}</p>` : ''}
+            <p>💰 R$ ${o.valor.toFixed(2)} | 📅 ${o.data}</p>
+            <button class="btn-verde botao-pequeno" onclick="aceitarOcorrencia()">✅ Aceitar este serviço</button>
+        </div>
+    `).join('');
+}
+
+// ====================================== FOTOS — PREVIEW E DOWNLOAD
+function atualizarPreview() {
+    fotosApoio = []; fotosExtras = [];
+    
+    // Fotos obrigatórias
+    for (let i = 1; i <= 5; i++) {
+        const input = document.getElementById(`foto${i}`);
+        if (input.files[0]) fotosApoio.push(input.files[0]);
+    }
+    // Fotos extras
+    const inputExtra = document.getElementById('fotos-extras');
+    if (inputExtra.files.length > 0) {
+        for (let f of inputExtra.files) fotosExtras.push(f);
+    }
+    
+    // Preview
+    const div = document.getElementById('preview-fotos');
+    div.innerHTML = '';
+    [...fotosApoio, ...fotosExtras].forEach(foto => {
+        const leitor = new FileReader();
+        leitor.onload = e => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.className = 'foto-item';
+            div.appendChild(img);
+        };
+        leitor.readAsDataURL(foto);
+    });
+}
+
+function baixarFotoComDados(indice) {
+    const todas = [...fotosApoio, ...fotosExtras];
     const foto = todas[indice];
-    if (!foto) return;
+    if (!foto || !servicoAceito) return;
     
-    const end = servicoAceito?.endereco || 'Sem-endereco';
-    const lat = servicoAceito?.coords?.lat?.toFixed(6) || '0';
-    const lng = servicoAceito?.coords?.lng?.toFixed(6) || '0';
-    const nomeArquivo = `Foto${indice+1}_${lat}-${lng}.png`;
+    const endereco = servicoAceito.endereco || 'Local não informado';
+    const lat = servicoAceito.lat || '---';
+    const lng = servicoAceito.lng || '---';
+    const data = new Date().toLocaleString('pt-BR');
     
-    // Cria imagem com texto sobreposto
     const img = new Image();
     img.onload = function() {
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
-        canvas.height = img.height + 60;
+        canvas.height = img.height + 70;
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, canvas.width, 60);
-        ctx.fillStyle = '#fff';
-        ctx.font = `${Math.max(12, canvas.width/50)}px Arial`;
-        ctx.fillText(`📍 ${end}`, 10, 25);
-        ctx.fillText(`🌐 ${lat}, ${lng}`, 10, 50);
-        ctx.drawImage(img, 0, 60);
+        // Fundo escuro para texto
+        ctx.fillStyle = '#000000cc';
+        ctx.fillRect(0, 0, canvas.width, 70);
         
+        // Desenha imagem
+        ctx.drawImage(img, 0, 70);
+        
+        // Texto branco
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(12, canvas.width / 45)}px Arial`;
+        ctx.fillText(`📍 ${endereco.substring(0, 45)}`, 10, 28);
+        ctx.fillText(`🌍 ${lat}, ${lng}`, 10, 50);
+        ctx.fillText(`🕒 ${data}`, 10, 68);
+        
+        // Download
         const link = document.createElement('a');
-        link.download = nomeArquivo;
+        link.download = `Foto_${indice+1}_DRTRACK.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     };
-    img.src = foto;
+    img.src = URL.createObjectURL(foto);
 }
 
-// ========== CONCLUIR ==========
-function concluirAtendimentoApoio() {
-    const todas = [...fotosApoio.filter(f=>f), ...fotosExtras];
-    if (todas.length < 5) { alert(`⚠️ Mínimo 5 fotos! Você enviou ${todas.length}`); return; }
-    if (!servicoAceito.horarioChegada) { alert('⚠️ Confirme chegada!'); return; }
+// ====================================== ENVIAR COMPROVANTE
+function enviarComprovante() {
+    if (!servicoAceito || !usuarioAtual) return;
     
-    const rel = document.getElementById('relatorio-apoio').value.trim();
-    if (!rel) { alert('⚠️ Preencha o relatório!'); return; }
-    
-    servicoAceito.fotos = todas;
-    servicoAceito.fotosCoordenadas = todas.map(() => 
-        `${servicoAceito.coords.lat.toFixed(6)}, ${servicoAceito.coords.lng.toFixed(6)}`
-    );
-    servicoAceito.relatorio = rel;
-    servicoAceito.dataConclusao = new Date().toLocaleString('pt-BR');
-    servicoAceito.status = 'concluido';
-    
-    salvarDados();
-    alert('✅ Enviado! O Administrador já recebeu.');
-    voltarParaOcorrencias();
-}
-
-function renderizarMeusAtendimentos() {
-    const cont = document.getElementById('meus-atendimentos-apoio');
-    if (!apoioLogado?.atendimentos?.length) {
-        cont.innerHTML = '<p class="sem-itens">Nenhum concluído.</p>';
+    if (fotosApoio.length < 5) {
+        alert(`⚠️ Envie no mínimo 5 fotos! (Enviadas: ${fotosApoio.length})`);
         return;
     }
-    const meus = listaOcorrencias.filter(o => o.aceitoPor?.nome === apoioLogado.nome);
-    cont.innerHTML = meus.length ? meus.map(oc => `
-        <div class="ocorrencia-card">
-            <span class="ocorrencia-tipo">${oc.descricaoExibicao || nomesTipos[oc.tipo]}</span>
-            <span class="etiqueta-status ${oc.status}">${oc.status.toUpperCase()}</span>
-            <p style="margin:5px 0;">📍 ${oc.endereco}</p>
-        </div>`).join('') : '<p class="sem-itens">Nenhum encontrado.</p>';
+    
+    const relato = document.getElementById('relato-apoio').value.trim();
+    if (!relato) {
+        alert('⚠️ Descreva o que encontrou no local!');
+        return;
+    }
+    
+    // Salvar dados do atendimento
+    servicoAceito.fotos = [...fotosApoio.map(f => f.name), ...fotosExtras.map(f => f.name)];
+    servicoAceito.relato = relato;
+    servicoAceito.dataConclusao = new Date().toLocaleString('pt-BR');
+    servicoAceito.status = 'concluida';
+    
+    // Salvar localização atual como comprovação
+    if (navigator.geolocation && localizacaoAtiva) {
+        // Se estiver ativa, já tem a posição atualizada
+    }
+    
+    salvarDados();
+    
+    // Mostrar botões de download
+    const areaDownload = document.getElementById('area-download');
+    const botoes = document.getElementById('botoes-download');
+    areaDownload.classList.remove('oculto');
+    botoes.innerHTML = '';
+    [...fotosApoio, ...fotosExtras].forEach((_, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'botao-pequeno btn-azul';
+        btn.textContent = `📷 Baixar Foto ${i+1}`;
+        btn.onclick = () => baixarFotoComDados(i);
+        botoes.appendChild(btn);
+    });
+    
+    document.getElementById('msg-comprovante').className = 'msg sucesso';
+    document.getElementById('msg-comprovante').textContent = '✅ Comprovante enviado! O Administrador já foi notificado.';
+    
+    // Atualizar listas
+    carregarChamados();
+    carregarMeusAtendimentos();
 }
 
-// Inicializar botão
+// ====================================== MEUS ATENDIMENTOS
+function carregarMeusAtendimentos() {
+    if (!usuarioAtual) return;
+    const div = document.getElementById('meus-atendimentos');
+    
+    const meusIds = usuarioAtual.atendimentos || [];
+    const meus = listaOcorrencias.filter(o => meusIds.includes(o.id) && o.aceitoPor === usuarioAtual.nome);
+    
+    if (!meus.length) {
+        div.innerHTML = '<p style="color:#94a3b8; text-align:center;">Nenhum atendimento ainda.</p>';
+        return;
+    }
+    
+    div.innerHTML = meus.map(o => `
+        <div class="ocorrencia-card ${o.status === 'concluida' ? 'concluida' : 'pendente'}">
+            <p><strong>${o.endereco}</strong></p>
+            <p>💰 R$ ${o.valor.toFixed(2)} | 📅 ${o.data}</p>
+            <p>Status: ${o.status === 'concluida' ? '✅ Concluída' : '🔄 Em Andamento'}</p>
+            ${o.relato ? `<p style="font-size:13px; margin-top:5px;">📝 ${o.relato}</p>` : ''}
+            ${o.fotos?.length ? `<p style="font-size:12px; color:#94a3b8;">📸 ${o.fotos.length} fotos enviadas</p>` : ''}
+        </div>
+    `).join('');
+}
+
+// ====================================== RELATÓRIOS ADMIN
+function atualizarRelatorio() {
+    const filtro = document.getElementById('filtro-periodo').value;
+    let filtrado = [...listaOcorrencias];
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1;
+    
+    if (filtro === 'quinzena1') {
+        filtrado = listaOcorrencias.filter(o => {
+            const partes = o.data.split('/');
+            const dia = parseInt(partes[0]);
+            const mes = parseInt(partes[1]);
+            return dia >= 1 && dia <= 15 && mes === mesAtual;
+        });
+    } else if (filtro === 'quinzena2') {
+        filtr
+    } else if (filtro === 'quinzena2') {
+        filtrado = listaOcorrencias.filter(o => {
+            const partes = o.data.split('/');
+            const dia = parseInt(partes[0]);
+            const mes = parseInt(partes[1]);
+            return dia >= 16 && mes === mesAtual;
+        });
+    } else if (filtro === 'concluidas') {
+        filtrado = listaOcorrencias.filter(o => o.status === 'concluida');
+    } else if (filtro === 'pendentes') {
+        filtrado = listaOcorrencias.filter(o => o.status !== 'concluida');
+    }
+
+    // Cálculos de valores
+    const totalGeral = filtrado.reduce((s, o) => s + o.valor, 0);
+    const totalComissao = filtrado.reduce((s, o) => s + (o.comissao || 0), 0);
+    const liquido = totalGeral - totalComissao;
+
+    // Exibir resumo
+    document.getElementById('resumo-valores').innerHTML = `
+        <div class="caixa" style="background:#1e293b; padding:15px;">
+            <p>💰 <strong>Valor Total:</strong> R$ ${totalGeral.toFixed(2)}</p>
+            <p>📊 <strong>Comissão DRTRACK (8% quando aplicável):</strong> R$ ${totalComissao.toFixed(2)}</p>
+            <p>💵 <strong>Valor Líquido aos Apoios:</strong> R$ ${liquido.toFixed(2)}</p>
+            <p style="margin-top:8px; font-size:13px; color:#94a3b8;">Período: ${filtro === 'todos' ? 'Todos os registros' : filtro.replace('quinzena', 'ª Quinzena — mês atual')}</p>
+        </div>
+    `;
+
+    // Listar ocorrências
+    const divLista = document.getElementById('lista-ocorrencias-admin');
+    if (!filtrado.length) {
+        divLista.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:15px;">Nenhuma ocorrência no período selecionado.</p>';
+        return;
+    }
+
+    divLista.innerHTML = filtrado.map(o => `
+        <div class="ocorrencia-card ${o.status === 'concluida' ? 'concluida' : 'pendente'}">
+            <p><strong>📍 ${o.endereco}</strong></p>
+            <p>💰 R$ ${o.valor.toFixed(2)} 
+               ${o.comissao > 0 ? `| 📊 Comissão: R$ ${o.comissao.toFixed(2)}` : '| Sem comissão'}
+            </p>
+            <p>👤 Atendido por: ${o.aceitoPor || 'Aguardando'}</p>
+            <p>📅 ${o.data} ${o.dataConclusao ? `→ ${o.dataConclusao}` : ''}</p>
+            <p>Status: ${o.status === 'concluida' ? '✅ Concluída' : o.status === 'aceita' ? '🔄 Em Andamento' : '⏳ Pendente'}</p>
+            ${o.relato ? `<p style="font-size:13px; margin-top:5px;">📝 ${o.relato}</p>` : ''}
+            ${o.fotos?.length ? `<p style="font-size:12px; color:#94a3b8;">📸 ${o.fotos.length} fotos enviadas</p>` : ''}
+        </div>
+    `).join('');
+}
+
+// ====================================== SALVAR DADOS
+function salvarDados() {
+    localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
+    localStorage.setItem('ocorrencias', JSON.stringify(listaOcorrencias));
+}
+
+// ====================================== SAIR
+function sair() {
+    usuarioAtual = null;
+    servicoAceito = null;
+    fotosApoio = [];
+    fotosExtras = [];
+    if (watchId) navigator.geolocation.clearWatch(watchId);
+    localizacaoAtiva = false;
+    voltarInicio();
+}
+
+// ====================================== INICIALIZAÇÃO
 document.addEventListener('DOMContentLoaded', () => {
-    const btn = document.querySelector('button[onclick*="Apoio"]');
-    if (btn) btn.setAttribute('onclick', 'irParaLoginApoio()');
+    // Carregar preferência de alerta salva
+    const tipoSalvo = localStorage.getItem('tipoAlerta') || 'sirene';
+    document.getElementById('tipo-alerta').value = tipoSalvo;
 });
 </script>
+</body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        

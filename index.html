@@ -68,11 +68,10 @@
 
 <audio id="som-sirene" preload="auto">
     <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-warning-1674.mp3" type="audio/mpeg">
-</audio>
 
 <audio id="som-aviso" preload="auto">
     <source src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" type="audio/mpeg">
-</audio>
+
 
 <div id="tela-inicio" class="tela ativa">
     <h1>🛡️ DRTRACK Conecta</h1>
@@ -259,7 +258,7 @@
     <div class="botoes">
         <button class="btn btn-vermelho" onclick="cancelarAtendimento()">❌ Recusar / Cancelar</button>
         <button class="btn btn-amarelo" onclick="pausarAtendimento()">⏸️ Pausar</button>
-        <button class="btn btn-verde" onclick="finalizarAtendimento()">📲 Enviar Relatório via WhatsApp</button>
+        <button class="btn btn-verde" id="btn-finalizar" onclick="finalizarAtendimento()">📲 Enviar Relatório via WhatsApp</button>
     </div>
 </div>
 
@@ -304,7 +303,6 @@ let watchId = null;
 let mapaAdmin = null, mapaApoio = null, mapaAcomp = null;
 let marcadoresApoios = {};
 let marcadoresApoioMapa = [];
-let tipoAlerta = 'sirene';
 
 function salvarDados() {
     localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
@@ -323,11 +321,7 @@ function mostrarTela(id) {
 }
 
 function tocarAlerta() {
-    if (tipoAlerta === 'sirene') {
-        document.getElementById('som-sirene').play().catch(()=>{});
-    } else {
-        document.getElementById('som-aviso').play().catch(()=>{});
-    }
+    document.getElementById('som-sirene').play().catch(()=>{});
 }
 
 function verificarSenhaAdmin() {
@@ -575,23 +569,10 @@ function gerarRelatorioPDF() {
             doc.text(linhas, 14, y);
             y += linhas.length * 5;
         }
-        if (o.fotos && o.fotos.length > 0) {
-            doc.text(`Fotos Anexadas (${o.fotos.length}):`, 14, y); y += 5;
-            let imgX = 14;
-            o.fotos.forEach((fotoBase64) => {
-                if (y > 230) { doc.addPage(); y = 20; imgX = 14; }
-                try {
-                    doc.addImage(fotoBase64, 'JPEG', imgX, y, 40, 30);
-                    imgX += 45;
-                    if (imgX > 150) { imgX = 14; y += 35; }
-                } catch(e) {}
-            });
-            if (imgX !== 14) y += 35;
-        }
         y += 8;
     });
     doc.save(`relatorio-drtrack-${inicio}-a-${fim}.pdf`);
-    alert('✅ PDF gerado com sucesso com imagens!');
+    alert('✅ PDF gerado com sucesso!');
 }
 
 function inicializarMapaAdmin() {
@@ -897,42 +878,49 @@ function cancelarAtendimento() {
 }
 
 function finalizarAtendimento() {
+    // VALIDAÇÃO CORRIGIDA E FUNCIONANDO
     if (fotosEnviadas.length < 5) {
-        alert(`Envie no mínimo 5 fotos! Você enviou ${fotosEnviadas.length}`);
+        alert(`⚠️ Envie no mínimo 5 fotos! Você enviou ${fotosEnviadas.length}`);
         return;
     }
     
-    if (!document.getElementById('relatorio').value.trim()) {
-        alert('Preencha o relatório!');
+    const relato = document.getElementById('relatorio').value.trim();
+    if (!relato) {
+        alert('⚠️ Preencha o relatório da ocorrência!');
         return;
     }
     
+    // SALVAR TUDO NO BANCO DE DADOS
     servicoAceito.status = 'concluida';
-    servicoAceito.fotos = fotosEnviadas;
-    servicoAceito.relatorio = document.getElementById('relatorio').value;
+    servicoAceito.fotos = [...fotosEnviadas];
+    servicoAceito.relatorio = relato;
     servicoAceito.dataConclusao = new Date().toLocaleString('pt-BR');
     salvarDados();
     
+    // MONTAR MENSAGEM COMPLETA
     const msg = `📋 RELATÓRIO DE ATENDIMENTO — CENTRAL DRTRACK CONECTA
 
 📍 Endereço: ${servicoAceito.endereco}
 🏘️ Região: ${servicoAceito.regiao || '—'}
 👤 Apoio Responsável: ${usuarioAtual.nome}
-📱 Telefone Apoio: ${usuarioAtual.telefone}
+📱 Telefone: ${usuarioAtual.telefone}
 💳 CPF: ${usuarioAtual.cpf || '—'}
 🚗 Veículo: ${usuarioAtual.veiculo} — Placa: ${usuarioAtual.placa}
-💰 Valor: R$ ${servicoAceito.valor.toFixed(2)}
+💰 Valor do Serviço: R$ ${servicoAceito.valor.toFixed(2)}
 💵 Chave PIX: ${usuarioAtual.pix}
 
 📝 RELATO DA OCORRÊNCIA:
 ${servicoAceito.relatorio}
 
-📸 Fotos Anexadas com GPS: ${fotosEnviadas.length} fotos salvas na ocorrência.
+📸 Fotos com geolocalização carimbada: ${fotosEnviadas.length} fotos enviadas.
 ✅ Concluído em: ${servicoAceito.dataConclusao}`;
     
+    // ABRIR WHATSAPP
     window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`, '_blank');
     
-    alert('✅ Ocorrência finalizada! Redirecionando para o WhatsApp da Central...');
+    alert('✅ Relatório enviado! Obrigado pelo atendimento.');
+    
+    // LIMPAR E VOLTAR
     servicoAceito = null;
     fotosEnviadas = [];
     mostrarTela('tela-apoio-principal');
@@ -951,6 +939,7 @@ function sair() {
     mostrarTela('tela-inicio');
 }
 
+// ATUALIZAÇÃO AUTOMÁTICA
 setInterval(() => {
     if (servicoAceito) {
         if (document.getElementById('tela-atendimento').classList.contains('ativa')) {

@@ -1,1087 +1,952 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DRTRACK Conecta 🛡️</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        :root { 
-            --fundo: #0f172a; --azul: #1e40af; --verde: #16a34a; --amarelo: #eab308; 
-            --vermelho: #dc2626; --texto: #f1f5f9; --cinza: #94a3b8; --roxo: #7c3aed;
-        }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: var(--texto); padding: 20px; }
-        .tela { display: none; max-width: 550px; margin: 0 auto; }
-        .ativa { display: block; }
-        h1 { text-align: center; margin: 20px 0; font-size: 28px; }
-        h2 { font-size: 20px; margin-bottom: 20px; }
-        h3 { font-size: 17px; margin: 15px 0 10px; color: #cbd5e1; }
-        .subtitulo { text-align: center; color: var(--cinza); margin-bottom: 40px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin: 8px 0; transition: transform 0.2s; }
-        .btn:active { transform: scale(0.98); }
-        .btn-verde { background: var(--verde); color: white; }
-        .btn-amarelo { background: var(--amarelo); color: #000; }
-        .btn-vermelho { background: var(--vermelho); color: white; }
-        .btn-azul { background: var(--azul); color: white; }
-        .btn-roxo { background: var(--roxo); color: white; }
-        .btn-cinza { background: #475569; color: white; }
-        .card { background: #1e293b; padding: 20px; border-radius: 16px; margin-bottom: 15px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 8px; background: #334155; color: white; font-size: 15px; }
-        label { display: block; margin-top: 12px; font-weight: 500; font-size: 14px; }
-        .ocorrencia { border-left: 4px solid var(--amarelo); padding: 15px; margin: 10px 0; background: #1e293b; border-radius: 0 10px 10px 0; }
-        .piscando { animation: piscar 0.8s infinite; }
-        @keyframes piscar { 0%,100% {opacity:1;} 50% {opacity:0.4;} }
-        .escondido { display: none !important; }
-        .link { color: #60a5fa; text-decoration: underline; cursor: pointer; margin-top: 12px; display: inline-block; font-size: 14px; }
-        .aviso { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin: 15px 0; text-align: center; font-weight: 500; }
-        .aviso-erro { background: #fee2e2; color: #991b1b; }
-        .aviso-sucesso { background: #dcfce7; color: #166534; }
-        #mapa-apoio { height: 320px; border-radius: 12px; margin: 15px 0; }
-        .botoes { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-        .botoes .btn { flex: 1; min-width: 100px; padding: 12px; font-size: 14px; }
-        .chat-box { height: 200px; overflow-y: auto; background: #0f172a; border-radius: 8px; padding: 12px; margin: 10px 0; }
-        .msg { margin: 6px 0; padding: 8px 12px; border-radius: 16px; max-width: 80%; font-size: 14px; }
-        .msg-apoio { background: #1e40af; margin-left: auto; border-bottom-right-radius: 4px; }
-        .msg-admin { background: #334155; margin-right: auto; border-bottom-left-radius: 4px; }
-        .msg-horario { font-size: 11px; opacity: 0.7; margin-top: 3px; }
-        .relatorio-opcoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
-        .relatorio-opcoes label { display: flex; align-items: center; gap: 5px; margin: 0; font-weight: normal; }
-        
-        /* GRID AJUSTÁVEL DE 2 EM 2 FOTOS COM DOWLOAD */
-        .grid-fotos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px 0; }
-        .foto-container { display: flex; flex-direction: column; background: #0f172a; padding: 6px; border-radius: 8px; }
-        .grid-fotos img { width: 100%; height: 130px; object-fit: cover; border-radius: 6px; }
-        .btn-download-foto { background: #334155; color: #fff; border: none; padding: 6px; font-size: 11px; border-radius: 4px; margin-top: 6px; cursor: pointer; text-align: center; text-decoration: none; display: block; }
-        
-        .status-tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-left: 8px; }
-        .status-pendente { background: #fef3c7; color: #92400e; }
-        .status-andamento { background: #dbeafe; color: #1e40af; }
-        .status-concluida { background: #dcfce7; color: #166534; }
-        .local-indicador { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 8px; margin: 10px 0; }
-        .local-ativo { background: #163425; border: 1px solid #16a34a; }
-        .local-inativo { background: #3b1f1f; border: 1px solid #dc2626; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Integrado de Monitoramento & Apoio Tático</title>
+  
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Leaflet CSS & JS (Mapas) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- html2pdf.js para geração de PDF com imagens -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    .tab-btn.active {
+      border-bottom: 3px solid #2563eb;
+      color: #2563eb;
+      font-weight: bold;
+    }
+    .subtab-btn.active {
+      background-color: #2563eb;
+      color: #ffffff;
+    }
+    #mapa-admin, #mapa-apoio {
+      height: 350px;
+      width: 100%;
+      border-radius: 0.5rem;
+    }
+    /* Estilização para impressão de PDF */
+    @media print {
+      body { background: white; }
+      .no-print { display: none !important; }
+    }
+  </style>
 </head>
-<body>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen flex flex-col">
 
-<!-- ÁUDIO -->
-<audio id="som-sirene" preload="auto">
-    <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-warning-1674.mp3" type="audio/mpeg">
-</audio>
-
-<audio id="som-aviso" preload="auto">
-    <source src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" type="audio/mpeg">
-</audio>
-
-<!-- TELA INICIAL -->
-<div id="tela-inicio" class="tela ativa">
-    <h1>🛡️ DRTRACK Conecta</h1>
-    <p class="subtitulo">Rede de Apoio e Segurança em Tempo Real</p>
-    
-    <button class="btn btn-verde" onclick="mostrarTela('tela-apoio-login')">
-        🛵 Sou Apoio — Entrar
-    </button>
-    <button class="btn btn-amarelo" onclick="mostrarTela('tela-admin-senha')">
-        ⚙️ Administrador
-    </button>
-</div>
-
-<!-- TELA ADMIN - SENHA -->
-<div id="tela-admin-senha" class="tela">
-    <h2>🔐 Acesso Administrativo</h2>
-    <div class="card">
-        <label>Senha de Acesso:</label>
-        <input type="password" id="senha-admin" placeholder="Digite a senha">
-        <button class="btn btn-amarelo" onclick="verificarSenhaAdmin()">Entrar</button>
-        <p class="link" onclick="mostrarTela('tela-inicio')">← Voltar</p>
+  <!-- HEADER / NAVEGAÇÃO PRINCIPAL -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <i class="fa-solid fa-shield-halved text-blue-500 text-2xl"></i>
+        <h1 class="font-bold text-xl tracking-wide">CENTRAL & APOIO TÁTICO</h1>
+      </div>
+      <nav class="flex space-x-2 mt-2 sm:mt-0">
+        <button id="btn-tab-central" onclick="alternarAbaPrincipal('central')" class="tab-btn active px-4 py-2 text-sm">
+          <i class="fa-solid fa-desktop mr-1"></i> CENTRAL ADMIN
+        </button>
+        <button id="btn-tab-apoio" onclick="alternarAbaPrincipal('apoio')" class="tab-btn px-4 py-2 text-sm text-slate-400">
+          <i class="fa-solid fa-truck-fast mr-1"></i> SOU APOIO ENTRAR
+        </button>
+      </nav>
     </div>
-</div>
+  </header>
 
-<!-- TELA ADMIN - PAINEL -->
-<div id="tela-admin" class="tela">
-    <h2>⚙️ Painel Administrativo</h2>
-    
-    <div class="card">
-        <h3>📤 Lançar Ocorrência</h3>
-        <label>Endereço Completo:</label>
-        <input type="text" id="ocorr-endereco" placeholder="Rua, número, bairro - Cidade">
-        
-        <label>Latitude:</label>
-        <input type="text" id="ocorr-lat" placeholder="-23.456789">
-        
-        <label>Longitude:</label>
-        <input type="text" id="ocorr-lng" placeholder="-46.789012">
-        
-        <label>Região:</label>
-        <input type="text" id="ocorr-regiao" placeholder="Ex: Zona Norte">
-        
-        <label>Tipo de Serviço:</label>
-        <select id="ocorr-tipo" onchange="campoOutro()">
-            <option value="Verificação">Verificação</option>
-            <option value="Apoio">Apoio</option>
-            <option value="Ronda">Ronda</option>
-            <option value="Recuperação de Veículo">Recuperação de Veículo</option>
-            <option value="Outro">Outro</option>
-        </select>
-        <input type="text" id="ocorr-tipo-outro" placeholder="Especifique..." class="escondido">
-        
-        <label>Valor do Serviço R$:</label>
-        <input type="number" id="ocorr-valor" step="0.01" placeholder="0,00">
-        
-        <label>Observações:</label>
-        <textarea id="ocorr-obs" rows="3" placeholder="Detalhes..."></textarea>
-        
-        <button class="btn btn-azul" onclick="lancarOcorrencia()">📢 Lançar para Apoios</button>
-    </div>
-    
-    <div class="card">
-        <h3>👥 Apoios Cadastrados (<span id="qtd-apoios">0</span>)</h3>
-        <div id="lista-apoios"></div>
-    </div>
-    
-    <div class="card">
-        <h3>📋 Ocorrências</h3>
-        <div class="botoes" style="flex-wrap: wrap;">
-            <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('todas')">Todas</button>
-            <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('pendentes')">Pendentes</button>
-            <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('andamento')">Em Andamento</button>
-            <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('concluidas')">Concluídas</button>
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
+
+    <!-- ========================================== -->
+    <!-- ABA 1: CENTRAL ADMINISTRATIVA (PAINEL)     -->
+    <!-- ========================================== -->
+    <section id="aba-central" class="space-y-6">
+      <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Painel de Controle da Central</h2>
+          <p class="text-xs text-slate-500">Gestão e acompanhamento de chamados e viaturas em tempo real</p>
         </div>
-        <div id="lista-ocorrencias-admin" style="margin-top:15px;"></div>
-    </div>
-    
-    <div class="card">
-        <h3>📊 Relatórios</h3>
-        <label>Período:</label>
-        <div style="display:flex; gap:10px;">
-            <input type="date" id="relatorio-inicio" style="flex:1;">
-            <input type="date" id="relatorio-fim" style="flex:1;">
+        <button onclick="abrirModalNovaOcorrencia()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i> Nova Ocorrência
+        </button>
+      </div>
+
+      <!-- MAPA CENTRAL & LISTA -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+          <h3 class="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-map-location-dot text-blue-600"></i> Mapa Geral de Ocorrências
+          </h3>
+          <div id="mapa-admin"></div>
         </div>
-        <label>Campos a incluir no relatório:</label>
-        <div class="relatorio-opcoes" id="campos-relatorio">
-            <label><input type="checkbox" checked value="endereco"> Endereço</label>
-            <label><input type="checkbox" checked value="regiao"> Região</label>
-            <label><input type="checkbox" checked value="tipo"> Tipo</label>
-            <label><input type="checkbox" checked value="valor"> Valor</label>
-            <label><input type="checkbox" checked value="data"> Data/Hora</label>
-            <label><input type="checkbox" checked value="apoio"> Apoio</label>
-            <label><input type="checkbox" checked value="relato"> Relatório</label>
-            <label><input type="checkbox" checked value="fotos"> Fotos</label>
+
+        <!-- LISTA DE OCORRÊNCIAS -->
+        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col h-[400px]">
+          <h3 class="font-semibold text-slate-700 mb-3 flex items-center justify-between">
+            <span><i class="fa-solid fa-list-check text-blue-600 mr-1"></i> Ocorrências</span>
+            <span id="badge-total-ocorrencias" class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full">0</span>
+          </h3>
+          <div id="lista-ocorrencias-admin" class="space-y-3 overflow-y-auto flex-grow pr-1">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
         </div>
-        <button class="btn btn-roxo" onclick="gerarRelatorioPDF()">📄 Gerar PDF A4</button>
-        <button class="btn btn-azul" onclick="enviarRelatorioWhatsApp()">📤 Enviar por WhatsApp</button>
-    </div>
-    
-    <div class="card">
-        <h3>🗺️ Mapa — Apoios em Tempo Real</h3>
-        <div id="mapa-admin" style="height:300px; border-radius:12px;"></div>
-    </div>
-    
-    <button class="btn btn-vermelho" onclick="sair()">🚪 Sair</button>
-</div>
+      </div>
 
-<!-- TELA APOIO - LOGIN -->
-<div id="tela-apoio-login" class="tela">
-    <h2>🛵 Área do Apoio</h2>
-    <div class="card">
-        <label>Telefone com WhatsApp:</label>
-        <input type="tel" id="apoio-tel" placeholder="(11) 99999-9999">
-        
-        <label>Senha:</label>
-        <input type="password" id="apoio-senha" placeholder="Sua senha">
-        
-        <button class="btn btn-verde" onclick="entrarApoio()">Entrar</button>
-        
-        <p style="margin-top:15px; text-align:center;">
-            Não tem conta? <span class="link" onclick="mostrarTela('tela-apoio-cadastro')">Cadastrar</span>
-        </p>
-        <p class="link" onclick="mostrarTela('tela-inicio')">← Voltar</p>
-    </div>
-</div>
-
-<!-- TELA APOIO - CADASTRO -->
-<div id="tela-apoio-cadastro" class="tela">
-    <h2>📝 Cadastro do Apoio</h2>
-    <div class="card">
-        <label>Nome Completo:</label>
-        <input type="text" id="cad-nome" placeholder="Seu nome completo">
-        
-        <label>CPF:</label>
-        <input type="text" id="cad-cpf" placeholder="000.000.000-00">
-        
-        <label>Telefone com WhatsApp:</label>
-        <input type="tel" id="cad-tel" placeholder="(11) 99999-9999">
-        
-        <label>Chave PIX para Recebimento:</label>
-        <input type="text" id="cad-pix" placeholder="Sua chave PIX">
-        
-        <label>Tipo de Veículo:</label>
-        <select id="cad-veiculo">
-            <option value="🛵 Motocicleta">🛵 Motocicleta</option>
-            <option value="🚗 Carro">🚗 Carro</option>
-            <option value="🚲 Bicicleta">🚲 Bicicleta</option>
-        </select>
-        
-        <label>Placa do Veículo:</label>
-        <input type="text" id="cad-placa" placeholder="ABC-1234">
-        
-        <label>Criar Senha (mínimo 6 dígitos):</label>
-        <input type="password" id="cad-senha" placeholder="Senha">
-        
-        <button class="btn btn-verde" onclick="cadastrarApoio()">Enviar Cadastro</button>
-        <p class="link" onclick="mostrarTela('tela-apoio-login')">← Já tenho conta</p>
-    </div>
-</div>
-
-<!-- TELA APOIO - AGUARDANDO APROVAÇÃO -->
-<div id="tela-apoio-aguardando" class="tela">
-    <h2>⏳ Aguardando Liberação</h2>
-    <div class="aviso">
-        Seu cadastro foi recebido! 📋<br>
-        Aguarde o administrador aprovar seu acesso.
-    </div>
-    <button class="btn btn-verde" onclick="verificarStatus()">🔄 Verificar novamente</button>
-    <button class="btn btn-vermelho" onclick="sair()">🚪 Sair</button>
-</div>
-
-<!-- TELA APOIO - LOCALIZAÇÃO OBRIGATÓRIA -->
-<div id="tela-apoio-localizacao" class="tela">
-    <h2>📍 Ativar Localização</h2>
-    <div class="card">
-        <p style="margin-bottom:15px;">Para visualizar e receber ocorrências, é obrigatório manter sua localização ativa em tempo real.</p>
-        <div id="status-localizacao" class="local-indicador local-inativo">
-            ❌ Localização Desativada
+      <!-- MONITORAÇÃO DA OCORRÊNCIA SELECIONADA / CHAT DA CENTRAL -->
+      <div id="painel-detalhes-admin" class="hidden bg-white p-6 rounded-lg shadow-sm border border-slate-200 space-y-4">
+        <div class="flex justify-between items-start border-b pb-3">
+          <div>
+            <span id="admin-detalhe-status" class="px-2 py-1 text-xs font-bold rounded-full bg-yellow-100 text-yellow-800">EM ANDAMENTO</span>
+            <h3 id="admin-detalhe-titulo" class="text-xl font-bold text-slate-800 mt-1">Ocorrência #000</h3>
+            <p id="admin-detalhe-cliente" class="text-sm text-slate-600"></p>
+          </div>
+          <button onclick="fecharDetalhesAdmin()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
-        <button class="btn btn-verde" onclick="ativarLocalizacao()">📍 Ativar Localização</button>
-        <button class="btn btn-cinza" onclick="pararLocalizacao()">⏸️ Pausar</button>
-    </div>
-</div>
 
-<!-- TELA APOIO - PRINCIPAL -->
-<div id="tela-apoio-principal" class="tela">
-    <h2>📍 Serviços Próximos</h2>
-    
-    <div class="card" style="padding:10px 15px;">
-        <div id="status-local-apoio" class="local-indicador local-ativo" style="margin:0;">
-            ✅ Localização Ativa
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2 text-sm">
+            <p><strong>Local:</strong> <span id="admin-detalhe-endereco"></span></p>
+            <p><strong>Apoio Designado:</strong> <span id="admin-detalhe-apoio" class="font-semibold text-blue-600">Nenhum</span></p>
+            <p><strong>Descrição Inicial:</strong> <span id="admin-detalhe-descricao"></span></p>
+            <div id="admin-detalhe-relatorio" class="mt-4 p-3 bg-slate-50 border rounded-lg hidden">
+              <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider mb-1">Relatório Enviado do Apoio:</h4>
+              <p id="admin-texto-relatorio" class="text-slate-600 italic text-sm"></p>
+            </div>
+          </div>
+
+          <!-- CHAT CENTRAL ↔ APOIO -->
+          <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-col h-64">
+            <h4 class="font-bold text-xs uppercase text-slate-500 mb-2 flex items-center gap-1">
+              <i class="fa-solid fa-comments text-blue-600"></i> Chat Interativo com o Apoio
+            </h4>
+            <div id="chat-mensagens-admin" class="flex-grow overflow-y-auto space-y-2 pr-1 text-xs mb-2">
+              <!-- Mensagens do chat -->
+            </div>
+            <div class="flex gap-2">
+              <input type="text" id="input-chat-admin" placeholder="Digite uma mensagem..." class="flex-grow text-xs border rounded px-2 py-1 focus:outline-none focus:border-blue-500">
+              <button onclick="enviarMensagemChat('Central')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700">Enviar</button>
+            </div>
+          </div>
         </div>
-    </div>
-    
-    <div id="mapa-apoio"></div>
-    
-    <h3>🔔 Ocorrências Disponíveis</h3>
-    <div id="lista-ocorrencias-apoio"></div>
-    
-    <button class="btn btn-cinza" onclick="pararLocalizacaoESair()">⏸️ Pausar e Sair</button>
-</div>
+      </div>
+    </section>
 
-<!-- TELA APOIO - ATENDIMENTO -->
-<div id="tela-atendimento" class="tela">
-    <h2>✅ Em Atendimento</h2>
-    <div class="card">
-        <p><strong>Endereço:</strong> <span id="atvs-endereco"></span></p>
-        <p><strong>Tipo:</strong> <span id="atvs-tipo"></span></p>
-        <p><strong>Valor:</strong> R$ <span id="atvs-valor"></span></p>
-        <p><strong>Status:</strong> <span class="status-tag status-andamento">Em Andamento</span></p>
-    </div>
-    
-    <!-- ABA DE CHAT COM A CENTRAL -->
-    <div class="card">
-        <h3>💬 Conversar com a Central</h3>
-        <div class="chat-box" id="caixa-chat"></div>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="msg-chat" placeholder="Digite sua mensagem para a central..." style="flex:1; margin:0;">
-            <button class="btn btn-azul" style="width:auto; padding:12px 16px; margin:0;" onclick="enviarMensagemChat()">➤</button>
+    <!-- ========================================== -->
+    <!-- ABA 2: SOU APOIO ENTRAR (PAINEL DO APOIO)  -->
+    <!-- ========================================== -->
+    <section id="aba-apoio" class="hidden space-y-6">
+      
+      <!-- TELA DE LOGIN DO APOIO -->
+      <div id="apoio-tela-login" class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md border border-slate-200 mt-10">
+        <div class="text-center mb-6">
+          <i class="fa-solid fa-user-shield text-4xl text-blue-600 mb-2"></i>
+          <h2 class="text-xl font-bold text-slate-800">Autenticação do Apoio Tático</h2>
+          <p class="text-xs text-slate-500">Informe suas credenciais para aceitar chamados</p>
         </div>
-    </div>
-    
-    <!-- ABA DE FOTOS (MÍNIMO 5 - COM CARIMBO GPS) -->
-    <div class="card">
-        <h3>📸 Enviar Fotos (mínimo 5)</h3>
-        <p style="font-size:12px; color:var(--cinza); margin-bottom:8px;">As imagens capturadas terão Latitude, Longitude e Data/Hora registradas automaticamente.</p>
-        <input type="file" id="fotos" accept="image/*" multiple capture="environment" onchange="processarFotos(this)">
-        <div id="preview-fotos" class="grid-fotos"></div>
-        <p id="qtd-fotos" style="color:var(--cinza); margin-top:8px;">0 / 5 fotos mínimas</p>
-    </div>
-    
-    <!-- ABA DE RELATAR OCORRIDO -->
-    <div class="card">
-        <h3>📝 Relatar Ocorrido</h3>
-        <textarea id="relatorio" rows="4" placeholder="Descreva os detalhes da ocorrência e ações tomadas no local..."></textarea>
-    </div>
-    
-    <div class="botoes">
-        <button class="btn btn-vermelho" onclick="cancelarAtendimento()">❌ Recusar / Cancelar</button>
-        <button class="btn btn-amarelo" onclick="pausarAtendimento()">⏸️ Pausar</button>
-        <button class="btn btn-verde" onclick="finalizarAtendimento()">✅ Finalizar e Enviar Relatório</button>
-    </div>
-</div>
+        <form onsubmit="realizarLoginApoio(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Código / Nome do Apoio</label>
+            <input type="text" id="login-nome-apoio" required placeholder="Ex: Viatura Alpha-01" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Senha de Acesso</label>
+            <input type="password" id="login-senha-apoio" required placeholder="••••••••" class="w-full border rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500">
+          </div>
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+            Entrar no Sistema
+          </button>
+        </form>
+      </div>
 
-<!-- TELA ADMIN - ACOMPANHAR OCORRÊNCIA -->
-<div id="tela-admin-acompanhar" class="tela">
-    <h2>👁️ Acompanhamento</h2>
-    <div class="card">
-        <p><strong>Endereço:</strong> <span id="acomp-endereco"></span></p>
-        <p><strong>Apoio:</strong> <span id="acomp-apoio"></span></p>
-        <p><strong>Status:</strong> <span id="acomp-status"></span></p>
-    </div>
-    
-    <div class="card">
-        <h3>🗺️ Localização do Apoio</h3>
-        <div id="mapa-acompanhar" style="height:250px; border-radius:12px;"></div>
-    </div>
-    
-    <div class="card">
-        <h3>💬 Conversa</h3>
-        <div class="chat-box" id="caixa-chat-admin"></div>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="msg-chat-admin" placeholder="Mensagem para o apoio..." style="flex:1; margin:0;">
-            <button class="btn btn-azul" style="width:auto; padding:12px 16px; margin:0;" onclick="enviarMensagemChatAdmin()">➤</button>
+      <!-- PAINEL OPERACIONAL DO APOIO LOGADO -->
+      <div id="apoio-painel-operacional" class="hidden space-y-6">
+        
+        <!-- HEADER DE STATUS LOGADO -->
+        <div class="bg-slate-800 text-white p-4 rounded-lg flex justify-between items-center shadow-sm">
+          <div class="flex items-center space-x-3">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <div>
+              <p class="text-xs text-slate-400">Agente em Serviço</p>
+              <h3 id="apoio-nome-display" class="font-bold text-md">---</h3>
+            </div>
+          </div>
+          <button onclick="logoutApoio()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded transition">
+            <i class="fa-solid fa-right-from-bracket mr-1"></i> Sair
+          </button>
         </div>
+
+        <!-- OCORRÊNCIAS DISPONÍVEIS OU EM ATENDIMENTO -->
+        <div id="apoio-lista-chamados" class="space-y-4">
+          <h3 class="font-bold text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-bell text-yellow-500"></i> Ocorrências Pendentes / Disponíveis
+          </h3>
+          <div id="container-chamados-disponiveis" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Cards de chamados -->
+          </div>
+        </div>
+
+        <!-- ÁREA DE ATENDIMENTO DA OCORRÊNCIA ACEITA -->
+        <div id="apoio-area-atendimento" class="hidden bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
+          
+          <!-- BANNER DA OCORRÊNCIA -->
+          <div class="bg-blue-50 p-4 border-b border-blue-100 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded font-bold">EM ATENDIMENTO</span>
+              <h2 id="atendimento-titulo" class="text-lg font-bold text-slate-800 mt-1">Ocorrência #---</h2>
+              <p id="atendimento-endereco" class="text-xs text-slate-600"></p>
+            </div>
+            <button onclick="finalizarAtendimento()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow flex items-center gap-1">
+              <i class="fa-solid fa-circle-check"></i> Finalizar Atendimento
+            </button>
+          </div>
+
+          <!-- NAVEGAÇÃO DE SUB-ABAS DE ATENDIMENTO -->
+          <div class="flex border-b border-slate-200 bg-slate-50 px-4">
+            <button id="subtab-btn-relatar" onclick="alternarSubAbaApoio('relatar')" class="subtab-btn active px-4 py-2.5 text-xs font-bold rounded-t-lg">
+              <i class="fa-solid fa-pen-to-square mr-1"></i> 1. Relatar Ocorrido
+            </button>
+            <button id="subtab-btn-fotos" onclick="alternarSubAbaApoio('fotos')" class="subtab-btn px-4 py-2.5 text-xs font-bold text-slate-600 rounded-t-lg">
+              <i class="fa-solid fa-camera mr-1"></i> 2. Fotos (Mín. 5) & GPS
+            </button>
+            <button id="subtab-btn-chat" onclick="alternarSubAbaApoio('chat')" class="subtab-btn px-4 py-2.5 text-xs font-bold text-slate-600 rounded-t-lg">
+              <i class="fa-solid fa-comments mr-1"></i> 3. Chat com Central
+            </button>
+          </div>
+
+          <!-- CONTEÚDO SUB-ABAS -->
+          <div class="p-6">
+            
+            <!-- SUB-ABA 1: RELATAR OCORRIDO -->
+            <div id="subaba-relatar" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Relatório Detalhado do Atendimento</label>
+                <textarea id="texto-relatorio-apoio" rows="6" placeholder="Descreva aqui o estado do local, dados do cliente/averiguado, ações tomadas e observações finais..." class="w-full border rounded-lg p-3 text-sm focus:outline-none focus:border-blue-500"></textarea>
+              </div>
+              <div class="flex justify-end gap-2">
+                <button onclick="salvarRascunhoRelatorio()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold">
+                  Salvar Texto
+                </button>
+                <button onclick="gerarRelatorioPDF()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2">
+                  <i class="fa-solid fa-file-pdf"></i> Gerar PDF Completo
+                </button>
+              </div>
+            </div>
+
+            <!-- SUB-ABA 2: TIRAR FOTOS COM GPS E GRADE AJUSTÁVEL -->
+            <div id="subaba-fotos" class="hidden space-y-6">
+              
+              <!-- ÁREA DE CAPTURA DE FOTOS -->
+              <div class="bg-slate-50 border-2 border-dashed border-slate-300 rounded-lg p-6 text-center space-y-3">
+                <div class="flex justify-center gap-4">
+                  <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow flex items-center gap-2">
+                    <i class="fa-solid fa-camera"></i> Capturar da Câmera
+                    <input type="file" id="input-camera" capture="environment" accept="image/*" class="hidden" onchange="processarFotoCarimbo(event)">
+                  </label>
+                  <label class="cursor-pointer bg-slate-700 hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg text-xs font-bold shadow flex items-center gap-2">
+                    <i class="fa-solid fa-upload"></i> Selecionar Arquivo
+                    <input type="file" id="input-arquivo" accept="image/*" class="hidden" onchange="processarFotoCarimbo(event)">
+                  </label>
+                </div>
+                <p class="text-xs text-slate-500">Mínimo necessário para fechamento: <strong>05 fotos</strong>. O carimbo de GPS e Horário é inserido automaticamente.</p>
+                <p id="contador-fotos" class="text-xs font-bold text-blue-600">Fotos Anexadas: 0 / 5</p>
+              </div>
+
+              <!-- GRADE DE FOTOS AJUSTÁVEL (2 EM 2 EMPILHADAS) -->
+              <div>
+                <h4 class="font-bold text-slate-700 text-sm mb-3">Galeria de Comprovantes (Grade 2x2)</h4>
+                <div id="grid-fotos-apoio" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Fotos inseridas dinamicamente -->
+                  <div id="placeholder-fotos" class="col-span-full text-center py-8 text-slate-400 text-xs italic">
+                    Nenhuma foto capturada até o momento.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUB-ABA 3: CHAT INTERATIVO COM A CENTRAL -->
+            <div id="subaba-chat" class="hidden space-y-4">
+              <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 flex flex-col h-80">
+                <div id="chat-mensagens-apoio" class="flex-grow overflow-y-auto space-y-3 pr-1 text-xs mb-3">
+                  <!-- Mensagens -->
+                </div>
+                <div class="flex gap-2">
+                  <input type="text" id="input-chat-apoio" placeholder="Escreva uma mensagem para a Central..." class="flex-grow border rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                  <button onclick="enviarMensagemChat('Apoio')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold">
+                    Enviar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL: NOVA OCORRÊNCIA (CENTRAL) -->
+  <div id="modal-nova-ocorrencia" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-800">Cadastrar Nova Ocorrência</h3>
+        <button onclick="fecharModalNovaOcorrencia()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="salvarNovaOcorrencia(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Cliente / Local</label>
+          <input type="text" id="nova-cliente" required class="w-full border rounded p-2 text-xs focus:outline-none focus:border-blue-500" placeholder="Ex: Farmácia Central">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Endereço Completo</label>
+          <input type="text" id="nova-endereco" required class="w-full border rounded p-2 text-xs focus:outline-none focus:border-blue-500" placeholder="Rua, Número, Bairro">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Latitude</label>
+            <input type="number" step="any" id="nova-lat" required class="w-full border rounded p-2 text-xs focus:outline-none focus:border-blue-500" placeholder="-23.5505">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Longitude</label>
+            <input type="number" step="any" id="nova-lng" required class="w-full border rounded p-2 text-xs focus:outline-none focus:border-blue-500" placeholder="-46.6333">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Descrição do Disparo/Evento</label>
+          <textarea id="nova-descricao" rows="2" required class="w-full border rounded p-2 text-xs focus:outline-none focus:border-blue-500" placeholder="Disparo de alarme zona 04..."></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="fecharModalNovaOcorrencia()" class="px-3 py-1.5 border rounded text-xs">Cancelar</button>
+          <button type="submit" class="px-4 py-1.5 bg-blue-600 text-white rounded text-xs font-bold hover:bg-blue-700">Criar Ocorrência</button>
+        </div>
+      </form>
     </div>
-    
-    <div class="card escondido" id="dados-concluidos">
-        <h3>📋 Relatório Final</h3>
-        <p id="acomp-relato"></p>
-        <h4 style="margin:15px 0 8px;">📸 Fotos Registradas</h4>
-        <div id="acomp-fotos" class="grid-fotos"></div>
-        <button class="btn btn-azul" onclick="enviarRelatorioOcorrencia()">📤 Enviar por WhatsApp</button>
-    </div>
-    
-    <button class="btn" onclick="voltarAdmin()">← Voltar</button>
-</div>
+  </div>
 
-<script>
-// DADOS
-let cadastrosApoio = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
-let listaOcorrencias = JSON.parse(localStorage.getItem('ocorrencias') || '[]');
-let mensagens = JSON.parse(localStorage.getItem('mensagens') || '{}');
-let usuarioAtual = null;
-let servicoAceito = null;
-let fotosEnviadas = [];
-let localizacaoAtiva = false;
-let watchId = null;
-let mapaAdmin = null, mapaApoio = null, mapaAcomp = null;
-let marcadoresApoios = {};
-let marcadoresApoioMapa = [];
-let tipoAlerta = 'sirene';
+  <!-- CONTAINER OCULTO PARA GERAÇÃO DO PDF -->
+  <div id="pdf-template" class="hidden p-8 bg-white text-slate-900 space-y-6">
+    <!-- Gerado dinamicamente no JS -->
+  </div>
 
-// ====================================== FUNÇÕES BASE
-function salvarDados() {
-    localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
-    localStorage.setItem('ocorrencias', JSON.stringify(listaOcorrencias));
-    localStorage.setItem('mensagens', JSON.stringify(mensagens));
-}
-
-function mostrarTela(id) {
-    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
-    document.getElementById(id).classList.add('ativa');
-    
-    setTimeout(() => {
-        if (id === 'tela-admin' && mapaAdmin) mapaAdmin.invalidateSize();
-        if (id === 'tela-apoio-principal' && mapaApoio) mapaApoio.invalidateSize();
-        if (id === 'tela-admin-acompanhar' && mapaAcomp) mapaAcomp.invalidateSize();
-    }, 200);
-}
-
-function tocarAlerta() {
-    if (tipoAlerta === 'sirene') {
-        document.getElementById('som-sirene').play().catch(()=>{});
-    } else {
-        document.getElementById('som-aviso').play().catch(()=>{});
-    }
-}
-
-// ====================================== ADMINISTRAÇÃO
-function verificarSenhaAdmin() {
-    const senha = document.getElementById('senha-admin').value;
-    if (senha === 'admin123') {
-        mostrarTela('tela-admin');
-        atualizarPainelAdmin();
-        inicializarMapaAdmin();
-    } else {
-        alert('Senha incorreta!');
-    }
-}
-
-function campoOutro() {
-    const sel = document.getElementById('ocorr-tipo').value;
-    document.getElementById('ocorr-tipo-outro').classList.toggle('escondido', sel !== 'Outro');
-}
-
-function lancarOcorrencia() {
-    const tipo = document.getElementById('ocorr-tipo').value;
-    const tipoFinal = tipo === 'Outro' ? document.getElementById('ocorr-tipo-outro').value : tipo;
-    
-    const ocorr = {
-        id: Date.now(),
-        endereco: document.getElementById('ocorr-endereco').value,
-        lat: parseFloat(document.getElementById('ocorr-lat').value) || null,
-        lng: parseFloat(document.getElementById('ocorr-lng').value) || null,
-        regiao: document.getElementById('ocorr-regiao').value,
-        tipo: tipoFinal,
-        valor: parseFloat(document.getElementById('ocorr-valor').value) || 0,
-        obs: document.getElementById('ocorr-obs').value,
-        data: new Date().toLocaleDateString('pt-BR'),
-        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
-        status: 'pendente',
-        aceitoPor: null,
+  <!-- JAVASCRIPT / LÓGICA DO SISTEMA -->
+  <script>
+    /* ===================================================
+       ESTADO DA APLICAÇÃO (IN-MEMORY / LOCALSTORAGE)
+    =================================================== */
+    let ocorrencias = [
+      {
+        id: "OC-1001",
+        cliente: "Supermercado Bonfim",
+        endereco: "Av. Paulista, 1000 - Bela Vista",
+        lat: -23.5615,
+        lng: -46.6559,
+        descricao: "Disparo de alarme setor tesouraria.",
+        status: "PENDENTE",
+        apoio: null,
+        relatorioTexto: "",
         fotos: [],
-        relatorio: '',
-        dataConclusao: null
-    };
-    
-    if (!ocorr.endereco) { alert('Preencha o endereço!'); return; }
-    
-    listaOcorrencias.unshift(ocorr);
-    mensagens[ocorr.id] = [];
-    salvarDados();
-    atualizarPainelAdmin();
-    alert('✅ Ocorrência lançada! Os apoios já podem ver.');
-    
-    document.getElementById('ocorr-endereco').value = '';
-    document.getElementById('ocorr-lat').value = '';
-    document.getElementById('ocorr-lng').value = '';
-    document.getElementById('ocorr-regiao').value = '';
-    document.getElementById('ocorr-valor').value = '';
-    document.getElementById('ocorr-obs').value = '';
-}
+        chat: []
+      },
+      {
+        id: "OC-1002",
+        cliente: "Depósito Zé Material",
+        endereco: "Rua Vergueiro, 2500 - Vila Mariana",
+        lat: -23.5882,
+        lng: -46.6324,
+        descricao: "Suspeito visualizado próximo ao muro lateral.",
+        status: "PENDENTE",
+        apoio: null,
+        relatorioTexto: "",
+        fotos: [],
+        chat: []
+      }
+    ];
 
-function atualizarPainelAdmin() {
-    document.getElementById('qtd-apoios').textContent = cadastrosApoio.length;
-    
-    const listaApoio = document.getElementById('lista-apoios');
-    listaApoio.innerHTML = cadastrosApoio.map((a, i) => `
-        <div style="padding:12px; background:#334155; border-radius:8px; margin:6px 0;">
-            <p><strong>${a.nome}</strong> — ${a.veiculo}</p>
-            <p style="font-size:13px; color:#94a3b8;">📱 ${a.telefone} | 💳 ${a.cpf || 'Sem CPF'}</p>
-            <p style="font-size:13px; color:#94a3b8;">📍 ${a.regiao || 'Região não informada'}</p>
-            <p style="font-size:13px;">Status: ${a.aprovado ? '✅ Ativo' : '⏳ Pendente'}</p>
-            ${!a.aprovado ? `<button class="btn btn-verde" style="padding:8px; font-size:14px; margin:6px 0;" onclick="aprovarApoio(${i})">✅ Aprovar</button>` : ''}
-            <button class="btn btn-vermelho" style="padding:8px; font-size:14px;" onclick="excluirApoio(${i})">🗑️ Excluir</button>
-        </div>
-    `).join('');
-    
-    atualizarRelatorioAdmin('todas');
-    atualizarMarcadoresApoios();
-}
+    let apoioLogado = null;
+    let ocorrenciaAtivaApoio = null;
+    let ocorrenciaSelecionadaAdmin = null;
+    let mapaAdmin = null;
+    let markersAdmin = [];
+    let localizacaoAtualGPS = { lat: -23.5505, lng: -46.6333 };
 
-function aprovarApoio(indice) {
-    cadastrosApoio[indice].aprovado = true;
-    salvarDados();
-    atualizarPainelAdmin();
-    alert('✅ Apoio aprovado!');
-}
+    /* ===================================================
+       INICIALIZAÇÃO & NAVEGAÇÃO
+    =================================================== */
+    window.addEventListener('DOMContentLoaded', () => {
+      inicializarMapaAdmin();
+      renderizarOcorrenciasAdmin();
+      obterGeolocalizacaoNavegador();
+    });
 
-function excluirApoio(indice) {
-    if (confirm('Excluir este apoio?')) {
-        cadastrosApoio.splice(indice, 1);
-        salvarDados();
-        atualizarPainelAdmin();
+    function alternarAbaPrincipal(aba) {
+      const btnCentral = document.getElementById('btn-tab-central');
+      const btnApoio = document.getElementById('btn-tab-apoio');
+      const abaCentral = document.getElementById('aba-central');
+      const abaApoio = document.getElementById('aba-apoio');
+
+      if (aba === 'central') {
+        btnCentral.classList.add('active');
+        btnCentral.classList.remove('text-slate-400');
+        btnApoio.classList.remove('active');
+        btnApoio.classList.add('text-slate-400');
+
+        abaCentral.classList.remove('hidden');
+        abaApoio.classList.add('hidden');
+        setTimeout(() => mapaAdmin.invalidateSize(), 200);
+      } else {
+        btnApoio.classList.add('active');
+        btnApoio.classList.remove('text-slate-400');
+        btnCentral.classList.remove('active');
+        btnCentral.classList.add('text-slate-400');
+
+        abaApoio.classList.remove('hidden');
+        abaCentral.classList.add('hidden');
+      }
     }
-}
 
-function filtrarOcorrencias(filtro) {
-    atualizarRelatorioAdmin(filtro);
-}
+    function alternarSubAbaApoio(subaba) {
+      const btns = ['relatar', 'fotos', 'chat'];
+      btns.forEach(b => {
+        const btnElem = document.getElementById(`subtab-btn-${b}`);
+        const divElem = document.getElementById(`subaba-${b}`);
+        if (b === subaba) {
+          btnElem.classList.add('active');
+          btnElem.classList.remove('text-slate-600');
+          divElem.classList.remove('hidden');
+        } else {
+          btnElem.classList.remove('active');
+          btnElem.classList.add('text-slate-600');
+          divElem.classList.add('hidden');
+        }
+      });
+    }
 
-function atualizarRelatorioAdmin(filtro) {
-    let filtrado = listaOcorrencias;
-    if (filtro === 'pendentes') filtrado = listaOcorrencias.filter(o => o.status === 'pendente');
-    if (filtro === 'andamento') filtrado = listaOcorrencias.filter(o => o.status === 'aceita');
-    if (filtro === 'concluidas') filtrado = listaOcorrencias.filter(o => o.status === 'concluida');
-    
-    const div = document.getElementById('lista-ocorrencias-admin');
-    if (!filtrado.length) {
-        div.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:15px;">Nenhuma ocorrência encontrada.</p>';
+    /* ===================================================
+       MÓDULO GEOLOCALIZAÇÃO
+    =================================================== */
+    function obterGeolocalizacaoNavegador() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.watchPosition(
+          (pos) => {
+            localizacaoAtualGPS.lat = pos.coords.latitude;
+            localizacaoAtualGPS.lng = pos.coords.longitude;
+          },
+          (err) => console.warn("GPS não obtido: ", err.message),
+          { enableHighAccuracy: true }
+        );
+      }
+    }
+
+    /* ===================================================
+       MÓDULO CENTRAL ADMINISTRATIVA
+    =================================================== */
+    function inicializarMapaAdmin() {
+      mapaAdmin = L.map('mapa-admin').setView([-23.5505, -46.6333], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+      }).addTo(mapaAdmin);
+    }
+
+    function renderizarOcorrenciasAdmin() {
+      const container = document.getElementById('lista-ocorrencias-admin');
+      document.getElementById('badge-total-ocorrencias').innerText = ocorrencias.length;
+      container.innerHTML = '';
+
+      // Limpar marcadores
+      markersAdmin.forEach(m => mapaAdmin.removeLayer(m));
+      markersAdmin = [];
+
+      ocorrencias.forEach(oc => {
+        // Marcador no Mapa
+        const marker = L.marker([oc.lat, oc.lng]).addTo(mapaAdmin)
+          .bindPopup(`<b>${oc.cliente}</b><br>${oc.descricao}`);
+        markersAdmin.push(marker);
+
+        // Card da Lista
+        const div = document.createElement('div');
+        div.className = "p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition cursor-pointer flex flex-col justify-between";
+        div.onclick = () => selecionarOcorrenciaAdmin(oc.id);
+
+        let statusBg = "bg-yellow-100 text-yellow-800";
+        if (oc.status === "EM ATENDIMENTO") statusBg = "bg-blue-100 text-blue-800";
+        if (oc.status === "FINALIZADO") statusBg = "bg-green-100 text-green-800";
+
+        div.innerHTML = `
+          <div class="flex justify-between items-start">
+            <span class="text-xs font-bold text-slate-500">${oc.id}</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold ${statusBg}">${oc.status}</span>
+          </div>
+          <h4 class="font-bold text-xs text-slate-800 mt-1">${oc.cliente}</h4>
+          <p class="text-[11px] text-slate-500 truncate">${oc.endereco}</p>
+          ${oc.apoio ? `<p class="text-[10px] text-blue-600 font-semibold mt-1"><i class="fa-solid fa-user-shield"></i> ${oc.apoio}</p>` : ''}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function selecionarOcorrenciaAdmin(id) {
+      const oc = ocorrencias.find(o => o.id === id);
+      if (!oc) return;
+
+      ocorrenciaSelecionadaAdmin = oc;
+      document.getElementById('painel-detalhes-admin').classList.remove('hidden');
+      document.getElementById('admin-detalhe-titulo').innerText = `${oc.id} - ${oc.cliente}`;
+      document.getElementById('admin-detalhe-status').innerText = oc.status;
+      document.getElementById('admin-detalhe-endereco').innerText = oc.endereco;
+      document.getElementById('admin-detalhe-descricao').innerText = oc.descricao;
+      document.getElementById('admin-detalhe-apoio').innerText = oc.apoio || "Nenhum atribuído";
+
+      if (oc.relatorioTexto) {
+        document.getElementById('admin-detalhe-relatorio').classList.remove('hidden');
+        document.getElementById('admin-texto-relatorio').innerText = oc.relatorioTexto;
+      } else {
+        document.getElementById('admin-detalhe-relatorio').classList.add('hidden');
+      }
+
+      mapaAdmin.setView([oc.lat, oc.lng], 15);
+      renderizarChat('admin');
+    }
+
+    function fecharDetalhesAdmin() {
+      document.getElementById('painel-detalhes-admin').classList.add('hidden');
+      ocorrenciaSelecionadaAdmin = null;
+    }
+
+    function abrirModalNovaOcorrencia() {
+      document.getElementById('modal-nova-ocorrencia').classList.remove('hidden');
+      document.getElementById('modal-nova-ocorrencia').classList.add('flex');
+    }
+
+    function fecharModalNovaOcorrencia() {
+      document.getElementById('modal-nova-ocorrencia').classList.add('hidden');
+      document.getElementById('modal-nova-ocorrencia').classList.remove('flex');
+    }
+
+    function salvarNovaOcorrencia(e) {
+      e.preventDefault();
+      const cliente = document.getElementById('nova-cliente').value;
+      const endereco = document.getElementById('nova-endereco').value;
+      const lat = parseFloat(document.getElementById('nova-lat').value);
+      const lng = parseFloat(document.getElementById('nova-lng').value);
+      const descricao = document.getElementById('nova-descricao').value;
+
+      const novaOc = {
+        id: `OC-${Math.floor(1000 + Math.random() * 9000)}`,
+        cliente,
+        endereco,
+        lat,
+        lng,
+        descricao,
+        status: "PENDENTE",
+        apoio: null,
+        relatorioTexto: "",
+        fotos: [],
+        chat: []
+      };
+
+      ocorrencias.push(novaOc);
+      fecharModalNovaOcorrencia();
+      renderizarOcorrenciasAdmin();
+      renderizarChamadosApoio();
+      alert("Nova ocorrência cadastrada com sucesso!");
+    }
+
+    /* ===================================================
+       MÓDULO SOU APOIO ENTRAR & ATENDIMENTO
+    =================================================== */
+    function realizarLoginApoio(e) {
+      e.preventDefault();
+      const nome = document.getElementById('login-nome-apoio').value;
+      if (!nome) return;
+
+      apoioLogado = nome;
+      document.getElementById('apoio-nome-display').innerText = apoioLogado;
+      document.getElementById('apoio-tela-login').classList.add('hidden');
+      document.getElementById('apoio-painel-operacional').classList.remove('hidden');
+
+      renderizarChamadosApoio();
+    }
+
+    function logoutApoio() {
+      apoioLogado = null;
+      ocorrenciaAtivaApoio = null;
+      document.getElementById('apoio-tela-login').classList.remove('hidden');
+      document.getElementById('apoio-painel-operacional').classList.add('hidden');
+      document.getElementById('apoio-area-atendimento').classList.add('hidden');
+    }
+
+    function renderizarChamadosApoio() {
+      const container = document.getElementById('container-chamados-disponiveis');
+      container.innerHTML = '';
+
+      const pendentes = ocorrencias.filter(o => o.status === "PENDENTE" || (o.status === "EM ATENDIMENTO" && o.apoio === apoioLogado));
+
+      if (pendentes.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 italic col-span-full">Nenhum chamado pendente no momento.</p>`;
         return;
+      }
+
+      pendentes.forEach(oc => {
+        const div = document.createElement('div');
+        div.className = "bg-white p-4 rounded-lg shadow-sm border border-slate-200 space-y-2";
+        const emAtendimentoPeloProprio = oc.status === "EM ATENDIMENTO" && oc.apoio === apoioLogado;
+
+        div.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-blue-600">${oc.id}</span>
+            <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold">${oc.status}</span>
+          </div>
+          <h4 class="font-bold text-sm text-slate-800">${oc.cliente}</h4>
+          <p class="text-xs text-slate-600">${oc.endereco}</p>
+          <p class="text-xs text-slate-500 italic">"${oc.descricao}"</p>
+          
+          ${!emAtendimentoPeloProprio ? `
+            <button onclick="aceitarOcorrencia('${oc.id}')" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-xs font-bold transition">
+              <i class="fa-solid fa-hand-holding-hand mr-1"></i> Aceitar Ocorrência
+            </button>
+          ` : `
+            <button onclick="abrirAtendimentoApoio('${oc.id}')" class="w-full mt-2 bg-amber-500 hover:bg-amber-600 text-white py-2 rounded text-xs font-bold transition">
+              <i class="fa-solid fa-folder-open mr-1"></i> Continuar Atendimento
+            </button>
+          `}
+        `;
+        container.appendChild(div);
+      });
     }
-    
-    div.innerHTML = filtrado.map(o => {
-        let classeStatus = o.status === 'concluida' ? 'status-concluida' : 
-                          o.status === 'aceita' ? 'status-andamento' : 'status-pendente';
-        let textoStatus = o.status === 'concluida' ? '✅ Concluída' : 
-                          o.status === 'aceita' ? '🔄 Em Andamento' : '⏳ Pendente';
-        return `
-        <div style="padding:14px; background:#334155; border-radius:8px; margin:8px 0; border-left:3px solid ${
-            o.status==='concluida'?'#16a34a':o.status==='aceita'?'#1e40af':'#eab308'
-        };">
-            <p><strong>📍 ${o.endereco}</strong></p>
-            <p>Tipo: ${o.tipo} | Valor: R$ ${o.valor.toFixed(2)}</p>
-            <p style="font-size:13px; color:#94a3b8;">${o.data} ${o.hora}</p>
-            <span class="status-tag ${classeStatus}">${textoStatus}</span>
-            ${o.aceitoPor ? `<p style="margin-top:6px;">👤 Apoio: ${o.aceitoPor.nome}</p>` : ''}
-            ${o.status === 'aceita' ? 
-                `<button class="btn btn-azul" style="padding:8px; font-size:14px; margin-top:8px;" onclick="acompanharOcorrencia(${o.id})">👁️ Acompanhar</button>` : 
-                o.status === 'concluida' ? 
-                `<button class="btn btn-azul" style="padding:8px; font-size:14px; margin-top:8px;" onclick="acompanharOcorrencia(${o.id})">📋 Ver Relatório</button>
-                 <button class="btn btn-verde" style="padding:8px; font-size:14px; margin-top:8px;" onclick="enviarRelatorioOcorrencia(${o.id})">📤 Enviar WhatsApp</button>` : ''
-            }
-        </div>
-    `}).join('');
-}
 
-function acompanharOcorrencia(id) {
-    servicoAceito = listaOcorrencias.find(o => o.id === id);
-    if (!servicoAceito) return;
-    
-    mostrarTela('tela-admin-acompanhar');
-    document.getElementById('acomp-endereco').textContent = servicoAceito.endereco;
-    document.getElementById('acomp-apoio').textContent = servicoAceito.aceitoPor?.nome || '—';
-    
-    let statusTexto = servicoAceito.status === 'concluida' ? '✅ Concluída' : '🔄 Em Andamento';
-    document.getElementById('acomp-status').textContent = statusTexto;
-    
-    carregarChatAdmin();
-    
-    const dadosConcl = document.getElementById('dados-concluidos');
-    if (servicoAceito.status === 'concluida') {
-        dadosConcl.classList.remove('escondido');
-        document.getElementById('acomp-relato').textContent = servicoAceito.relatorio || 'Sem relatório';
-        const divFotos = document.getElementById('acomp-fotos');
-        divFotos.innerHTML = (servicoAceito.fotos || []).map((f, i) => `
-            <div class="foto-container">
-                <img src="${f}" alt="Foto ${i+1}">
-                <a href="${f}" download="foto_ocorrencia_${i+1}.jpg" class="btn-download-foto">📥 Baixar Foto</a>
-            </div>
-        `).join('');
-    } else {
-        dadosConcl.classList.add('escondido');
+    function aceitarOcorrencia(id) {
+      const oc = ocorrencias.find(o => o.id === id);
+      if (!oc) return;
+
+      oc.status = "EM ATENDIMENTO";
+      oc.apoio = apoioLogado;
+
+      renderizarOcorrenciasAdmin();
+      renderizarChamadosApoio();
+      abrirAtendimentoApoio(id);
     }
-    
-    setTimeout(() => {
-        if (!mapaAcomp) {
-            mapaAcomp = L.map('mapa-acompanhar').setView([-23.5505, -46.6333], 12);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaAcomp);
-        }
-        mapaAcomp.invalidateSize();
-        if (servicoAceito.lat && servicoAceito.lng) {
-            mapaAcomp.setView([servicoAceito.lat, servicoAceito.lng], 15);
-            L.marker([servicoAceito.lat, servicoAceito.lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaAcomp).bindPopup('Local da Ocorrência');
-        }
-        if (servicoAceito.aceitoPor?.ultimaLat && servicoAceito.aceitoPor?.ultimaLng) {
-            L.marker([servicoAceito.aceitoPor.ultimaLat, servicoAceito.aceitoPor.ultimaLng], {icon: L.divIcon({html:'🛵', className:'', iconSize:[25,25]})}).addTo(mapaAcomp).bindPopup(servicoAceito.aceitoPor.nome);
-        }
-    }, 100);
-}
 
-function voltarAdmin() {
-    servicoAceito = null;
-    mostrarTela('tela-admin');
-    atualizarPainelAdmin();
-}
+    function abrirAtendimentoApoio(id) {
+      const oc = ocorrencias.find(o => o.id === id);
+      if (!oc) return;
 
-function carregarChatAdmin() {
-    const caixa = document.getElementById('caixa-chat-admin');
-    const msgs = mensagens[servicoAceito.id] || [];
-    caixa.innerHTML = msgs.map(m => `
-        <div class="msg ${m.de === 'admin' ? 'msg-admin' : 'msg-apoio'}">
-            ${m.texto}
-            <div class="msg-horario">${m.hora}</div>
-        </div>
-    `).join('');
-    caixa.scrollTop = caixa.scrollHeight;
-}
+      ocorrenciaAtivaApoio = oc;
+      document.getElementById('apoio-area-atendimento').classList.remove('hidden');
+      document.getElementById('atendimento-titulo').innerText = `${oc.id} - ${oc.cliente}`;
+      document.getElementById('atendimento-endereco').innerText = oc.endereco;
+      document.getElementById('texto-relatorio-apoio').value = oc.relatorioTexto || "";
 
-function enviarMensagemChatAdmin() {
-    const input = document.getElementById('msg-chat-admin');
-    const texto = input.value.trim();
-    if (!texto || !servicoAceito) return;
-    
-    if (!mensagens[servicoAceito.id]) mensagens[servicoAceito.id] = [];
-    mensagens[servicoAceito.id].push({
-        de: 'admin',
-        texto: texto,
-        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
-    });
-    salvarDados();
-    input.value = '';
-    carregarChatAdmin();
-}
+      renderizarGaleriaFotosApoio();
+      renderizarChat('apoio');
+      alternarSubAbaApoio('relatar');
+    }
 
-function enviarRelatorioOcorrencia(id) {
-    const o = id ? listaOcorrencias.find(x => x.id === id) : servicoAceito;
-    if (!o) return;
-    
-    const msg = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
+    function salvarRascunhoRelatorio() {
+      if (!ocorrenciaAtivaApoio) return;
+      ocorrenciaAtivaApoio.relatorioTexto = document.getElementById('texto-relatorio-apoio').value;
+      if (ocorrenciaSelecionadaAdmin && ocorrenciaSelecionadaAdmin.id === ocorrenciaAtivaApoio.id) {
+        selecionarOcorrenciaAdmin(ocorrenciaAtivaApoio.id);
+      }
+      alert("Relatório salvo com sucesso!");
+    }
 
-📍 Endereço: ${o.endereco}
-🏘️ Região: ${o.regiao || '—'}
-📌 Tipo: ${o.tipo}
-💰 Valor: R$ ${o.valor.toFixed(2)}
-👤 Apoio: ${o.aceitoPor?.nome || '—'}
-📱 Tel: ${o.aceitoPor?.telefone || '—'}
-📅 Data: ${o.data} ${o.hora}
-✅ Concluído em: ${o.dataConclusao || '—'}
+    function finalizarAtendimento() {
+      if (!ocorrenciaAtivaApoio) return;
+      if (ocorrenciaAtivaApoio.fotos.length < 5) {
+        alert("Atenção: É necessário capturar e anexar no mínimo 05 fotos com GPS para finalizar a ocorrência.");
+        alternarSubAbaApoio('fotos');
+        return;
+      }
 
-📝 RELATÓRIO:
-${o.relatorio || 'Sem relatório registrado'}
+      salvarRascunhoRelatorio();
+      ocorrenciaAtivaApoio.status = "FINALIZADO";
+      alert("Atendimento finalizado com sucesso e relatório enviado para a Central!");
+      
+      document.getElementById('apoio-area-atendimento').classList.add('hidden');
+      ocorrenciaAtivaApoio = null;
+      renderizarChamadosApoio();
+      renderizarOcorrenciasAdmin();
+    }
 
-📸 Fotos com Geolocalização: ${(o.fotos || []).length} arquivos anexados`;
-    
-    window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`, '_blank');
-}
+    /* ===================================================
+       MÓDULO FOTOS & CARIMBO DE GPS (CANVAS API)
+    =================================================== */
+    function processarFotoCarimbo(event) {
+      const input = event.target;
+      if (!input.files || !input.files[0]) return;
 
-function gerarRelatorioPDF() {
-    const inicio = document.getElementById('relatorio-inicio').value;
-    const fim = document.getElementById('relatorio-fim').value;
-    
-    if (!inicio || !fim) { alert('Selecione o período!'); return; }
-    
-    const filtro = listaOcorrencias.filter(o => {
-        const [d, m, a] = o.data.split('/');
-        const dataOcorr = new Date(`${a}-${m}-${d}`);
-        return dataOcorr >= new Date(inicio) && dataOcorr <= new Date(fim);
-    });
-    
-    if (!filtro.length) { alert('Nenhuma ocorrência no período selecionado.'); return; }
-    
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text('RELATÓRIO DE OCORRÊNCIAS', 105, 20, {align:'center'});
-    doc.setFontSize(11);
-    doc.text(`Período: ${inicio} a ${fim}`, 105, 30, {align:'center'});
-    
-    let y = 40;
-    filtro.forEach((o, idx) => {
-        if (y > 230) { doc.addPage(); y = 20; }
-        doc.setFontSize(12);
-        doc.text(`${idx+1}. ${o.endereco}`, 10, y); y += 7;
-        doc.setFontSize(10);
-        doc.text(`Região: ${o.regiao || '—'}`, 14, y); y += 5;
-        doc.text(`Tipo: ${o.tipo}`, 14, y); y += 5;
-        doc.text(`Valor: R$ ${o.valor.toFixed(2)}`, 14, y); y += 5;
-        doc.text(`Data: ${o.data} ${o.hora}`, 14, y); y += 5;
-        doc.text(`Apoio: ${o.aceitoPor?.nome || 'Não atribuído'}`, 14, y); y += 5;
-        if (o.relatorio) {
-            doc.text(`Relatório:`, 14, y); y += 5;
-            const linhas = doc.splitTextToSize(o.relatorio, 180);
-            doc.text(linhas, 14, y);
-            y += linhas.length * 5;
-        }
-        
-        // ANEXAR FOTOS AO PDF
-        if (o.fotos && o.fotos.length > 0) {
-            doc.text(`Fotos Anexadas (${o.fotos.length}):`, 14, y); y += 5;
-            let imgX = 14;
-            o.fotos.forEach((fotoBase64) => {
-                if (y > 230) { doc.addPage(); y = 20; imgX = 14; }
-                try {
-                    doc.addImage(fotoBase64, 'JPEG', imgX, y, 40, 30);
-                    imgX += 45;
-                    if (imgX > 150) { imgX = 14; y += 35; }
-                } catch(e) {}
+      const file = input.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          // Criar Canvas para aplicar o carimbo de GPS e Data/Hora
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+
+          canvas.width = img.width;
+          canvas.height = img.height;
+
+          // Desenhar imagem original
+          ctx.drawImage(img, 0, 0);
+
+          // Configurar Estilo da Faixa de GPS
+          const alturaFaixa = Math.max(40, canvas.height * 0.08);
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+          ctx.fillRect(0, canvas.height - alturaFaixa, canvas.width, alturaFaixa);
+
+          // Texto do Carimbo GPS
+          const dataHora = new Date().toLocaleString('pt-BR');
+          const latStr = localizacaoAtualGPS.lat ? localizacaoAtualGPS.lat.toFixed(6) : "N/A";
+          const lngStr = localizacaoAtualGPS.lng ? localizacaoAtualGPS.lng.toFixed(6) : "N/A";
+          const textoGPS = `LAT: ${latStr} | LNG: ${lngStr} | DATA: ${dataHora}`;
+
+          const fontSize = Math.max(12, Math.floor(alturaFaixa * 0.35));
+          ctx.font = `bold ${fontSize}px sans-serif`;
+          ctx.fillStyle = '#ffffff';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(textoGPS, 15, canvas.height - (alturaFaixa / 2));
+
+          // Converter para Base64 Data URL
+          const fotoCarimbadaBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+          if (ocorrenciaAtivaApoio) {
+            ocorrenciaAtivaApoio.fotos.push({
+              id: Date.now(),
+              dataUrl: fotoCarimbadaBase64,
+              dataHora,
+              lat: latStr,
+              lng: lngStr
             });
-            if (imgX !== 14) y += 35;
-        }
-        y += 8;
-    });
-    
-    doc.save(`relatorio-drtrack-${inicio}-a-${fim}.pdf`);
-    alert('✅ PDF gerado com sucesso com imagens!');
-}
+            renderizarGaleriaFotosApoio();
+          }
 
-function enviarRelatorioWhatsApp() {
-    alert('📤 Use o PDF gerado acima para enviar pelo WhatsApp.');
-}
-
-function inicializarMapaAdmin() {
-    if (mapaAdmin) return;
-    mapaAdmin = L.map('mapa-admin').setView([-23.5505, -46.6333], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaAdmin);
-}
-
-function atualizarMarcadoresApoios() {
-    if (!mapaAdmin) return;
-    cadastrosApoio.forEach(a => {
-        if (a.ultimaLat && a.ultimaLng && a.aprovado) {
-            if (!marcadoresApoios[a.telefone]) {
-                marcadoresApoios[a.telefone] = L.marker([a.ultimaLat, a.ultimaLng], {
-                    icon: L.divIcon({html:a.veiculo ? a.veiculo.split(' ')[0] : '🛵', className:'', iconSize:[30,30]})
-                }).addTo(mapaAdmin).bindPopup(`<b>${a.nome}</b><br>${a.telefone}`);
-            } else {
-                marcadoresApoios[a.telefone].setLatLng([a.ultimaLat, a.ultimaLng]);
-            }
-        }
-    });
-}
-
-// ====================================== APOIO - CADASTRO E LOGIN
-function cadastrarApoio() {
-    const dados = {
-        nome: document.getElementById('cad-nome').value.trim(),
-        cpf: document.getElementById('cad-cpf').value.trim(),
-        telefone: document.getElementById('cad-tel').value.trim(),
-        pix: document.getElementById('cad-pix').value.trim(),
-        veiculo: document.getElementById('cad-veiculo').value,
-        placa: document.getElementById('cad-placa').value.trim(),
-        senha: document.getElementById('cad-senha').value,
-        regiao: '',
-        aprovado: false,
-        dataCadastro: new Date().toLocaleDateString('pt-BR'),
-        ultimaLat: null,
-        ultimaLng: null
-    };
-    
-    if (!dados.nome || !dados.cpf || !dados.telefone || !dados.pix || !dados.placa || dados.senha.length < 6) {
-        alert('Preencha TODOS os campos! Senha com mínimo 6 dígitos.');
-        return;
-    }
-    
-    const existe = cadastrosApoio.find(a => a.telefone === dados.telefone);
-    if (existe) { alert('Esse telefone já está cadastrado!'); return; }
-    
-    cadastrosApoio.push(dados);
-    salvarDados();
-    alert('✅ Cadastro enviado! Aguarde aprovação do administrador.');
-    mostrarTela('tela-apoio-aguardando');
-}
-
-function entrarApoio() {
-    const tel = document.getElementById('apoio-tel').value.trim();
-    const senha = document.getElementById('apoio-senha').value;
-    
-    const apoio = cadastrosApoio.find(a => a.telefone === tel && a.senha === senha);
-    
-    if (!apoio) { alert('Telefone ou senha incorretos!'); return; }
-    
-    usuarioAtual = apoio;
-    
-    if (!apoio.aprovado) {
-        mostrarTela('tela-apoio-aguardando');
-    } else {
-        mostrarTela('tela-apoio-localizacao');
-    }
-}
-
-function verificarStatus() {
-    const apoio = cadastrosApoio.find(a => a.telefone === usuarioAtual?.telefone);
-    if (apoio?.aprovado) {
-        usuarioAtual = apoio;
-        mostrarTela('tela-apoio-localizacao');
-    } else {
-        alert('Ainda não aprovado. Aguarde!');
-    }
-}
-
-// ====================================== LOCALIZAÇÃO
-function ativarLocalizacao() {
-    if (!navigator.geolocation) {
-        alert('Geolocalização não suportada no aparelho.');
-        return;
-    }
-    
-    watchId = navigator.geolocation.watchPosition(
-        pos => {
-            localizacaoAtiva = true;
-            if (usuarioAtual) {
-                usuarioAtual.ultimaLat = pos.coords.latitude;
-                usuarioAtual.ultimaLng = pos.coords.longitude;
-                const idx = cadastrosApoio.findIndex(a => a.telefone === usuarioAtual.telefone);
-                if (idx !== -1) {
-                    cadastrosApoio[idx].ultimaLat = pos.coords.latitude;
-                    cadastrosApoio[idx].ultimaLng = pos.coords.longitude;
-                }
-                salvarDados();
-            }
-            
-            document.getElementById('status-localizacao').innerHTML = '✅ Localização Ativa';
-            document.getElementById('status-localizacao').classList.remove('local-inativo');
-            document.getElementById('status-localizacao').classList.add('local-ativo');
-            document.getElementById('status-local-apoio').innerHTML = '✅ Localização Ativa';
-            
-            mostrarTela('tela-apoio-principal');
-            inicializarMapaApoio(pos.coords.latitude, pos.coords.longitude);
-            verificarOcorrenciasPendentes();
-        },
-        erro => {
-            alert('Não foi possível acessar sua localização. Verifique as permissões.');
-        },
-        {enableHighAccuracy: true, maximumAge: 10000, timeout: 5000}
-    );
-}
-
-function pararLocalizacao() {
-    if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-    }
-    localizacaoAtiva = false;
-    document.getElementById('status-localizacao').innerHTML = '❌ Localização Pausada';
-    document.getElementById('status-localizacao').classList.remove('local-ativo');
-    document.getElementById('status-localizacao').classList.add('local-inativo');
-    mostrarTela('tela-apoio-localizacao');
-}
-
-function pararLocalizacaoESair() {
-    pararLocalizacao();
-    sair();
-}
-
-// ====================================== MAPA E OCORRÊNCIAS DO APOIO
-function inicializarMapaApoio(lat, lng) {
-    if (!mapaApoio) {
-        mapaApoio = L.map('mapa-apoio').setView([lat, lng], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaApoio);
-        L.marker([lat, lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaApoio).bindPopup('Sua localização');
-    } else {
-        mapaApoio.setView([lat, lng], 14);
-    }
-    mapaApoio.invalidateSize();
-}
-
-function verificarOcorrenciasPendentes() {
-    if (!localizacaoAtiva) return;
-    
-    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente');
-    const div = document.getElementById('lista-ocorrencias-apoio');
-    
-    if (!pendentes.length) {
-        div.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:20px;">Nenhuma ocorrência disponível no momento.</p>';
-        return;
-    }
-    
-    tocarAlerta();
-    
-    div.innerHTML = pendentes.map(o => `
-        <div class="ocorrencia piscando">
-            <p><strong>📍 ${o.endereco}</strong></p>
-            <p>Tipo: ${o.tipo}</p>
-            <p>Valor: R$ ${o.valor.toFixed(2)}</p>
-            <div class="botoes">
-                <button class="btn btn-verde" style="flex:1;" onclick="aceitarServico(${o.id})">✅ Aceitar</button>
-                <button class="btn btn-vermelho" style="flex:1;" onclick="recusarServico(${o.id})">❌ Recusar</button>
-            </div>
-        </div>
-    `).join('');
-    
-    marcadoresApoioMapa.forEach(m => mapaApoio.removeLayer(m));
-    marcadoresApoioMapa = [];
-
-    pendentes.forEach(o => {
-        if (o.lat && o.lng && mapaApoio) {
-            let m = L.marker([o.lat, o.lng], {
-                icon: L.divIcon({html:'🚨', className:'', iconSize:[30,30]})
-            }).addTo(mapaApoio).bindPopup(`${o.endereco}<br>${o.tipo}`);
-            marcadoresApoioMapa.push(m);
-        }
-    });
-}
-
-function recusarServico(id) {
-    alert('Ocorrência recusada. Continuando em monitoramento...');
-    verificarOcorrenciasPendentes();
-}
-
-// ACEITAR SERVIÇO
-function aceitarServico(id) {
-    if (!confirm('Confirmar aceite do serviço?')) return;
-    
-    const ocorr = listaOcorrencias.find(o => o.id === id);
-    if (!ocorr || ocorr.status !== 'pendente') {
-        alert('Serviço já foi aceito por outro!');
-        verificarOcorrenciasPendentes();
-        return;
-    }
-    
-    ocorr.status = 'aceita';
-    ocorr.aceitoPor = usuarioAtual;
-    servicoAceito = ocorr;
-    mensagens[ocorr.id] = mensagens[ocorr.id] || [];
-    salvarDados();
-    
-    // Preencher dados na tela
-    document.getElementById('atvs-endereco').textContent = ocorr.endereco;
-    document.getElementById('atvs-tipo').textContent = ocorr.tipo;
-    document.getElementById('atvs-valor').textContent = ocorr.valor.toFixed(2);
-    fotosEnviadas = [];
-    document.getElementById('preview-fotos').innerHTML = '';
-    document.getElementById('qtd-fotos').textContent = '0 / 5 fotos mínimas';
-    
-    mostrarTela('tela-atendimento');
-    carregarChatApoio();
-}
-
-// CHAT — APOIO
-function carregarChatApoio() {
-    if (!servicoAceito) return;
-    const caixa = document.getElementById('caixa-chat');
-    const msgs = mensagens[servicoAceito.id] || [];
-    caixa.innerHTML = msgs.map(m => `
-        <div class="msg ${m.de === 'apoio' ? 'msg-apoio' : 'msg-admin'}">
-            ${m.texto}
-            <div class="msg-horario">${m.hora}</div>
-        </div>
-    `).join('');
-    caixa.scrollTop = caixa.scrollHeight;
-}
-
-function enviarMensagemChat() {
-    const input = document.getElementById('msg-chat');
-    const texto = input.value.trim();
-    if (!texto || !servicoAceito) return;
-    
-    if (!mensagens[servicoAceito.id]) mensagens[servicoAceito.id] = [];
-    mensagens[servicoAceito.id].push({
-        de: 'apoio',
-        texto: texto,
-        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
-    });
-    salvarDados();
-    input.value = '';
-    carregarChatApoio();
-}
-
-// PROCESSAR FOTOS E APLICAR CARIMBO DE LAT/LNG
-function processarFotos(input) {
-    const arquivos = input.files;
-    if (!arquivos.length) return;
-
-    for (let i = 0; i < arquivos.length; i++) {
-        const leitor = new FileReader();
-        leitor.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                
-                // Desenhar Imagem no Canvas
-                ctx.drawImage(img, 0, 0);
-
-                // Configurar Estilo da Marca d'Água (Carimbo GPS)
-                const latStr = usuarioAtual?.ultimaLat ? usuarioAtual.ultimaLat.toFixed(6) : 'N/A';
-                const lngStr = usuarioAtual?.ultimaLng ? usuarioAtual.ultimaLng.toFixed(6) : 'N/A';
-                const dataStr = new Date().toLocaleString('pt-BR');
-                const textoGps = `📍 LAT: ${latStr} | LNG: ${lngStr} - ${dataStr}`;
-
-                const fontSize = Math.max(16, Math.floor(canvas.width / 30));
-                ctx.font = `bold ${fontSize}px sans-serif`;
-
-                // Fundo Escuro para Leitura
-                const textWidth = ctx.measureText(textoGps).width;
-                ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
-                ctx.fillRect(10, canvas.height - fontSize - 20, textWidth + 20, fontSize + 12);
-
-                // Texto Branco do Carimbo
-                ctx.fillStyle = "#ffffff";
-                ctx.fillText(textoGps, 20, canvas.height - 15);
-
-                // Converter Imagem com Carimbo para Base64
-                const imagemCarimbada = canvas.toDataURL('image/jpeg', 0.85);
-                fotosEnviadas.push(imagemCarimbada);
-                atualizarPreview();
-            };
-            img.src = e.target.result;
+          input.value = ''; // Reset input
         };
-        leitor.readAsDataURL(arquivos[i]);
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
     }
-}
 
-function atualizarPreview() {
-    const div = document.getElementById('preview-fotos');
-    div.innerHTML = fotosEnviadas.map((f, i) => `
-        <div class="foto-container">
-            <img src="${f}" alt="Foto ${i+1}">
-            <a href="${f}" download="foto_apoio_${i+1}.jpg" class="btn-download-foto">📥 Baixar Foto</a>
+    function renderizarGaleriaFotosApoio() {
+      if (!ocorrenciaAtivaApoio) return;
+
+      const grid = document.getElementById('grid-fotos-apoio');
+      const contador = document.getElementById('contador-fotos');
+      const total = ocorrenciaAtivaApoio.fotos.length;
+
+      contador.innerText = `Fotos Anexadas: ${total} / 5`;
+      if (total >= 5) {
+        contador.classList.remove('text-blue-600');
+        contador.classList.add('text-green-600');
+      } else {
+        contador.classList.remove('text-green-600');
+        contador.classList.add('text-blue-600');
+      }
+
+      grid.innerHTML = '';
+      if (total === 0) {
+        grid.innerHTML = `
+          <div id="placeholder-fotos" class="col-span-full text-center py-8 text-slate-400 text-xs italic">
+            Nenhuma foto capturada até o momento.
+          </div>`;
+        return;
+      }
+
+      // GRADE 2 EM 2 EMPILHADAS (grid-cols-2)
+      ocorrenciaAtivaApoio.fotos.forEach((foto, idx) => {
+        const div = document.createElement('div');
+        div.className = "bg-slate-50 border border-slate-200 rounded-lg p-2 flex flex-col space-y-2 shadow-sm";
+        div.innerHTML = `
+          <div class="relative overflow-hidden rounded border bg-black flex items-center justify-center">
+            <img src="${foto.dataUrl}" alt="Foto ${idx + 1}" class="w-full h-48 object-cover">
+            <span class="absolute top-1 left-1 bg-slate-900/80 text-white text-[10px] px-1.5 py-0.5 rounded font-bold">#${idx + 1}</span>
+          </div>
+          <div class="flex justify-between items-center text-[10px] text-slate-500">
+            <span>GPS: ${foto.lat}, ${foto.lng}</span>
+            <span>${foto.dataHora}</span>
+          </div>
+          <div class="flex gap-2">
+            <a href="${foto.dataUrl}" download="Foto_Ocorrencia_${foto.id}.jpg" class="flex-grow text-center bg-blue-600 hover:bg-blue-700 text-white text-[11px] py-1 rounded font-bold transition">
+              <i class="fa-solid fa-download"></i> Baixar Foto
+            </a>
+            <button onclick="removerFoto(${foto.id})" class="bg-red-100 hover:bg-red-200 text-red-700 text-[11px] px-2 py-1 rounded font-bold">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    function removerFoto(idFoto) {
+      if (!ocorrenciaAtivaApoio) return;
+      ocorrenciaAtivaApoio.fotos = ocorrenciaAtivaApoio.fotos.filter(f => f.id !== idFoto);
+      renderizarGaleriaFotosApoio();
+    }
+
+    /* ===================================================
+       MÓDULO CHAT EM TEMPO REAL (APOIO ↔ CENTRAL)
+    =================================================== */
+    function enviarMensagemChat(remetente) {
+      let texto = "";
+      let ocTarget = null;
+
+      if (remetente === 'Apoio') {
+        texto = document.getElementById('input-chat-apoio').value.trim();
+        ocTarget = ocorrenciaAtivaApoio;
+      } else {
+        texto = document.getElementById('input-chat-admin').value.trim();
+        ocTarget = ocorrenciaSelecionadaAdmin;
+      }
+
+      if (!texto || !ocTarget) return;
+
+      const novaMsg = {
+        remetente: remetente === 'Apoio' ? apoioLogado : 'Central Admin',
+        tipo: remetente, // 'Apoio' ou 'Central'
+        texto,
+        horario: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      ocTarget.chat.push(novaMsg);
+
+      if (remetente === 'Apoio') {
+        document.getElementById('input-chat-apoio').value = '';
+        renderizarChat('apoio');
+        if (ocorrenciaSelecionadaAdmin && ocorrenciaSelecionadaAdmin.id === ocTarget.id) renderizarChat('admin');
+      } else {
+        document.getElementById('input-chat-admin').value = '';
+        renderizarChat('admin');
+        if (ocorrenciaAtivaApoio && ocorrenciaAtivaApoio.id === ocTarget.id) renderizarChat('apoio');
+      }
+    }
+
+    function renderizarChat(contexto) {
+      const oc = contexto === 'apoio' ? ocorrenciaAtivaApoio : ocorrenciaSelecionadaAdmin;
+      const containerId = contexto === 'apoio' ? 'chat-mensagens-apoio' : 'chat-mensagens-admin';
+      const container = document.getElementById(containerId);
+
+      if (!container || !oc) return;
+      container.innerHTML = '';
+
+      if (oc.chat.length === 0) {
+        container.innerHTML = `<p class="text-[11px] text-slate-400 italic text-center py-4">Nenhuma mensagem trocada ainda.</p>`;
+        return;
+      }
+
+      oc.chat.forEach(msg => {
+        const div = document.createElement('div');
+        const ehEu = (contexto === 'apoio' && msg.tipo === 'Apoio') || (contexto === 'admin' && msg.tipo === 'Central');
+
+        div.className = `flex flex-col ${ehEu ? 'items-end' : 'items-start'}`;
+        div.innerHTML = `
+          <div class="max-w-[80%] rounded-lg p-2 text-xs ${ehEu ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-800'}">
+            <span class="block text-[9px] font-bold opacity-75">${msg.remetente} • ${msg.horario}</span>
+            <span>${msg.texto}</span>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    /* ===================================================
+       MÓDULO GERAÇÃO DE RELATÓRIO PDF (html2pdf.js)
+    =================================================== */
+    function gerarRelatorioPDF() {
+      if (!ocorrenciaAtivaApoio) return;
+
+      const oc = ocorrenciaAtivaApoio;
+      const pdfContainer = document.getElementById('pdf-template');
+
+      // Montar Estrutura HTML do PDF com Fotos em Par (Grade)
+      let fotosHTML = '';
+      if (oc.fotos.length > 0) {
+        fotosHTML = `
+          <div style="margin-top:20px;">
+            <h3 style="font-size:14px; font-weight:bold; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:12px;">REGISTRO FOTOGRÁFICO COM GEOLOCALIZAÇÃO</h3>
+            <div style="display:flex; flex-wrap:wrap; gap:10px;">
+        `;
+
+        oc.fotos.forEach((foto, index) => {
+          fotosHTML += `
+            <div style="width: 48%; border:1px solid #ddd; padding:4px; box-sizing:border-box; margin-bottom:10px; page-break-inside: avoid;">
+              <img src="${foto.dataUrl}" style="width:100%; height:180px; object-fit:cover;">
+              <p style="font-size:9px; color:#555; margin-top:4px;"><strong>Foto #${index+1}</strong> - GPS: ${foto.lat}, ${foto.lng}</p>
+              <p style="font-size:9px; color:#555;">Data/Hora: ${foto.dataHora}</p>
+            </div>
+          `;
+        });
+
+        fotosHTML += `</div></div>`;
+      }
+
+      pdfContainer.innerHTML = `
+        <div style="font-family: Arial, sans-serif; padding:20px; color:#1e293b;">
+          <div style="text-align:center; border-bottom:2px solid #2563eb; padding-bottom:10px; margin-bottom:20px;">
+            <h1 style="font-size:18px; font-weight:bold; color:#1e293b; margin:0;">RELATÓRIO DE ATENDIMENTO DE OCORRÊNCIA</h1>
+            <p style="font-size:11px; color:#64748b; margin:4px 0 0 0;">Sistema Integrado de Monitoramento & Apoio Tático</p>
+          </div>
+
+          <table style="width:100%; font-size:11px; margin-bottom:20px; border-collapse:collapse;">
+            <tr>
+              <td style="padding:6px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>CÓDIGO OCORRÊNCIA:</strong></td>
+              <td style="padding:6px; border:1px solid #cbd5e1;">${oc.id}</td>
+              <td style="padding:6px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>STATUS:</strong></td>
+              <td style="padding:6px; border:1px solid #cbd5e1;">${oc.status}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>CLIENTE / LOCAL:</strong></td>
+              <td style="padding:6px; border:1px solid #cbd5e1;">${oc.cliente}</td>
+              <td style="padding:6px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>APOIO DESIGNADO:</strong></td>
+              <td style="padding:6px; border:1px solid #cbd5e1;">${oc.apoio || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px; border:1px solid #cbd5e1; background:#f8fafc;"><strong>ENDEREÇO:</strong></td>
+              <td colspan="3" style="padding:6px; border:1px solid #cbd5e1;">${oc.endereco}</td>
+            </tr>
+          </table>
+
+          <div style="margin-bottom:20px;">
+            <h3 style="font-size:13px; font-weight:bold; border-bottom:1px solid #ccc; padding-bottom:4px; margin-bottom:8px;">DESCRIÇÃO DOS FATOS (RELATÓRIO DO APOIO)</h3>
+            <p style="font-size:11px; text-align:justify; line-height:1.5; background:#f8fafc; padding:10px; border:1px solid #e2e8f0; rounded:4px;">
+              ${document.getElementById('texto-relatorio-apoio').value || 'Nenhum detalhe informado no relatório verbal.'}
+            </p>
+          </div>
+
+          ${fotosHTML}
+
+          <div style="margin-top:30px; text-align:right; font-size:10px; color:#94a3b8; border-top:1px solid #eee; padding-top:10px;">
+            Documento gerado automaticamente pelo App de Apoio em ${new Date().toLocaleString('pt-BR')}
+          </div>
         </div>
-    `).join('');
-    document.getElementById('qtd-fotos').textContent = `${fotosEnviadas.length} / 5 fotos mínimas`;
-}
+      `;
 
-// PAUSAR / CANCELAR / FINALIZAR
-function pausarAtendimento() {
-    if (!confirm('Pausar este atendimento? Você pode retomar depois.')) return;
-    alert('⏸️ Atendimento pausado.');
-}
+      pdfContainer.classList.remove('hidden');
 
-function cancelarAtendimento() {
-    if (!confirm('Cancelar este atendimento?')) return;
-    if (servicoAceito) {
-        servicoAceito.status = 'pendente';
-        servicoAceito.aceitoPor = null;
-        salvarDados();
+      const opt = {
+        margin:       10,
+        filename:     `Relatorio_Ocorrencia_${oc.id}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(pdfContainer).save().then(() => {
+        pdfContainer.classList.add('hidden');
+      });
     }
-    servicoAceito = null;
-    fotosEnviadas = [];
-    mostrarTela('tela-apoio-principal');
-    verificarOcorrenciasPendentes();
-}
-
-function finalizarAtendimento() {
-    if (fotosEnviadas.length < 5) {
-        alert(`Envie no mínimo 5 fotos! Você enviou ${fotosEnviadas.length}`);
-        return;
-    }
-    
-    if (!document.getElementById('relatorio').value.trim()) {
-        alert('Preencha o relatório!');
-        return;
-    }
-    
-    servicoAceito.status = 'concluida';
-    servicoAceito.fotos = fotosEnviadas;
-    servicoAceito.relatorio = document.getElementById('relatorio').value;
-    servicoAceito.dataConclusao = new Date().toLocaleString('pt-BR');
-    salvarDados();
-    
-    // Mensagem WhatsApp para a Central
-    const msg = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
-
-📍 Endereço: ${servicoAceito.endereco}
-🏘️ Região: ${servicoAceito.regiao || '—'}
-👤 Apoio: ${usuarioAtual.nome}
-📱 Tel: ${usuarioAtual.telefone}
-💳 CPF: ${usuarioAtual.cpf || '—'}
-🚗 Veículo: ${usuarioAtual.veiculo} — ${usuarioAtual.placa}
-💰 Valor: R$ ${servicoAceito.valor.toFixed(2)}
-💵 PIX: ${usuarioAtual.pix}
-
-📝 RELATÓRIO DO OCORRIDO:
-${servicoAceito.relatorio}
-
-📸 Fotos Anexadas (com GPS): ${fotosEnviadas.length} arquivos enviados
-
-✅ Concluído em: ${servicoAceito.dataConclusao}`;
-    
-    window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`, '_blank');
-    
-    alert('✅ Atendimento finalizado! Relatório enviado pelo WhatsApp.');
-    servicoAceito = null;
-    fotosEnviadas = [];
-    mostrarTela('tela-apoio-principal');
-    verificarOcorrenciasPendentes();
-}
-
-function sair() {
-    if (watchId) {
-        navigator.geolocation.clearWatch(watchId);
-        watchId = null;
-    }
-    usuarioAtual = null;
-    servicoAceito = null;
-    fotosEnviadas = [];
-    localizacaoAtiva = false;
-    mostrarTela('tela-inicio');
-}
-
-// Atualização automática a cada 15 segundos
-setInterval(() => {
-    if (usuarioAtual && usuarioAtual.aprovado && localizacaoAtiva) {
-        verificarOcorrenciasPendentes();
-    }
-}, 15000);
-
-// Inicialização
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ DRTRACK Conecta — Sistema Carregado!');
-});
-</script>
+  </script>
 </body>
 </html>

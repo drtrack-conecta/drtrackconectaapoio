@@ -238,11 +238,6 @@
             
             <button class="btn-verde" onclick="enviarComprovante()">📤 Enviar Comprovante</button>
             <p id="msg-comprovante" class="msg"></p>
-            
-            <div id="area-download" class="oculto">
-                <h4 style="margin-top:20px;">⬇️ Baixar fotos com dados embutidos</h4>
-                <div id="botoes-download"></div>
-            </div>
         </div>
 
         <div class="caixa">
@@ -272,7 +267,7 @@
     <div class="linha" style="margin-bottom:15px;">
         <button class="btn-verde" onclick="mostrarAba('aba-lancar')">📤 Lançar Ocorrência</button>
         <button class="btn-azul" onclick="mostrarAba('aba-apoiadores')">👥 Apoiadores</button>
-        <button class="btn-amarelo" onclick="mostrarAba('aba-relatorios')">📊 Relatórios e Dashboard</button>
+        <button class="btn-amarelo" onclick="mostrarAba('aba-relatorios')">📊 Relatórios</button>
     </div>
 
     <div id="aba-lancar" class="caixa aba-conteudo">
@@ -348,7 +343,7 @@
             <label><input type="checkbox" id="chk-fotos-qtd" checked onchange="atualizarRelatorio()"> Qtd. Fotos Enviadas</label>
         </div>
 
-        <button class="btn-azul" onclick="window.print()" style="margin-bottom:15px;">🖨️ Imprimir / Salvar PDF do Relatório</button>
+        <button class="btn-azul" onclick="window.print()" style="margin-bottom:15px;">🖨️ Imprimir / Salvar PDF</button>
 
         <div id="resumo-valores" style="margin:15px 0; font-size:16px;"></div>
         <div id="lista-ocorrencias-admin"></div>
@@ -362,12 +357,8 @@
 const SUPABASE_URL = "https://SEU-PROJETO.supabase.co";
 const SUPABASE_ANON_KEY = "SUA-CHAVE-ANON-PUBLIC";
 let supabase = null;
-if (!SUPABASE_URL.includes("SEU-PROJETO") && !SUPABASE_ANON_KEY.includes("SUA-CHAVE")) {
-    try {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } catch(e) {
-        supabase = null;
-    }
+if (!SUPABASE_URL.includes("SEU-PROJETO")) {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
 // ====================================== DADOS GLOBAIS
@@ -441,22 +432,14 @@ async function enviarCadastro() {
         msg.className = 'msg erro'; msg.textContent = '⚠️ Preencha TODOS os campos e envie o documento!'; return;
     }
 
-    let docUrl = "doc_simulado.jpg";
-
-    if (supabase) {
-        msg.className = 'msg aviso'; msg.textContent = 'Enviando documento...';
-        const fileExt = docFile.name.split('.').pop();
-        const fileName = `${telefone}_doc.${fileExt}`;
-        const { data, error } = await supabase.storage.from('documentos').upload(fileName, docFile);
-        if (!error && data) {
-            docUrl = data.path;
-        }
+    if (senha.length < 6) {
+        msg.className = 'msg erro'; msg.textContent = '⚠️ Senha precisa ter no mínimo 6 caracteres!'; return;
     }
 
     const novo = {
         id: Date.now(),
         nome, email, telefone, placa, regiao, veiculo, pix,
-        documentoUrl: docUrl,
+        documentoUrl: "doc_enviado",
         senha: btoa(senha),
         aprovado: false,
         dataCadastro: new Date().toLocaleString('pt-BR'),
@@ -465,15 +448,10 @@ async function enviarCadastro() {
 
     cadastrosApoio.push(novo);
     salvarDados();
-    notificarAdministrador(novo);
     
     msg.className = 'msg sucesso';
-    msg.textContent = '✅ Cadastro enviado! Documento em verificação pelo Administrador.';
+    msg.textContent = '✅ Cadastro enviado! Documento em verificação.';
     setTimeout(() => irParaLoginApoio(), 2500);
-}
-
-function notificarAdministrador(usuario) {
-    console.log(`🔔 NOTIFICAÇÃO ADMIN: Novo apoio cadastrado (${usuario.nome}). Documento enviado.`);
 }
 
 // ====================================== LOGIN
@@ -547,7 +525,6 @@ function listarApoiadores() {
             <p style="font-size:13px;">📧 ${c.email} | 📱 ${c.telefone}</p>
             <p style="font-size:13px;">🚗 ${c.placa} | 📍 ${c.regiao} | ${c.veiculo}</p>
             <p style="font-size:13px;">💳 PIX: ${c.pix}</p>
-            <p style="font-size:13px;">📄 Documento: ${c.documentoUrl !== 'doc_simulado.jpg' ? `<a href="${c.documentoUrl}" target="_blank" style="color:#facc15;">Ver Documento</a>` : 'Aguardando envio'}</p>
             <p style="margin-top:8px;">
                 ${c.aprovado 
                     ? '<span class="etiqueta et-aprovado">✅ APROVADO</span>'
@@ -617,7 +594,7 @@ function lancarOcorrencia() {
     salvarDados();
     
     msg.className = 'msg sucesso';
-    msg.textContent = '✅ Ocorrência lançada para a região!';
+    msg.textContent = '✅ Ocorrência lançada!';
     
     document.getElementById('ocor-endereco').value = '';
     document.getElementById('ocor-lat').value = '';
@@ -728,10 +705,12 @@ function carregarChamados() {
     inicializarMapa();
     mapa.eachLayer(l => { if (l instanceof L.Marker) mapa.removeLayer(l); });
     
-    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente' && o.lat && o.lng);
+    const pendentes = listaOcorrencias.filter(o => o.status === 'pendente');
     pendentes.forEach(o => {
-        L.marker([parseFloat(o.lat), parseFloat(o.lng)]).addTo(mapa)
-            .bindPopup(`<b>${o.endereco}</b><br>R$ ${o.valor.toFixed(2)}`);
+        if (o.lat && o.lng) {
+            L.marker([parseFloat(o.lat), parseFloat(o.lng)]).addTo(mapa)
+                .bindPopup(`<b>${o.endereco}</b><br>R$ ${o.valor.toFixed(2)}`);
+        }
     });
     
     const lista = document.getElementById('lista-chamados');
@@ -781,7 +760,7 @@ function enviarComprovante() {
     salvarDados();
     
     document.getElementById('msg-comprovante').className = 'msg sucesso';
-    document.getElementById('msg-comprovante').textContent = '✅ Comprovante enviado com sucesso!';
+    document.getElementById('msg-comprovante').textContent = '✅ Comprovante enviado!';
     carregarChamados(); carregarMeusAtendimentos();
 }
 
@@ -849,8 +828,7 @@ function atualizarRelatorio() {
             const partes = o.data.split('/');
             return parseInt(partes[0]) >= 16 && parseInt(partes[1]) === mesAtual;
         });
-    } else if (filtro === 'mes_at
-ual') {
+    } else if (filtro === 'mes_atual') {
         filtrado = listaOcorrencias.filter(o => parseInt(o.data.split('/')[1]) === mesAtual);
     }
 
@@ -867,10 +845,11 @@ ual') {
 
     document.getElementById('resumo-valores').innerHTML = `
         <div class="caixa" style="background:#1e293b; padding:15px;">
-            ${exValores ? `<p>💰 <strong>Valor Total das Ocorrências:</strong> R$ ${totalGeral.toFixed(2)}</p>` : ''}
-            ${exComissao ? `<p>📊 <strong>Comissão Retida DRTRACK (8%):</strong> R$ ${totalComissao.toFixed(2)}</p>` : ''}
-            ${exValores && exComissao ? `<p>💵 <strong>Valor Líquido Repassado:</strong> R$ ${liquido.toFixed(2)}</p>` : ''}
-            <p style="margin-top:5px; font-size:13px; color:#94a3b8;">Total de Registros: ${filtrado.length}</p>
+            ${exValores ? `<p>💰 <strong>Valor Total:</strong> R$ ${totalGeral.toFixed(2)}</p>` : ''}
+            ${exComissao ? `<p>📊 <strong>Comissão 8%:</strong> R$ ${totalComissao.toFixed(2)}</p>` : ''}
+            ${exValores && exComissao ? `<p>💵 <strong>Líquido:</strong> R$ ${liquido.toFixed(2)}</p>` : ''}
+            <p style="margin-top:5px; font-size:13px; color:#94a3b8
+            ; color:#94a3b8;">Total de Registros: ${filtrado.length}</p>
         </div>
     `;
 

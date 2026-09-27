@@ -25,7 +25,6 @@
         input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 8px; background: #334155; color: white; font-size: 15px; }
         label { display: block; margin-top: 12px; font-weight: 500; }
         .ocorrencia { border-left: 4px solid var(--amarelo); padding: 15px; margin: 10px 0; background: #1e293b; border-radius: 0 10px 10px 0; cursor: pointer; }
-        .ocorrencia-concluida { border-left-color: var(--verde); }
         .piscando { animation: piscar 0.8s infinite; }
         @keyframes piscar { 0%,100% {opacity:1;} 50% {opacity:0.4;} }
         .escondido { display: none !important; }
@@ -38,9 +37,6 @@
         .foto-container { background: #0f172a; padding: 6px; border-radius: 8px; border: 1px solid #334155; }
         .grid-fotos img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; }
         .detalhes { margin-top: 10px; padding: 10px; background: #0f172a; border-radius: 8px; font-size: 14px; line-height: 1.6; }
-        .status-pendente { color: var(--amarelo); }
-        .status-andamento { color: var(--azul); }
-        .status-concluida { color: var(--verde); }
     </style>
 </head>
 <body>
@@ -86,16 +82,16 @@
             <option>Recuperação de Veículo</option>
             <option>Outro</option>
         </select>
-        <input type="text" id="tipo-outro" class="escondido" placeholder="Especifique o tipo de serviço">
+        <input type="text" id="tipo-outro" class="escondido" placeholder="Especifique...">
         <label>Valor R$:</label>
         <input type="number" id="valor" step="0.01" placeholder="0,00">
         <label>Observações:</label>
-        <textarea id="obs" rows="2" placeholder="Informações adicionais..."></textarea>
-        <button class="btn btn-azul" onclick="lancar()">📢 Lançar Ocorrência</button>
+        <textarea id="obs" rows="2" placeholder="Detalhes..."></textarea>
+        <button class="btn btn-azul" onclick="lancar()">📢 Lançar</button>
     </div>
 
     <div class="card">
-        <h3>📋 Controle de Ocorrências</h3>
+        <h3>📋 Ocorrências</h3>
         <div class="botoes">
             <button class="btn btn-cinza" onclick="filtrar('todas')">Todas</button>
             <button class="btn btn-amarelo" onclick="filtrar('pendentes')">Pendentes</button>
@@ -109,13 +105,13 @@
         <h3>📄 Relatório Completo</h3>
         <div id="conteudo-detalhes" class="detalhes"></div>
         <div class="botoes">
-            <button class="btn btn-verde" onclick="enviarRelatorio()">📲 Enviar pelo WhatsApp</button>
+            <button class="btn btn-verde" onclick="enviarRelatorioWhatsApp()">📲 Enviar pelo WhatsApp</button>
             <button class="btn btn-cinza" onclick="fecharDetalhes()">← Voltar</button>
         </div>
     </div>
 
     <div class="card">
-        <h3>👥 Apoios Cadastrados (<span id="qtd-apoios">0</span>)</h3>
+        <h3>👥 Apoios (<span id="qtd-apoios">0</span>)</h3>
         <div id="lista-apoios"></div>
     </div>
 
@@ -138,50 +134,47 @@
 
 <!-- CADASTRO APOIO -->
 <div id="cadastro" class="tela">
-    <h2>📝 Cadastro do Apoio</h2>
+    <h2>📝 Cadastro</h2>
     <div class="card">
         <label>Nome Completo:</label>
         <input type="text" id="c-nome">
         <label>CPF:</label>
         <input type="text" id="c-cpf" placeholder="000.000.000-00">
-        <label>Telefone com WhatsApp:</label>
+        <label>Telefone:</label>
         <input type="tel" id="c-tel">
         <label>E-mail:</label>
         <input type="email" id="c-email">
-        <label>Tipo de Veículo:</label>
+        <label>Veículo:</label>
         <select id="c-veiculo">
             <option>🛵 Motocicleta</option>
             <option>🚗 Carro</option>
             <option>🚲 Bicicleta</option>
         </select>
-        <label>Placa do Veículo:</label>
+        <label>Placa:</label>
         <input type="text" id="c-placa" placeholder="ABC-1234">
-        <label>Chave PIX:</label>
+        <label>PIX:</label>
         <input type="text" id="c-pix">
-        <label>Senha (mínimo 6 dígitos):</label>
+        <label>Senha (6+ dígitos):</label>
         <input type="password" id="c-senha">
-        <button class="btn btn-verde" onclick="salvarCadastro()">Enviar Cadastro</button>
+        <button class="btn btn-verde" onclick="salvarCadastro()">Enviar</button>
         <p class="link" onclick="mostrar('login-apoio')">← Voltar</p>
     </div>
 </div>
 
 <!-- AGUARDANDO APROVAÇÃO -->
 <div id="aguardando" class="tela">
-    <h2>⏳ Aguardando Liberação</h2>
-    <div class="aviso">
-        Seu cadastro foi recebido!<br>
-        Aguarde o administrador aprovar seu acesso.
-    </div>
-    <button class="btn btn-verde" onclick="verificar()">🔄 Verificar Status</button>
+    <h2>⏳ Aguardando</h2>
+    <div class="aviso">Cadastro recebido! Aguarde o administrador aprovar.</div>
+    <button class="btn btn-verde" onclick="verificar()">🔄 Verificar</button>
     <button class="btn btn-cinza" onclick="sair()">🚪 Sair</button>
 </div>
 
 <!-- ATIVAR LOCALIZAÇÃO -->
 <div id="localizacao" class="tela">
-    <h2>📍 Ativar Localização</h2>
+    <h2>📍 Localização</h2>
     <div class="card">
-        <p style="margin-bottom:15px;">Precisamos da sua localização para mostrar ocorrências próximas.</p>
-        <button class="btn btn-verde" onclick="ativarGPS()">📍 Ativar Localização</button>
+        <p>Ative sua localização para ver ocorrências próximas.</p>
+        <button class="btn btn-verde" onclick="ativarGPS()">📍 Ativar</button>
     </div>
 </div>
 
@@ -193,11 +186,12 @@
     <button class="btn btn-cinza" onclick="sair()">🚪 Sair</button>
 </div>
 
-<!-- TELA DE ATENDIMENTO / PRESTAR CONTAS -->
+<!-- TELA DE PRESTAÇÃO DE CONTAS -- AQUI APARECE TUDO -->
 <div id="atendimento" class="tela">
-    <h2>✅ Atendimento — Prestar Contas</h2>
+    <h2>✅ Prestar Contas do Atendimento</h2>
+    
     <div class="card">
-        <h3>Dados da Ocorrência</h3>
+        <h3>📍 Dados da Ocorrência</h3>
         <p><strong>Endereço:</strong> <span id="atv-end"></span></p>
         <p><strong>Tipo:</strong> <span id="atv-tipo"></span></p>
         <p><strong>Valor:</strong> R$ <span id="atv-valor"></span></p>
@@ -205,20 +199,20 @@
 
     <div class="card">
         <h3>📸 Enviar Fotos (mínimo 5)</h3>
-        <p style="font-size:13px; color:var(--cinza); margin-bottom:8px;">As fotos recebem carimbo de localização e data automaticamente.</p>
-        <input type="file" id="fotos" accept="image/*" multiple capture="environment" onchange="carregarFotos(this)">
-        <div id="preview" class="grid-fotos"></div>
-        <p id="contador" style="color:var(--cinza); margin-top:8px;">0 / 5 fotos</p>
+        <p style="font-size:13px; color:var(--cinza); margin-bottom:8px;">As fotos recebem carimbo de localização e data.</p>
+        <input type="file" id="fotos" accept="image/*" multiple capture="environment" onchange="processarFotos(this)">
+        <div id="preview-fotos" class="grid-fotos"></div>
+        <p id="qtd-fotos" style="color:var(--cinza); margin-top:8px;">0 / 5 fotos</p>
     </div>
 
     <div class="card">
-        <h3>📝 Relatório do Atendimento</h3>
-        <textarea id="relatorio" rows="5" placeholder="Descreva detalhadamente o que foi feito no local, horário de chegada, situação encontrada, ações tomadas e resultado."></textarea>
+        <h3>📝 Relatar o que aconteceu</h3>
+        <textarea id="relatorio" rows="6" placeholder="Descreva: horário de chegada, o que encontrou no local, o que fez, situação final, tudo o que observou..."></textarea>
     </div>
 
     <div class="botoes">
         <button class="btn btn-vermelho" onclick="cancelar()">❌ Cancelar</button>
-        <button class="btn btn-verde" onclick="finalizar()">✅ Enviar Relatório</button>
+        <button class="btn btn-verde" onclick="enviarRelatorio()">✅ Enviar Relatório</button>
     </div>
 </div>
 
@@ -226,16 +220,21 @@
 let apoios = JSON.parse(localStorage.getItem('apoios') || '[]');
 let ocorrencias = JSON.parse(localStorage.getItem('ocorrencias') || '[]');
 let usuario = null;
-let servico = null;
-let fotos = [];
+let servicoAtual = null;
+let fotosEnviadas = [];
 let mapa = null;
 let watchGPS = null;
 let ocorrenciaSelecionada = null;
 
+function salvarDados() {
+    localStorage.setItem('apoios', JSON.stringify(apoios));
+    localStorage.setItem('ocorrencias', JSON.stringify(ocorrencias));
+}
+
 function mostrar(id) {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById(id).classList.add('ativa');
-    if(id === 'admin') atualizarAdmin();
+    if(id === 'admin') atualizarPainelAdmin();
     if(id === 'principal') atualizarListaApoio();
 }
 
@@ -248,8 +247,8 @@ function entrarAdmin() {
 }
 
 function campoOutro() {
-    const sel = document.getElementById('tipo');
-    document.getElementById('tipo-outro').classList.toggle('escondido', sel.value !== 'Outro');
+    document.getElementById('tipo-outro').classList.toggle('escondido', 
+        document.getElementById('tipo').value !== 'Outro');
 }
 
 function lancar() {
@@ -279,9 +278,9 @@ function lancar() {
         relatorio: '',
         dataConclusao: null
     });
-    salvar();
-    atualizarAdmin();
-    alert('✅ Ocorrência lançada!');
+    salvarDados();
+    atualizarPainelAdmin();
+    alert('✅ Lançada!');
     document.getElementById('end').value = '';
     document.getElementById('lat').value = '';
     document.getElementById('lng').value = '';
@@ -291,32 +290,32 @@ function lancar() {
     document.getElementById('obs').value = '';
 }
 
-function atualizarAdmin() {
+function atualizarPainelAdmin() {
     document.getElementById('qtd-apoios').textContent = apoios.length;
     document.getElementById('lista-apoios').innerHTML = apoios.map((a, i) => `
         <div style="padding:10px; background:#334155; border-radius:8px; margin:5px 0;">
             <p><strong>${a.nome}</strong></p>
             <p style="font-size:13px; color:var(--cinza);">📱 ${a.telefone} | 🚗 ${a.veiculo} — ${a.placa}</p>
             <p>Status: ${a.aprovado ? '<span style="color:var(--verde);">✅ Aprovado</span>' : '<span style="color:var(--amarelo);">⏳ Pendente</span>'}</p>
-            ${!a.aprovado ? `<button class="btn btn-verde" style="padding:8px; margin-top:5px;" onclick="aprovar(${i})">✅ Aprovar</button>` : ''}
+            ${!a.aprovado ? `<button class="btn btn-verde" style="padding:8px; margin-top:5px;" onclick="aprovarApoio(${i})">✅ Aprovar</button>` : ''}
             <button class="btn btn-vermelho" style="padding:8px; margin-top:5px;" onclick="excluirApoio(${i})">🗑️ Excluir</button>
         </div>
     `).join('');
     filtrar('todas');
 }
 
-function aprovar(i) {
+function aprovarApoio(i) {
     apoios[i].aprovado = true;
-    salvar();
-    atualizarAdmin();
+    salvarDados();
+    atualizarPainelAdmin();
     alert('✅ Aprovado!');
 }
 
 function excluirApoio(i) {
     if(confirm('Excluir este apoio?')) {
         apoios.splice(i, 1);
-        salvar();
-        atualizarAdmin();
+        salvarDados();
+        atualizarPainelAdmin();
     }
 }
 
@@ -329,30 +328,25 @@ function filtrar(filtro) {
     document.getElementById('lista-admin').innerHTML = lista.length ? lista.map(o => {
         let classe = '';
         let statusTxt = '';
-        if(o.status === 'pendente') { classe = 'piscando'; statusTxt = '<span class="status-pendente">⏳ Pendente</span>'; }
-        if(o.status === 'aceita') statusTxt = '<span class="status-andamento">🔄 Em Andamento</span>';
-        if(o.status === 'concluida') { classe = 'ocorrencia-concluida'; statusTxt = '<span class="status-concluida">✅ Concluída</span>'; }
+        if(o.status === 'pendente') { classe = 'piscando'; statusTxt = '⏳ Pendente'; }
+        if(o.status === 'aceita') statusTxt = '🔄 Em Andamento — ' + (o.apoio?.nome || 'Apoio');
+        if(o.status === 'concluida') statusTxt = '✅ Concluída';
         
         return `
-        <div class="ocorrencia ${classe}" onclick="verDetalhes(${o.id})">
+        <div class="ocorrencia ${classe}" onclick="abrirDetalhes(${o.id})">
             <p><strong>${o.endereco}</strong></p>
             <p style="font-size:14px;">${o.tipo} — R$ ${o.valor.toFixed(2)}</p>
             <p style="font-size:13px; color:var(--cinza);">${o.data} ${o.hora}</p>
-            ${statusTxt}
+            <p>${statusTxt}</p>
         </div>`;
-    }).join('') : '<p style="color:var(--cinza); text-align:center; padding:15px;">Nenhuma ocorrência encontrada</p>';
+    }).join('') : '<p style="color:var(--cinza); text-align:center; padding:15px;">Nenhuma ocorrência</p>';
 }
 
-function verDetalhes(id) {
+function abrirDetalhes(id) {
     ocorrenciaSelecionada = ocorrencias.find(o => o.id === id);
     if(!ocorrenciaSelecionada) return;
     
     const o = ocorrenciaSelecionada;
-    let statusTxt = '';
-    if(o.status === 'pendente') statusTxt = '⏳ Pendente';
-    if(o.status === 'aceita') statusTxt = '🔄 Em Andamento — Apoio: ' + (o.apoio?.nome || '—');
-    if(o.status === 'concluida') statusTxt = '✅ Concluída em ' + (o.dataConclusao || '—');
-
     let fotosHtml = '';
     if(o.fotos && o.fotos.length > 0) {
         fotosHtml = '<p><strong>Fotos enviadas:</strong></p><div class="grid-fotos">' + 
@@ -366,10 +360,8 @@ function verDetalhes(id) {
         <p><strong>Tipo:</strong> ${o.tipo}</p>
         <p><strong>Valor:</strong> R$ ${o.valor.toFixed(2)}</p>
         <p><strong>Data/Hora:</strong> ${o.data} ${o.hora}</p>
-        <p><strong>Status:</strong> ${statusTxt}</p>
-        ${o.apoio ? `<p><strong>Apoio responsável:</strong> ${o.apoio.nome} | ${o.apoio.telefone} | PIX: ${o.apoio.pix}</p>` : ''}
-        ${o.obs ? `<p><strong>Observações:</strong> ${o.obs}</p>` : ''}
-        ${o.relatorio ? `<hr style="border:0; border-top:1px solid #333; margin:10px 0;"><p><strong>Relatório do Apoio:</strong></p><p style="white-space:pre-wrap;">${o.relatorio}</p>` : ''}
+        ${o.apoio ? `<p><strong>Apoio:</strong> ${o.apoio.nome} | ${o.apoio.telefone} | PIX: ${o.apoio.pix}</p>` : ''}
+        ${o.relatorio ? `<hr style="border:0; border-top:1px solid #333; margin:10px 0;"><p><strong>Relatório:</strong></p><p style="white-space:pre-wrap;">${o.relatorio}</p>` : ''}
         ${fotosHtml}
     `;
     document.getElementById('detalhes-ocorrencia').classList.remove('escondido');
@@ -380,22 +372,19 @@ function fecharDetalhes() {
     ocorrenciaSelecionada = null;
 }
 
-function enviarRelatorio() {
+function enviarRelatorioWhatsApp() {
     if(!ocorrenciaSelecionada) return;
     const o = ocorrenciaSelecionada;
-    let mensagem = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
+    let mensagem = `📋 RELATÓRIO — DRTRACK CONECTA
 
 📍 Endereço: ${o.endereco}
 🗺️ Região: ${o.regiao || '—'}
-📍 Coordenadas: ${o.lat || '—'} / ${o.lng || '—'}
 📌 Tipo: ${o.tipo}
 💰 Valor: R$ ${o.valor.toFixed(2)}
-📅 Data/Hora: ${o.data} ${o.hora}
-📊 Status: ${o.status === 'concluida' ? '✅ Concluída' : o.status === 'aceita' ? '🔄 Em Andamento' : '⏳ Pendente'}
+📅 Data: ${o.data} ${o.hora}
 ${o.apoio ? `👤 Apoio: ${o.apoio.nome}\n📱 Telefone: ${o.apoio.telefone}\n💵 PIX: ${o.apoio.pix}` : ''}
-${o.obs ? `📝 Observações: ${o.obs}` : ''}
 ${o.relatorio ? `\n📝 RELATÓRIO:\n${o.relatorio}` : ''}
-${o.fotos ? `\n📸 ${o.fotos.length} fotos enviadas` : ''}`;
+${o.fotos ? `\n📸 ${o.fotos.length} fotos anexadas` : ''}`;
 
     window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(mensagem)}`, '_blank');
 }
@@ -423,8 +412,8 @@ function salvarCadastro() {
         return;
     }
     apoios.push(dados);
-    salvar();
-    alert('✅ Cadastro enviado! Aguarde aprovação.');
+    salvarDados();
+    alert('✅ Cadastrado! Aguarde aprovação.');
     mostrar('aguardando');
 }
 
@@ -455,7 +444,7 @@ function ativarGPS() {
                     apoios[idx].ultimaLat = pos.coords.latitude;
                     apoios[idx].ultimaLng = pos.coords.longitude;
                 }
-                salvar();
+                salvarDados();
             }
             mostrar('principal');
             if(!mapa) {
@@ -484,34 +473,36 @@ function atualizarListaApoio() {
             <p><strong>📍 ${o.endereco}</strong></p>
             <p>${o.tipo} — R$ ${o.valor.toFixed(2)}</p>
             <div class="botoes">
-                <button class="btn btn-verde" onclick="aceitar(${o.id})">✅ Aceitar</button>
-                <button class="btn btn-vermelho" onclick="atualizarListaApoio()">❌ Recusar</button>
+                <button class="btn btn-verde" onclick="aceitarServico(${o.id})">✅ Aceitar</button>
+                <button class="btn btn-cinza" onclick="atualizarListaApoio()">❌ Recusar</button>
             </div>
         </div>
     `).join('');
 }
 
-function aceitar(id) {
-    if(!confirm('Aceitar este serviço?')) return;
+function aceitarServico(id) {
+    if(!confirm('Aceitar este atendimento?')) return;
     const o = ocorrencias.find(x => x.id === id);
     if(!o || o.status !== 'pendente') { alert('Já foi aceito!'); atualizarListaApoio(); return; }
+    
     o.status = 'aceita';
     o.apoio = usuario;
-    servico = o;
-    fotos = [];
-    salvar();
+    servicoAtual = o;
+    fotosEnviadas = [];
+    salvarDados();
     
+    // PREENCHE TELA DE PRESTAÇÃO DE CONTAS — AGORA APARECE TUDO!
     document.getElementById('atv-end').textContent = o.endereco;
     document.getElementById('atv-tipo').textContent = o.tipo;
     document.getElementById('atv-valor').textContent = o.valor.toFixed(2);
-    document.getElementById('preview').innerHTML = '';
-    document.getElementById('contador').textContent = '0 / 5 fotos';
+    document.getElementById('preview-fotos').innerHTML = '';
+    document.getElementById('qtd-fotos').textContent = '0 / 5 fotos';
     document.getElementById('relatorio').value = '';
     
-    mostrar('atendimento');
+    mostrar('atendimento'); // ← AQUI ABRE A TELA DO RELATÓRIO
 }
 
-function carregarFotos(input) {
+function processarFotos(input) {
     for(let i = 0; i < input.files.length; i++) {
         const leitor = new FileReader();
         leitor.onload = e => {
@@ -535,9 +526,11 @@ function carregarFotos(input) {
                 ctx.fillStyle = '#fff';
                 ctx.fillText(texto, 20, canvas.height - 15);
                 
-                fotos.push(canvas.toDataURL('image/jpeg', 0.85));
-                document.getElementById('preview').innerHTML = fotos.map(f => `<div class="foto-container"><img src="${f}"></div>`).join('');
-                document.getElementById('contador').textContent = `${fotos.length} / 5 fotos`;
+                fotosEnviadas.push(canvas.toDataURL('image/jpeg', 0.85));
+                document.getElementById('preview-fotos').innerHTML = fotosEnviadas.map(f => 
+                    `<div class="foto-container"><img src="${f}"></div>`
+                ).join('');
+                document.getElementById('qtd-fotos').textContent = `${fotosEnviadas.length} / 5 fotos`;
             };
             img.src = e.target.result;
         };
@@ -546,39 +539,43 @@ function carregarFotos(input) {
 }
 
 function cancelar() {
-    if(!confirm('Cancelar este atendimento?')) return;
-    if(servico) {
-        servico.status = 'pendente';
-        servico.apoio = null;
-        salvar();
+    if(!confirm('Cancelar atendimento?')) return;
+    if(servicoAtual) {
+        servicoAtual.status = 'pendente';
+        servicoAtual.apoio = null;
+        salvarDados();
     }
-    servico = null;
-    fotos = [];
+    servicoAtual = null;
+    fotosEnviadas = [];
     mostrar('principal');
     atualizarListaApoio();
 }
 
-function finalizar() {
-    if(fotos.length < 5) {
-        alert(`Envie no mínimo 5 fotos! Enviadas: ${fotos.length}`);
+function enviarRelatorio() {
+    // VALIDAÇÃO OBRIGATÓRIA
+    if(fotosEnviadas.length < 5) {
+        alert(`⚠️ Envie no mínimo 5 fotos! Enviadas: ${fotosEnviadas.length}`);
         return;
     }
     const rel = document.getElementById('relatorio').value.trim();
     if(!rel) {
-        alert('Preencha o relatório!');
+        alert('⚠️ Descreva o atendimento no relatório!');
         return;
     }
-    servico.status = 'concluida';
-    servico.fotos = [...fotos];
-    servico.relatorio = rel;
-    servico.dataConclusao = new Date().toLocaleString('pt-BR');
-    salvar();
     
-    const msg = `📋 RELATÓRIO — DRTRACK CONECTA
+    // SALVA NO SISTEMA
+    servicoAtual.status = 'concluida';
+    servicoAtual.fotos = [...fotosEnviadas];
+    servicoAtual.relatorio = rel;
+    servicoAtual.dataConclusao = new Date().toLocaleString('pt-BR');
+    salvarDados();
+    
+    // ENVIA PARA SEU WHATSAPP
+    const mensagem = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
 
-📍 Endereço: ${servico.endereco}
-📌 Tipo: ${servico.tipo}
-💰 Valor: R$ ${servico.valor.toFixed(2)}
+📍 Endereço: ${servicoAtual.endereco}
+📌 Tipo: ${servicoAtual.tipo}
+💰 Valor: R$ ${servicoAtual.valor.toFixed(2)}
 👤 Apoio: ${usuario.nome}
 📱 Telefone: ${usuario.telefone}
 🚗 Veículo: ${usuario.veiculo} — ${usuario.placa}
@@ -587,25 +584,21 @@ function finalizar() {
 📝 RELATÓRIO:
 ${rel}
 
-📸 ${fotos.length} fotos com geolocalização anexadas.
-✅ Concluído em: ${servico.dataConclusao}`;
+📸 ${fotosEnviadas.length} fotos com geolocalização carimbada.
+✅ Concluído em: ${servicoAtual.dataConclusao}`;
 
-    window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`, '_blank');
-    alert('✅ Relatório enviado!');
-    servico = null;
-    fotos = [];
+    window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(mensagem)}`, '_blank');
+    
+    alert('✅ Relatório enviado com sucesso!');
+    servicoAtual = null;
+    fotosEnviadas = [];
     mostrar('principal');
     atualizarListaApoio();
 }
 
-function salvar() {
-    localStorage.setItem('apoios', JSON.stringify(apoios));
-    localStorage.setItem('ocorrencias', JSON.stringify(ocorrencias));
-}
-
 function sair() {
     if(watchGPS) navigator.geolocation.clearWatch(watchGPS);
-    usuario = null; servico = null; fotos = []; mapa = null;
+    usuario = null; servicoAtual = null; fotosEnviadas = []; mapa = null;
     mostrar('inicio');
 }
 </script>

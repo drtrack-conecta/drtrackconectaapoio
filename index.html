@@ -50,8 +50,13 @@
         .msg-horario { font-size: 11px; opacity: 0.7; margin-top: 3px; }
         .relatorio-opcoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
         .relatorio-opcoes label { display: flex; align-items: center; gap: 5px; margin: 0; font-weight: normal; }
-        .grid-fotos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; }
-        .grid-fotos img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; }
+        
+        /* GRID AJUSTÁVEL DE 2 EM 2 FOTOS COM DOWLOAD */
+        .grid-fotos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px 0; }
+        .foto-container { display: flex; flex-direction: column; background: #0f172a; padding: 6px; border-radius: 8px; }
+        .grid-fotos img { width: 100%; height: 130px; object-fit: cover; border-radius: 6px; }
+        .btn-download-foto { background: #334155; color: #fff; border: none; padding: 6px; font-size: 11px; border-radius: 4px; margin-top: 6px; cursor: pointer; text-align: center; text-decoration: none; display: block; }
+        
         .status-tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-left: 8px; }
         .status-pendente { background: #fef3c7; color: #92400e; }
         .status-andamento { background: #dbeafe; color: #1e40af; }
@@ -284,31 +289,35 @@
         <p><strong>Status:</strong> <span class="status-tag status-andamento">Em Andamento</span></p>
     </div>
     
+    <!-- ABA DE CHAT COM A CENTRAL -->
     <div class="card">
         <h3>💬 Conversar com a Central</h3>
         <div class="chat-box" id="caixa-chat"></div>
         <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="msg-chat" placeholder="Digite sua mensagem..." style="flex:1; margin:0;">
+            <input type="text" id="msg-chat" placeholder="Digite sua mensagem para a central..." style="flex:1; margin:0;">
             <button class="btn btn-azul" style="width:auto; padding:12px 16px; margin:0;" onclick="enviarMensagemChat()">➤</button>
         </div>
     </div>
     
+    <!-- ABA DE FOTOS (MÍNIMO 5 - COM CARIMBO GPS) -->
     <div class="card">
         <h3>📸 Enviar Fotos (mínimo 5)</h3>
+        <p style="font-size:12px; color:var(--cinza); margin-bottom:8px;">As imagens capturadas terão Latitude, Longitude e Data/Hora registradas automaticamente.</p>
         <input type="file" id="fotos" accept="image/*" multiple capture="environment" onchange="processarFotos(this)">
         <div id="preview-fotos" class="grid-fotos"></div>
         <p id="qtd-fotos" style="color:var(--cinza); margin-top:8px;">0 / 5 fotos mínimas</p>
     </div>
     
+    <!-- ABA DE RELATAR OCORRIDO -->
     <div class="card">
-        <h3>📝 Relatório de Atendimento</h3>
-        <textarea id="relatorio" rows="4" placeholder="Descreva o que foi feito no local..."></textarea>
+        <h3>📝 Relatar Ocorrido</h3>
+        <textarea id="relatorio" rows="4" placeholder="Descreva os detalhes da ocorrência e ações tomadas no local..."></textarea>
     </div>
     
     <div class="botoes">
         <button class="btn btn-vermelho" onclick="cancelarAtendimento()">❌ Recusar / Cancelar</button>
         <button class="btn btn-amarelo" onclick="pausarAtendimento()">⏸️ Pausar</button>
-        <button class="btn btn-verde" onclick="finalizarAtendimento()">✅ Finalizar</button>
+        <button class="btn btn-verde" onclick="finalizarAtendimento()">✅ Finalizar e Enviar Relatório</button>
     </div>
 </div>
 
@@ -338,7 +347,7 @@
     <div class="card escondido" id="dados-concluidos">
         <h3>📋 Relatório Final</h3>
         <p id="acomp-relato"></p>
-        <h4 style="margin:15px 0 8px;">📸 Fotos</h4>
+        <h4 style="margin:15px 0 8px;">📸 Fotos Registradas</h4>
         <div id="acomp-fotos" class="grid-fotos"></div>
         <button class="btn btn-azul" onclick="enviarRelatorioOcorrencia()">📤 Enviar por WhatsApp</button>
     </div>
@@ -534,7 +543,12 @@ function acompanharOcorrencia(id) {
         dadosConcl.classList.remove('escondido');
         document.getElementById('acomp-relato').textContent = servicoAceito.relatorio || 'Sem relatório';
         const divFotos = document.getElementById('acomp-fotos');
-        divFotos.innerHTML = (servicoAceito.fotos || []).map(f => `<img src="${f}">`).join('');
+        divFotos.innerHTML = (servicoAceito.fotos || []).map((f, i) => `
+            <div class="foto-container">
+                <img src="${f}" alt="Foto ${i+1}">
+                <a href="${f}" download="foto_ocorrencia_${i+1}.jpg" class="btn-download-foto">📥 Baixar Foto</a>
+            </div>
+        `).join('');
     } else {
         dadosConcl.classList.add('escondido');
     }
@@ -607,7 +621,7 @@ function enviarRelatorioOcorrencia(id) {
 📝 RELATÓRIO:
 ${o.relatorio || 'Sem relatório registrado'}
 
-📸 Fotos: ${(o.fotos || []).length} arquivos anexados`;
+📸 Fotos com Geolocalização: ${(o.fotos || []).length} arquivos anexados`;
     
     window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`, '_blank');
 }
@@ -635,7 +649,7 @@ function gerarRelatorioPDF() {
     
     let y = 40;
     filtro.forEach((o, idx) => {
-        if (y > 270) { doc.addPage(); y = 20; }
+        if (y > 230) { doc.addPage(); y = 20; }
         doc.setFontSize(12);
         doc.text(`${idx+1}. ${o.endereco}`, 10, y); y += 7;
         doc.setFontSize(10);
@@ -650,11 +664,26 @@ function gerarRelatorioPDF() {
             doc.text(linhas, 14, y);
             y += linhas.length * 5;
         }
+        
+        // ANEXAR FOTOS AO PDF
+        if (o.fotos && o.fotos.length > 0) {
+            doc.text(`Fotos Anexadas (${o.fotos.length}):`, 14, y); y += 5;
+            let imgX = 14;
+            o.fotos.forEach((fotoBase64) => {
+                if (y > 230) { doc.addPage(); y = 20; imgX = 14; }
+                try {
+                    doc.addImage(fotoBase64, 'JPEG', imgX, y, 40, 30);
+                    imgX += 45;
+                    if (imgX > 150) { imgX = 14; y += 35; }
+                } catch(e) {}
+            });
+            if (imgX !== 14) y += 35;
+        }
         y += 8;
     });
     
     doc.save(`relatorio-drtrack-${inicio}-a-${fim}.pdf`);
-    alert('✅ PDF gerado com sucesso!');
+    alert('✅ PDF gerado com sucesso com imagens!');
 }
 
 function enviarRelatorioWhatsApp() {
@@ -908,14 +937,48 @@ function enviarMensagemChat() {
     carregarChatApoio();
 }
 
-// FOTOS
+// PROCESSAR FOTOS E APLICAR CARIMBO DE LAT/LNG
 function processarFotos(input) {
     const arquivos = input.files;
+    if (!arquivos.length) return;
+
     for (let i = 0; i < arquivos.length; i++) {
         const leitor = new FileReader();
         leitor.onload = function(e) {
-            fotosEnviadas.push(e.target.result);
-            atualizarPreview();
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Desenhar Imagem no Canvas
+                ctx.drawImage(img, 0, 0);
+
+                // Configurar Estilo da Marca d'Água (Carimbo GPS)
+                const latStr = usuarioAtual?.ultimaLat ? usuarioAtual.ultimaLat.toFixed(6) : 'N/A';
+                const lngStr = usuarioAtual?.ultimaLng ? usuarioAtual.ultimaLng.toFixed(6) : 'N/A';
+                const dataStr = new Date().toLocaleString('pt-BR');
+                const textoGps = `📍 LAT: ${latStr} | LNG: ${lngStr} - ${dataStr}`;
+
+                const fontSize = Math.max(16, Math.floor(canvas.width / 30));
+                ctx.font = `bold ${fontSize}px sans-serif`;
+
+                // Fundo Escuro para Leitura
+                const textWidth = ctx.measureText(textoGps).width;
+                ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+                ctx.fillRect(10, canvas.height - fontSize - 20, textWidth + 20, fontSize + 12);
+
+                // Texto Branco do Carimbo
+                ctx.fillStyle = "#ffffff";
+                ctx.fillText(textoGps, 20, canvas.height - 15);
+
+                // Converter Imagem com Carimbo para Base64
+                const imagemCarimbada = canvas.toDataURL('image/jpeg', 0.85);
+                fotosEnviadas.push(imagemCarimbada);
+                atualizarPreview();
+            };
+            img.src = e.target.result;
         };
         leitor.readAsDataURL(arquivos[i]);
     }
@@ -924,7 +987,10 @@ function processarFotos(input) {
 function atualizarPreview() {
     const div = document.getElementById('preview-fotos');
     div.innerHTML = fotosEnviadas.map((f, i) => `
-        <img src="${f}" alt="Foto ${i+1}">
+        <div class="foto-container">
+            <img src="${f}" alt="Foto ${i+1}">
+            <a href="${f}" download="foto_apoio_${i+1}.jpg" class="btn-download-foto">📥 Baixar Foto</a>
+        </div>
     `).join('');
     document.getElementById('qtd-fotos').textContent = `${fotosEnviadas.length} / 5 fotos mínimas`;
 }
@@ -977,10 +1043,10 @@ function finalizarAtendimento() {
 💰 Valor: R$ ${servicoAceito.valor.toFixed(2)}
 💵 PIX: ${usuarioAtual.pix}
 
-📝 RELATÓRIO:
+📝 RELATÓRIO DO OCORRIDO:
 ${servicoAceito.relatorio}
 
-📸 Fotos: ${fotosEnviadas.length} arquivos enviados
+📸 Fotos Anexadas (com GPS): ${fotosEnviadas.length} arquivos enviados
 
 ✅ Concluído em: ${servicoAceito.dataConclusao}`;
     

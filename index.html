@@ -40,7 +40,7 @@
         .aviso { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin: 15px 0; text-align: center; font-weight: 500; }
         .aviso-erro { background: #fee2e2; color: #991b1b; }
         .aviso-sucesso { background: #dcfce7; color: #166534; }
-        #mapa { height: 320px; border-radius: 12px; margin: 15px 0; }
+        #mapa-apoio { height: 320px; border-radius: 12px; margin: 15px 0; }
         .botoes { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
         .botoes .btn { flex: 1; min-width: 100px; padding: 12px; font-size: 14px; }
         .chat-box { height: 200px; overflow-y: auto; background: #0f172a; border-radius: 8px; padding: 12px; margin: 10px 0; }
@@ -66,10 +66,11 @@
 <!-- ÁUDIO -->
 <audio id="som-sirene" preload="auto">
     <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-warning-1674.mp3" type="audio/mpeg">
+</audio>
 
 <audio id="som-aviso" preload="auto">
     <source src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" type="audio/mpeg">
-
+</audio>
 
 <!-- TELA INICIAL -->
 <div id="tela-inicio" class="tela ativa">
@@ -238,7 +239,7 @@
         Seu cadastro foi recebido! 📋<br>
         Aguarde o administrador aprovar seu acesso.
     </div>
-    <button class="btn" onclick="verificarStatus()">🔄 Verificar novamente</button>
+    <button class="btn btn-verde" onclick="verificarStatus()">🔄 Verificar novamente</button>
     <button class="btn btn-vermelho" onclick="sair()">🚪 Sair</button>
 </div>
 
@@ -334,7 +335,7 @@
         </div>
     </div>
     
-    <div class="card" id="dados-concluidos" class="escondido">
+    <div class="card escondido" id="dados-concluidos">
         <h3>📋 Relatório Final</h3>
         <p id="acomp-relato"></p>
         <h4 style="margin:15px 0 8px;">📸 Fotos</h4>
@@ -357,6 +358,7 @@ let localizacaoAtiva = false;
 let watchId = null;
 let mapaAdmin = null, mapaApoio = null, mapaAcomp = null;
 let marcadoresApoios = {};
+let marcadoresApoioMapa = [];
 let tipoAlerta = 'sirene';
 
 // ====================================== FUNÇÕES BASE
@@ -369,6 +371,12 @@ function salvarDados() {
 function mostrarTela(id) {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById(id).classList.add('ativa');
+    
+    setTimeout(() => {
+        if (id === 'tela-admin' && mapaAdmin) mapaAdmin.invalidateSize();
+        if (id === 'tela-apoio-principal' && mapaApoio) mapaApoio.invalidateSize();
+        if (id === 'tela-admin-acompanhar' && mapaAcomp) mapaAcomp.invalidateSize();
+    }, 200);
 }
 
 function tocarAlerta() {
@@ -536,6 +544,7 @@ function acompanharOcorrencia(id) {
             mapaAcomp = L.map('mapa-acompanhar').setView([-23.5505, -46.6333], 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaAcomp);
         }
+        mapaAcomp.invalidateSize();
         if (servicoAceito.lat && servicoAceito.lng) {
             mapaAcomp.setView([servicoAceito.lat, servicoAceito.lng], 15);
             L.marker([servicoAceito.lat, servicoAceito.lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaAcomp).bindPopup('Local da Ocorrência');
@@ -581,7 +590,7 @@ function enviarMensagemChatAdmin() {
 }
 
 function enviarRelatorioOcorrencia(id) {
-    const o = listaOcorrencias.find(x => x.id === id);
+    const o = id ? listaOcorrencias.find(x => x.id === id) : servicoAceito;
     if (!o) return;
     
     const msg = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
@@ -664,7 +673,7 @@ function atualizarMarcadoresApoios() {
         if (a.ultimaLat && a.ultimaLng && a.aprovado) {
             if (!marcadoresApoios[a.telefone]) {
                 marcadoresApoios[a.telefone] = L.marker([a.ultimaLat, a.ultimaLng], {
-                    icon: L.divIcon({html:a.veiculo.split(' ')[0], className:'', iconSize:[30,30]})
+                    icon: L.divIcon({html:a.veiculo ? a.veiculo.split(' ')[0] : '🛵', className:'', iconSize:[30,30]})
                 }).addTo(mapaAdmin).bindPopup(`<b>${a.nome}</b><br>${a.telefone}`);
             } else {
                 marcadoresApoios[a.telefone].setLatLng([a.ultimaLat, a.ultimaLng]);
@@ -787,10 +796,14 @@ function pararLocalizacaoESair() {
 
 // ====================================== MAPA E OCORRÊNCIAS DO APOIO
 function inicializarMapaApoio(lat, lng) {
-    if (mapaApoio) return;
-    mapaApoio = L.map('mapa-apoio').setView([lat, lng], 14);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaApoio);
-    L.marker([lat, lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaApoio).bindPopup('Sua localização');
+    if (!mapaApoio) {
+        mapaApoio = L.map('mapa-apoio').setView([lat, lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaApoio);
+        L.marker([lat, lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaApoio).bindPopup('Sua localização');
+    } else {
+        mapaApoio.setView([lat, lng], 14);
+    }
+    mapaApoio.invalidateSize();
 }
 
 function verificarOcorrenciasPendentes() {
@@ -818,12 +831,15 @@ function verificarOcorrenciasPendentes() {
         </div>
     `).join('');
     
+    marcadoresApoioMapa.forEach(m => mapaApoio.removeLayer(m));
+    marcadoresApoioMapa = [];
+
     pendentes.forEach(o => {
-        if (
-        (o.lat && o.lng && mapaApoio) {
-            L.marker([o.lat, o.lng], {
+        if (o.lat && o.lng && mapaApoio) {
+            let m = L.marker([o.lat, o.lng], {
                 icon: L.divIcon({html:'🚨', className:'', iconSize:[30,30]})
             }).addTo(mapaApoio).bindPopup(`${o.endereco}<br>${o.tipo}`);
+            marcadoresApoioMapa.push(m);
         }
     });
 }
@@ -1003,4 +1019,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-

@@ -50,14 +50,11 @@
         .msg-horario { font-size: 11px; opacity: 0.7; margin-top: 3px; text-align: right; }
         .relatorio-opcoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
         .relatorio-opcoes label { display: flex; align-items: center; gap: 5px; margin: 0; font-weight: normal; }
-        
-        /* GRID AJUSTÁVEL DE 2 EM 2 FOTOS COM DOWNLOAD */
         .grid-fotos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 12px 0; }
         .foto-container { display: flex; flex-direction: column; background: #0f172a; padding: 6px; border-radius: 8px; border: 1px solid #334155; }
         .grid-fotos img { width: 100%; height: 130px; object-fit: cover; border-radius: 6px; }
         .btn-download-foto { background: #1e40af; color: #fff; border: none; padding: 6px; font-size: 11px; font-weight: bold; border-radius: 4px; margin-top: 6px; cursor: pointer; text-align: center; text-decoration: none; display: block; }
         .btn-download-foto:hover { background: #2563eb; }
-        
         .status-tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-left: 8px; }
         .status-pendente { background: #fef3c7; color: #92400e; }
         .status-andamento { background: #dbeafe; color: #1e40af; }
@@ -69,29 +66,20 @@
 </head>
 <body>
 
-<!-- ÁUDIO -->
 <audio id="som-sirene" preload="auto">
     <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-warning-1674.mp3" type="audio/mpeg">
-</audio>
 
 <audio id="som-aviso" preload="auto">
     <source src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" type="audio/mpeg">
-</audio>
 
-<!-- TELA INICIAL -->
+
 <div id="tela-inicio" class="tela ativa">
     <h1>🛡️ DRTRACK Conecta</h1>
     <p class="subtitulo">Rede de Apoio e Segurança em Tempo Real</p>
-    
-    <button class="btn btn-verde" onclick="mostrarTela('tela-apoio-login')">
-        🛵 Sou Apoio — Entrar
-    </button>
-    <button class="btn btn-amarelo" onclick="mostrarTela('tela-admin-senha')">
-        ⚙️ Administrador
-    </button>
+    <button class="btn btn-verde" onclick="mostrarTela('tela-apoio-login')">🛵 Sou Apoio — Entrar</button>
+    <button class="btn btn-amarelo" onclick="mostrarTela('tela-admin-senha')">⚙️ Administrador</button>
 </div>
 
-<!-- TELA ADMIN - SENHA -->
 <div id="tela-admin-senha" class="tela">
     <h2>🔐 Acesso Administrativo</h2>
     <div class="card">
@@ -102,24 +90,18 @@
     </div>
 </div>
 
-<!-- TELA ADMIN - PAINEL -->
 <div id="tela-admin" class="tela">
     <h2>⚙️ Painel Administrativo</h2>
-    
     <div class="card">
         <h3>📤 Lançar Ocorrência</h3>
         <label>Endereço Completo:</label>
         <input type="text" id="ocorr-endereco" placeholder="Rua, número, bairro - Cidade">
-        
         <label>Latitude:</label>
         <input type="text" id="ocorr-lat" placeholder="-23.456789">
-        
         <label>Longitude:</label>
         <input type="text" id="ocorr-lng" placeholder="-46.789012">
-        
         <label>Região:</label>
         <input type="text" id="ocorr-regiao" placeholder="Ex: Zona Norte">
-        
         <label>Tipo de Serviço:</label>
         <select id="ocorr-tipo" onchange="campoOutro()">
             <option value="Verificação">Verificação</option>
@@ -129,24 +111,19 @@
             <option value="Outro">Outro</option>
         </select>
         <input type="text" id="ocorr-tipo-outro" placeholder="Especifique..." class="escondido">
-        
         <label>Valor do Serviço R$:</label>
         <input type="number" id="ocorr-valor" step="0.01" placeholder="0,00">
-        
         <label>Observações:</label>
         <textarea id="ocorr-obs" rows="3" placeholder="Detalhes..."></textarea>
-        
         <button class="btn btn-azul" onclick="lancarOcorrencia()">📢 Lançar para Apoios</button>
     </div>
-    
     <div class="card">
         <h3>👥 Apoios Cadastrados (<span id="qtd-apoios">0</span>)</h3>
         <div id="lista-apoios"></div>
     </div>
-    
     <div class="card">
         <h3>📋 Ocorrências</h3>
-        <div class="botoes" style="flex-wrap: wrap;">
+        <div class="botoes">
             <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('todas')">Todas</button>
             <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('pendentes')">Pendentes</button>
             <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('andamento')">Em Andamento</button>
@@ -154,7 +131,6 @@
         </div>
         <div id="lista-ocorrencias-admin" style="margin-top:15px;"></div>
     </div>
-    
     <div class="card">
         <h3>📊 Relatórios</h3>
         <label>Período:</label>
@@ -175,69 +151,52 @@
         </div>
         <button class="btn btn-roxo" onclick="gerarRelatorioPDF()">📄 Gerar PDF A4</button>
     </div>
-    
     <div class="card">
         <h3>🗺️ Mapa — Apoios em Tempo Real</h3>
         <div id="mapa-admin" style="height:300px; border-radius:12px;"></div>
     </div>
-    
     <button class="btn btn-vermelho" onclick="sair()">🚪 Sair</button>
 </div>
 
-<!-- TELA APOIO - LOGIN -->
 <div id="tela-apoio-login" class="tela">
     <h2>🛵 Área do Apoio</h2>
     <div class="card">
         <label>Telefone com WhatsApp:</label>
         <input type="tel" id="apoio-tel" placeholder="(11) 99999-9999">
-        
         <label>Senha:</label>
         <input type="password" id="apoio-senha" placeholder="Sua senha">
-        
         <button class="btn btn-verde" onclick="entrarApoio()">Entrar</button>
-        
-        <p style="margin-top:15px; text-align:center;">
-            Não tem conta? <span class="link" onclick="mostrarTela('tela-apoio-cadastro')">Cadastrar</span>
-        </p>
+        <p style="margin-top:15px; text-align:center;">Não tem conta? <span class="link" onclick="mostrarTela('tela-apoio-cadastro')">Cadastrar</span></p>
         <p class="link" onclick="mostrarTela('tela-inicio')">← Voltar</p>
     </div>
 </div>
 
-<!-- TELA APOIO - CADASTRO -->
 <div id="tela-apoio-cadastro" class="tela">
     <h2>📝 Cadastro do Apoio</h2>
     <div class="card">
         <label>Nome Completo:</label>
         <input type="text" id="cad-nome" placeholder="Seu nome completo">
-        
         <label>CPF:</label>
         <input type="text" id="cad-cpf" placeholder="000.000.000-00">
-        
         <label>Telefone com WhatsApp:</label>
         <input type="tel" id="cad-tel" placeholder="(11) 99999-9999">
-        
         <label>Chave PIX para Recebimento:</label>
         <input type="text" id="cad-pix" placeholder="Sua chave PIX">
-        
         <label>Tipo de Veículo:</label>
         <select id="cad-veiculo">
             <option value="🛵 Motocicleta">🛵 Motocicleta</option>
             <option value="🚗 Carro">🚗 Carro</option>
             <option value="🚲 Bicicleta">🚲 Bicicleta</option>
         </select>
-        
         <label>Placa do Veículo:</label>
         <input type="text" id="cad-placa" placeholder="ABC-1234">
-        
         <label>Criar Senha (mínimo 6 dígitos):</label>
         <input type="password" id="cad-senha" placeholder="Senha">
-        
         <button class="btn btn-verde" onclick="cadastrarApoio()">Enviar Cadastro</button>
         <p class="link" onclick="mostrarTela('tela-apoio-login')">← Já tenho conta</p>
     </div>
 </div>
 
-<!-- TELA APOIO - AGUARDANDO APROVAÇÃO -->
 <div id="tela-apoio-aguardando" class="tela">
     <h2>⏳ Aguardando Liberação</h2>
     <div class="aviso">
@@ -248,38 +207,27 @@
     <button class="btn btn-vermelho" onclick="sair()">🚪 Sair</button>
 </div>
 
-<!-- TELA APOIO - LOCALIZAÇÃO OBRIGATÓRIA -->
 <div id="tela-apoio-localizacao" class="tela">
     <h2>📍 Ativar Localização</h2>
     <div class="card">
         <p style="margin-bottom:15px;">Para visualizar e receber ocorrências, é obrigatório manter sua localização ativa em tempo real.</p>
-        <div id="status-localizacao" class="local-indicador local-inativo">
-            ❌ Localização Desativada
-        </div>
+        <div id="status-localizacao" class="local-indicador local-inativo">❌ Localização Desativada</div>
         <button class="btn btn-verde" onclick="ativarLocalizacao()">📍 Ativar Localização</button>
         <button class="btn btn-cinza" onclick="pararLocalizacao()">⏸️ Pausar</button>
     </div>
 </div>
 
-<!-- TELA APOIO - PRINCIPAL -->
 <div id="tela-apoio-principal" class="tela">
     <h2>📍 Serviços Próximos</h2>
-    
     <div class="card" style="padding:10px 15px;">
-        <div id="status-local-apoio" class="local-indicador local-ativo" style="margin:0;">
-            ✅ Localização Ativa
-        </div>
+        <div id="status-local-apoio" class="local-indicador local-ativo" style="margin:0;">✅ Localização Ativa</div>
     </div>
-    
     <div id="mapa-apoio"></div>
-    
     <h3>🔔 Ocorrências Disponíveis</h3>
     <div id="lista-ocorrencias-apoio"></div>
-    
     <button class="btn btn-cinza" onclick="pararLocalizacaoESair()">⏸️ Pausar e Sair</button>
 </div>
 
-<!-- TELA APOIO - ATENDIMENTO -->
 <div id="tela-atendimento" class="tela">
     <h2>✅ Em Atendimento</h2>
     <div class="card">
@@ -288,8 +236,6 @@
         <p><strong>Valor:</strong> R$ <span id="atvs-valor"></span></p>
         <p><strong>Status:</strong> <span class="status-tag status-andamento">Em Andamento</span></p>
     </div>
-    
-    <!-- ABA DE CHAT COM A CENTRAL -->
     <div class="card">
         <h3>💬 Conversar com a Central</h3>
         <div class="chat-box" id="caixa-chat"></div>
@@ -298,8 +244,6 @@
             <button class="btn btn-azul" style="width:auto; padding:12px 16px; margin:0;" onclick="enviarMensagemChat()">➤</button>
         </div>
     </div>
-    
-    <!-- ABA DE FOTOS (MÍNIMO 5 - COM CARIMBO GPS) -->
     <div class="card">
         <h3>📸 Enviar Fotos (mínimo 5)</h3>
         <p style="font-size:12px; color:var(--cinza); margin-bottom:8px;">As imagens capturadas terão Latitude, Longitude e Data/Hora registradas automaticamente.</p>
@@ -307,13 +251,10 @@
         <div id="preview-fotos" class="grid-fotos"></div>
         <p id="qtd-fotos" style="color:var(--cinza); margin-top:8px;">0 / 5 fotos mínimas</p>
     </div>
-    
-    <!-- ABA DE RELATAR OCORRIDO -->
     <div class="card">
         <h3>📝 Relatar Ocorrido</h3>
         <textarea id="relatorio" rows="4" placeholder="Descreva os detalhes da ocorrência e ações tomadas no local..."></textarea>
     </div>
-    
     <div class="botoes">
         <button class="btn btn-vermelho" onclick="cancelarAtendimento()">❌ Recusar / Cancelar</button>
         <button class="btn btn-amarelo" onclick="pausarAtendimento()">⏸️ Pausar</button>
@@ -321,7 +262,6 @@
     </div>
 </div>
 
-<!-- TELA ADMIN - ACOMPANHAR OCORRÊNCIA -->
 <div id="tela-admin-acompanhar" class="tela">
     <h2>👁️ Acompanhamento</h2>
     <div class="card">
@@ -329,12 +269,10 @@
         <p><strong>Apoio:</strong> <span id="acomp-apoio"></span></p>
         <p><strong>Status:</strong> <span id="acomp-status"></span></p>
     </div>
-    
     <div class="card">
         <h3>🗺️ Localização do Apoio</h3>
         <div id="mapa-acompanhar" style="height:250px; border-radius:12px;"></div>
     </div>
-    
     <div class="card">
         <h3>💬 Conversa</h3>
         <div class="chat-box" id="caixa-chat-admin"></div>
@@ -343,7 +281,6 @@
             <button class="btn btn-azul" style="width:auto; padding:12px 16px; margin:0;" onclick="enviarMensagemChatAdmin()">➤</button>
         </div>
     </div>
-    
     <div class="card escondido" id="dados-concluidos">
         <h3>📋 Relatório Final</h3>
         <p id="acomp-relato"></p>
@@ -351,12 +288,10 @@
         <div id="acomp-fotos" class="grid-fotos"></div>
         <button class="btn btn-verde" onclick="enviarRelatorioOcorrencia()">📲 Enviar para o WhatsApp da Central</button>
     </div>
-    
     <button class="btn" onclick="voltarAdmin()">← Voltar</button>
 </div>
 
 <script>
-// DADOS
 let cadastrosApoio = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
 let listaOcorrencias = JSON.parse(localStorage.getItem('ocorrencias') || '[]');
 let mensagens = JSON.parse(localStorage.getItem('mensagens') || '{}');
@@ -370,7 +305,6 @@ let marcadoresApoios = {};
 let marcadoresApoioMapa = [];
 let tipoAlerta = 'sirene';
 
-// ====================================== FUNÇÕES BASE
 function salvarDados() {
     localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
     localStorage.setItem('ocorrencias', JSON.stringify(listaOcorrencias));
@@ -380,7 +314,6 @@ function salvarDados() {
 function mostrarTela(id) {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById(id).classList.add('ativa');
-    
     setTimeout(() => {
         if (id === 'tela-admin' && mapaAdmin) mapaAdmin.invalidateSize();
         if (id === 'tela-apoio-principal' && mapaApoio) mapaApoio.invalidateSize();
@@ -396,7 +329,6 @@ function tocarAlerta() {
     }
 }
 
-// ====================================== ADMINISTRAÇÃO
 function verificarSenhaAdmin() {
     const senha = document.getElementById('senha-admin').value;
     if (senha === 'admin123') {
@@ -416,7 +348,6 @@ function campoOutro() {
 function lancarOcorrencia() {
     const tipo = document.getElementById('ocorr-tipo').value;
     const tipoFinal = tipo === 'Outro' ? document.getElementById('ocorr-tipo-outro').value : tipo;
-    
     const ocorr = {
         id: Date.now(),
         endereco: document.getElementById('ocorr-endereco').value,
@@ -434,15 +365,12 @@ function lancarOcorrencia() {
         relatorio: '',
         dataConclusao: null
     };
-    
     if (!ocorr.endereco) { alert('Preencha o endereço!'); return; }
-    
     listaOcorrencias.unshift(ocorr);
     mensagens[ocorr.id] = [];
     salvarDados();
     atualizarPainelAdmin();
     alert('✅ Ocorrência lançada! Os apoios já podem ver.');
-    
     document.getElementById('ocorr-endereco').value = '';
     document.getElementById('ocorr-lat').value = '';
     document.getElementById('ocorr-lng').value = '';
@@ -453,7 +381,6 @@ function lancarOcorrencia() {
 
 function atualizarPainelAdmin() {
     document.getElementById('qtd-apoios').textContent = cadastrosApoio.length;
-    
     const listaApoio = document.getElementById('lista-apoios');
     listaApoio.innerHTML = cadastrosApoio.map((a, i) => `
         <div style="padding:12px; background:#334155; border-radius:8px; margin:6px 0;">
@@ -465,7 +392,6 @@ function atualizarPainelAdmin() {
             <button class="btn btn-vermelho" style="padding:8px; font-size:14px;" onclick="excluirApoio(${i})">🗑️ Excluir</button>
         </div>
     `).join('');
-    
     atualizarRelatorioAdmin('todas');
     atualizarMarcadoresApoios();
 }
@@ -494,18 +420,14 @@ function atualizarRelatorioAdmin(filtro) {
     if (filtro === 'pendentes') filtrado = listaOcorrencias.filter(o => o.status === 'pendente');
     if (filtro === 'andamento') filtrado = listaOcorrencias.filter(o => o.status === 'aceita');
     if (filtro === 'concluidas') filtrado = listaOcorrencias.filter(o => o.status === 'concluida');
-    
     const div = document.getElementById('lista-ocorrencias-admin');
     if (!filtrado.length) {
         div.innerHTML = '<p style="color:#94a3b8; text-align:center; padding:15px;">Nenhuma ocorrência encontrada.</p>';
         return;
     }
-    
     div.innerHTML = filtrado.map(o => {
-        let classeStatus = o.status === 'concluida' ? 'status-concluida' : 
-                          o.status === 'aceita' ? 'status-andamento' : 'status-pendente';
-        let textoStatus = o.status === 'concluida' ? '✅ Concluída' : 
-                          o.status === 'aceita' ? '🔄 Em Andamento' : '⏳ Pendente';
+        let classeStatus = o.status === 'concluida' ? 'status-concluida' : o.status === 'aceita' ? 'status-andamento' : 'status-pendente';
+        let textoStatus = o.status === 'concluida' ? '✅ Concluída' : o.status === 'aceita' ? '🔄 Em Andamento' : '⏳ Pendente';
         return `
         <div style="padding:14px; background:#334155; border-radius:8px; margin:8px 0; border-left:3px solid ${
             o.status==='concluida'?'#16a34a':o.status==='aceita'?'#1e40af':'#eab308'
@@ -528,16 +450,12 @@ function atualizarRelatorioAdmin(filtro) {
 function acompanharOcorrencia(id) {
     servicoAceito = listaOcorrencias.find(o => o.id === id);
     if (!servicoAceito) return;
-    
     mostrarTela('tela-admin-acompanhar');
     document.getElementById('acomp-endereco').textContent = servicoAceito.endereco;
     document.getElementById('acomp-apoio').textContent = servicoAceito.aceitoPor?.nome || '—';
-    
     let statusTexto = servicoAceito.status === 'concluida' ? '✅ Concluída' : '🔄 Em Andamento';
     document.getElementById('acomp-status').textContent = statusTexto;
-    
     carregarChatAdmin();
-    
     const dadosConcl = document.getElementById('dados-concluidos');
     if (servicoAceito.status === 'concluida') {
         dadosConcl.classList.remove('escondido');
@@ -552,7 +470,6 @@ function acompanharOcorrencia(id) {
     } else {
         dadosConcl.classList.add('escondido');
     }
-    
     setTimeout(() => {
         if (!mapaAcomp) {
             mapaAcomp = L.map('mapa-acompanhar').setView([-23.5505, -46.6333], 12);
@@ -592,7 +509,6 @@ function enviarMensagemChatAdmin() {
     const input = document.getElementById('msg-chat-admin');
     const texto = input.value.trim();
     if (!texto || !servicoAceito) return;
-    
     if (!mensagens[servicoAceito.id]) mensagens[servicoAceito.id] = [];
     mensagens[servicoAceito.id].push({
         de: 'admin',
@@ -604,11 +520,9 @@ function enviarMensagemChatAdmin() {
     carregarChatAdmin();
 }
 
-// ENVIAR RELATÓRIO VIA WHATSAPP CENTRAL (11) 99494-4410
 function enviarRelatorioOcorrencia(id) {
     const o = id ? listaOcorrencias.find(x => x.id === id) : servicoAceito;
     if (!o) return;
-    
     const msg = `📋 RELATÓRIO DE ATENDIMENTO — CENTRAL DRTRACK CONECTA
 
 📍 Endereço: ${o.endereco}
@@ -624,31 +538,25 @@ function enviarRelatorioOcorrencia(id) {
 ${o.relatorio || 'Sem relatório registrado'}
 
 📸 Fotos Registradas: ${(o.fotos || []).length} fotos capturadas com geolocalização.`;
-    
     window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
 function gerarRelatorioPDF() {
     const inicio = document.getElementById('relatorio-inicio').value;
     const fim = document.getElementById('relatorio-fim').value;
-    
     if (!inicio || !fim) { alert('Selecione o período!'); return; }
-    
     const filtro = listaOcorrencias.filter(o => {
         const [d, m, a] = o.data.split('/');
         const dataOcorr = new Date(`${a}-${m}-${d}`);
         return dataOcorr >= new Date(inicio) && dataOcorr <= new Date(fim);
     });
-    
     if (!filtro.length) { alert('Nenhuma ocorrência no período selecionado.'); return; }
-    
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text('RELATÓRIO DE OCORRÊNCIAS', 105, 20, {align:'center'});
     doc.setFontSize(11);
     doc.text(`Período: ${inicio} a ${fim}`, 105, 30, {align:'center'});
-    
     let y = 40;
     filtro.forEach((o, idx) => {
         if (y > 230) { doc.addPage(); y = 20; }
@@ -666,8 +574,6 @@ function gerarRelatorioPDF() {
             doc.text(linhas, 14, y);
             y += linhas.length * 5;
         }
-        
-        // ANEXAR FOTOS AO PDF
         if (o.fotos && o.fotos.length > 0) {
             doc.text(`Fotos Anexadas (${o.fotos.length}):`, 14, y); y += 5;
             let imgX = 14;
@@ -683,7 +589,6 @@ function gerarRelatorioPDF() {
         }
         y += 8;
     });
-    
     doc.save(`relatorio-drtrack-${inicio}-a-${fim}.pdf`);
     alert('✅ PDF gerado com sucesso com imagens!');
 }
@@ -709,7 +614,6 @@ function atualizarMarcadoresApoios() {
     });
 }
 
-// ====================================== APOIO - CADASTRO E LOGIN
 function cadastrarApoio() {
     const dados = {
         nome: document.getElementById('cad-nome').value.trim(),
@@ -725,15 +629,12 @@ function cadastrarApoio() {
         ultimaLat: null,
         ultimaLng: null
     };
-    
     if (!dados.nome || !dados.cpf || !dados.telefone || !dados.pix || !dados.placa || dados.senha.length < 6) {
         alert('Preencha TODOS os campos! Senha com mínimo 6 dígitos.');
         return;
     }
-    
     const existe = cadastrosApoio.find(a => a.telefone === dados.telefone);
     if (existe) { alert('Esse telefone já está cadastrado!'); return; }
-    
     cadastrosApoio.push(dados);
     salvarDados();
     alert('✅ Cadastro enviado! Aguarde aprovação do administrador.');
@@ -743,13 +644,9 @@ function cadastrarApoio() {
 function entrarApoio() {
     const tel = document.getElementById('apoio-tel').value.trim();
     const senha = document.getElementById('apoio-senha').value;
-    
     const apoio = cadastrosApoio.find(a => a.telefone === tel && a.senha === senha);
-    
     if (!apoio) { alert('Telefone ou senha incorretos!'); return; }
-    
     usuarioAtual = apoio;
-    
     if (!apoio.aprovado) {
         mostrarTela('tela-apoio-aguardando');
     } else {
@@ -767,13 +664,11 @@ function verificarStatus() {
     }
 }
 
-// ====================================== LOCALIZAÇÃO
 function ativarLocalizacao() {
     if (!navigator.geolocation) {
         alert('Geolocalização não suportada no aparelho.');
         return;
     }
-    
     watchId = navigator.geolocation.watchPosition(
         pos => {
             localizacaoAtiva = true;
@@ -787,12 +682,10 @@ function ativarLocalizacao() {
                 }
                 salvarDados();
             }
-            
             document.getElementById('status-localizacao').innerHTML = '✅ Localização Ativa';
             document.getElementById('status-localizacao').classList.remove('local-inativo');
             document.getElementById('status-localizacao').classList.add('local-ativo');
             document.getElementById('status-local-apoio').innerHTML = '✅ Localização Ativa';
-            
             mostrarTela('tela-apoio-principal');
             inicializarMapaApoio(pos.coords.latitude, pos.coords.longitude);
             verificarOcorrenciasPendentes();
@@ -821,12 +714,12 @@ function pararLocalizacaoESair() {
     sair();
 }
 
-// ====================================== MAPA E OCORRÊNCIAS DO APOIO
 function inicializarMapaApoio(lat, lng) {
     if (!mapaApoio) {
         mapaApoio = L.map('mapa-apoio').setView([lat, lng], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaApoio);
-        L.marker([lat, lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaApoio).bindPopup('Sua localização');
+        L.marker([lat, lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]
+})}).bindPopup('Sua localização');
     } else {
         mapaApoio.setView([lat, lng], 14);
     }
@@ -876,7 +769,6 @@ function recusarServico(id) {
     verificarOcorrenciasPendentes();
 }
 
-// ACEITAR SERVIÇO
 function aceitarServico(id) {
     if (!confirm('Confirmar aceite do serviço?')) return;
     
@@ -893,7 +785,6 @@ function aceitarServico(id) {
     mensagens[ocorr.id] = mensagens[ocorr.id] || [];
     salvarDados();
     
-    // Preencher dados na tela
     document.getElementById('atvs-endereco').textContent = ocorr.endereco;
     document.getElementById('atvs-tipo').textContent = ocorr.tipo;
     document.getElementById('atvs-valor').textContent = ocorr.valor.toFixed(2);
@@ -906,7 +797,6 @@ function aceitarServico(id) {
     carregarChatApoio();
 }
 
-// CHAT — APOIO
 function carregarChatApoio() {
     if (!servicoAceito) return;
     const caixa = document.getElementById('caixa-chat');
@@ -936,7 +826,6 @@ function enviarMensagemChat() {
     carregarChatApoio();
 }
 
-// PROCESSAR FOTOS E APLICAR CARIMBO DE LAT/LNG
 function processarFotos(input) {
     const arquivos = input.files;
     if (!arquivos.length) return;
@@ -951,10 +840,8 @@ function processarFotos(input) {
                 canvas.width = img.width;
                 canvas.height = img.height;
                 
-                // Desenhar Imagem no Canvas
                 ctx.drawImage(img, 0, 0);
 
-                // Configurar Estilo da Marca d'Água (Carimbo GPS)
                 const latStr = usuarioAtual?.ultimaLat ? usuarioAtual.ultimaLat.toFixed(6) : 'N/A';
                 const lngStr = usuarioAtual?.ultimaLng ? usuarioAtual.ultimaLng.toFixed(6) : 'N/A';
                 const dataStr = new Date().toLocaleString('pt-BR');
@@ -963,16 +850,13 @@ function processarFotos(input) {
                 const fontSize = Math.max(16, Math.floor(canvas.width / 30));
                 ctx.font = `bold ${fontSize}px sans-serif`;
 
-                // Fundo Escuro para Leitura
                 const textWidth = ctx.measureText(textoGps).width;
                 ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
                 ctx.fillRect(10, canvas.height - fontSize - 20, textWidth + 20, fontSize + 12);
 
-                // Texto Branco do Carimbo
                 ctx.fillStyle = "#ffffff";
                 ctx.fillText(textoGps, 20, canvas.height - 15);
 
-                // Converter Imagem com Carimbo para Base64
                 const imagemCarimbada = canvas.toDataURL('image/jpeg', 0.85);
                 fotosEnviadas.push(imagemCarimbada);
                 atualizarPreview();
@@ -994,7 +878,6 @@ function atualizarPreview() {
     document.getElementById('qtd-fotos').textContent = `${fotosEnviadas.length} / 5 fotos mínimas`;
 }
 
-// PAUSAR / CANCELAR / FINALIZAR
 function pausarAtendimento() {
     if (!confirm('Pausar este atendimento? Você pode retomar depois.')) return;
     alert('⏸️ Atendimento pausado.');
@@ -1013,7 +896,6 @@ function cancelarAtendimento() {
     verificarOcorrenciasPendentes();
 }
 
-// FINALIZAR E ENVIAR RELATÓRIO DO APOIO DIRETAMENTE PARA O WHATSAPP DA CENTRAL (11) 99494-4410
 function finalizarAtendimento() {
     if (fotosEnviadas.length < 5) {
         alert(`Envie no mínimo 5 fotos! Você enviou ${fotosEnviadas.length}`);
@@ -1031,7 +913,6 @@ function finalizarAtendimento() {
     servicoAceito.dataConclusao = new Date().toLocaleString('pt-BR');
     salvarDados();
     
-    // Formatação da mensagem direta para a Central DRTRACK (11 99494-4410)
     const msg = `📋 RELATÓRIO DE ATENDIMENTO — CENTRAL DRTRACK CONECTA
 
 📍 Endereço: ${servicoAceito.endereco}
@@ -1049,7 +930,6 @@ ${servicoAceito.relatorio}
 📸 Fotos Anexadas com GPS: ${fotosEnviadas.length} fotos salvas na ocorrência.
 ✅ Concluído em: ${servicoAceito.dataConclusao}`;
     
-    // Redireciona diretamente para o WhatsApp da Central
     window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`, '_blank');
     
     alert('✅ Ocorrência finalizada! Redirecionando para o WhatsApp da Central...');
@@ -1071,7 +951,6 @@ function sair() {
     mostrarTela('tela-inicio');
 }
 
-// Sincronização e atualização automática a cada 5 segundos (mensagens e status)
 setInterval(() => {
     if (servicoAceito) {
         if (document.getElementById('tela-atendimento').classList.contains('ativa')) {
@@ -1086,7 +965,6 @@ setInterval(() => {
     }
 }, 5000);
 
-// Inicialização
 document.addEventListener('DOMContentLoaded', () => {
     console.log('✅ DRTRACK Conecta — Sistema Carregado!');
 });

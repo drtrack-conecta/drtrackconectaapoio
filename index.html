@@ -849,8 +849,8 @@ function atualizarRelatorio() {
             const partes = o.data.split('/');
             return parseInt(partes[0]) >= 16 && parseInt(partes[1]) === mesAtual;
         });
-    } else if (f
-(filtro === 'mes_atual') {
+    } else if (filtro === 'mes_at
+ual') {
         filtrado = listaOcorrencias.filter(o => parseInt(o.data.split('/')[1]) === mesAtual);
     }
 

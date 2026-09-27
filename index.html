@@ -162,7 +162,6 @@
         <label>Chave PIX para recebimento *</label>
         <input type="text" id="cad-pix" placeholder="Sua chave PIX">
 
-        <!-- NOVO CAMPO: Documento para Validação -->
         <label>Foto do Documento (RG ou CNH com CPF) *</label>
         <input type="file" id="cad-doc" accept="image/*,application/pdf">
         
@@ -199,7 +198,6 @@
             <p id="status-localizacao" style="font-size:13px; margin-top:5px; color:#94a3b8;">Não ativa</p>
         </div>
 
-        <!-- ALERTA DE NOVA OCORRÊNCIA -->
         <div id="painel-alerta" class="caixa oculto alerta-piscando">
             <h3>🚨 NOVA OCORRÊNCIA! 🚨</h3>
             <div id="alerta-conteudo"></div>
@@ -209,14 +207,12 @@
             </div>
         </div>
 
-        <!-- MAPA E LISTA -->
         <div class="caixa">
             <h3>🗺️ Ocorrências Abertas</h3>
             <div id="mapa"></div>
             <div id="lista-chamados"></div>
         </div>
 
-        <!-- ENVIAR COMPROVANTE -->
         <div id="area-comprovante" class="caixa oculto">
             <h3>📸 Enviar Comprovante de Atendimento</h3>
             <p style="color:#facc15; font-size:13px;">Mínimo 5 fotos obrigatórias</p>
@@ -249,7 +245,6 @@
             </div>
         </div>
 
-        <!-- MEUS ATENDIMENTOS -->
         <div class="caixa">
             <h3>📋 Meus Atendimentos</h3>
             <div id="meus-atendimentos"></div>
@@ -280,7 +275,6 @@
         <button class="btn-amarelo" onclick="mostrarAba('aba-relatorios')">📊 Relatórios e Dashboard</button>
     </div>
 
-    <!-- ABA LANÇAR OCORRÊNCIA -->
     <div id="aba-lancar" class="caixa aba-conteudo">
         <h3>📤 Lançar Nova Ocorrência</h3>
         <label>Endereço Completo *</label>
@@ -321,14 +315,12 @@
         <p id="msg-lancamento" class="msg"></p>
     </div>
 
-    <!-- ABA APOIADORES -->
     <div id="aba-apoiadores" class="caixa aba-conteudo oculto">
         <h3>👥 Gerenciar Apoiadores</h3>
         <p style="margin-bottom:10px;">Total: <span id="qtd-total">0</span> | Aprovados: <span id="qtd-aprovados">0</span> | Pendentes: <span id="qtd-pendentes">0</span></p>
         <div id="lista-apoiadores"></div>
     </div>
 
-    <!-- ABA RELATÓRIOS E DASHBOARD -->
     <div id="aba-relatorios" class="caixa aba-conteudo oculto">
         <h3>📈 Volume de Ocorrências por Região</h3>
         <div style="background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
@@ -367,12 +359,18 @@
 
 <script>
 // ====================================== CONFIGURAÇÃO SUPABASE
-// Substitua pelas suas credenciais do painel Supabase
 const SUPABASE_URL = "https://SEU-PROJETO.supabase.co";
 const SUPABASE_ANON_KEY = "SUA-CHAVE-ANON-PUBLIC";
-const supabase = (SUPABASE_URL.includes("SEU-PROJETO")) ? null : supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabase = null;
+if (!SUPABASE_URL.includes("SEU-PROJETO") && !SUPABASE_ANON_KEY.includes("SUA-CHAVE")) {
+    try {
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch(e) {
+        supabase = null;
+    }
+}
 
-// ====================================== DADOS GLOBAIS DE FALLBACK (LOCALSTORAGE)
+// ====================================== DADOS GLOBAIS
 const senhaAdmin = "drtrack2026";
 let cadastrosApoio = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
 let listaOcorrencias = JSON.parse(localStorage.getItem('ocorrencias') || '[]');
@@ -445,7 +443,6 @@ async function enviarCadastro() {
 
     let docUrl = "doc_simulado.jpg";
 
-    // Envio do arquivo ao Supabase Storage (caso configurado)
     if (supabase) {
         msg.className = 'msg aviso'; msg.textContent = 'Enviando documento...';
         const fileExt = docFile.name.split('.').pop();
@@ -468,8 +465,6 @@ async function enviarCadastro() {
 
     cadastrosApoio.push(novo);
     salvarDados();
-
-    // Notificação automática ao administrador
     notificarAdministrador(novo);
     
     msg.className = 'msg sucesso';
@@ -477,18 +472,8 @@ async function enviarCadastro() {
     setTimeout(() => irParaLoginApoio(), 2500);
 }
 
-// Disparador de Notificação
 function notificarAdministrador(usuario) {
-    // 1. Notificação In-App via Webhook/Supabase Function ou Alerta local no console
     console.log(`🔔 NOTIFICAÇÃO ADMIN: Novo apoio cadastrado (${usuario.nome}). Documento enviado.`);
-    
-    // 2. Opcional: Integrar Webhook do WhatsApp/E-mail (Ex: Z-API / SendGrid)
-    /*
-    fetch('https://sua-api-whatsapp.com/send', {
-        method: 'POST',
-        body: JSON.stringify({ message: `Novo cadastro de ${usuario.nome} aguardando aprovação.` })
-    });
-    */
 }
 
 // ====================================== LOGIN
@@ -534,7 +519,7 @@ function enviarRecuperacao() {
     msg.textContent = `✅ Instruções enviadas para ${email}`;
 }
 
-// ====================================== ADMIN — GERENCIAMENTO
+// ====================================== ADMIN
 function loginAdmin() {
     const senha = document.getElementById('admin-senha').value;
     if (senha === senhaAdmin) {
@@ -562,12 +547,12 @@ function listarApoiadores() {
             <p style="font-size:13px;">📧 ${c.email} | 📱 ${c.telefone}</p>
             <p style="font-size:13px;">🚗 ${c.placa} | 📍 ${c.regiao} | ${c.veiculo}</p>
             <p style="font-size:13px;">💳 PIX: ${c.pix}</p>
-            <p style="font-size:13px;">📄 Documento: ${c.documentoUrl ? `<a href="${c.documentoUrl}" target="_blank" style="color:#facc15;">Ver Documento Enivado</a>` : 'Não enviado'}</p>
+            <p style="font-size:13px;">📄 Documento: ${c.documentoUrl !== 'doc_simulado.jpg' ? `<a href="${c.documentoUrl}" target="_blank" style="color:#facc15;">Ver Documento</a>` : 'Aguardando envio'}</p>
             <p style="margin-top:8px;">
                 ${c.aprovado 
                     ? '<span class="etiqueta et-aprovado">✅ APROVADO</span>'
                     : `<span class="etiqueta et-pend-aprov">⏳ PENDENTE</span>
-                       <button class="botao-pequeno btn-verde" onclick="aprovar(${c.id})">✅ Aprovar Documento e Apoio</button>`
+                       <button class="botao-pequeno btn-verde" onclick="aprovar(${c.id})">✅ Aprovar</button>`
                 }
                 <button class="botao-pequeno btn-vermelho" onclick="excluirApoiador(${c.id})">🗑️ Excluir</button>
             </p>
@@ -582,7 +567,7 @@ function aprovar(id) {
         salvarDados();
         atualizarContadoresAdmin();
         listarApoiadores();
-        alert(`✅ ${usuario.nome} foi verificado e aprovado!`);
+        alert(`✅ ${usuario.nome} foi aprovado!`);
     }
 }
 
@@ -816,7 +801,7 @@ function carregarMeusAtendimentos() {
     `).join('');
 }
 
-// ====================================== DASHBOARD GRÁFICO POR REGIÃO
+// ====================================== GRÁFICO
 function renderizarGrafico() {
     const regioes = ["Zona Norte — SP", "Zona Sul — SP", "Zona Leste — SP", "Zona Oeste — SP", "Centro — SP", "Grande São Paulo"];
     const contagem = regioes.map(r => listaOcorrencias.filter(o => o.regiao === r).length);
@@ -847,7 +832,7 @@ function renderizarGrafico() {
     });
 }
 
-// ====================================== RELATÓRIOS ADMIN COM CHECKBOXES
+// ====================================== RELATÓRIOS
 function atualizarRelatorio() {
     const filtro = document.getElementById('filtro-periodo').value;
     let filtrado = [...listaOcorrencias];
@@ -864,11 +849,11 @@ function atualizarRelatorio() {
             const partes = o.data.split('/');
             return parseInt(partes[0]) >= 16 && parseInt(partes[1]) === mesAtual;
         });
-    } else if (filtro === 'mes_atual') {
+    } else if (f
+(filtro === 'mes_atual') {
         filtrado = listaOcorrencias.filter(o => parseInt(o.data.split('/')[1]) === mesAtual);
     }
 
-    // Configuração dos Checkboxes do relatório
     const exValores = document.getElementById('chk-valores').checked;
     const exComissao = document.getElementById('chk-comissao').checked;
     const exAte = document.getElementById('chk-atendentes').checked;
@@ -876,7 +861,6 @@ function atualizarRelatorio() {
     const exDatas = document.getElementById('chk-datas').checked;
     const exFotos = document.getElementById('chk-fotos-qtd').checked;
 
-    // Resumo de cálculo
     const totalGeral = filtrado.reduce((s, o) => s + o.valor, 0);
     const totalComissao = filtrado.reduce((s, o) => s + (o.comissao || 0), 0);
     const liquido = totalGeral - totalComissao;
@@ -892,15 +876,16 @@ function atualizarRelatorio() {
 
     const divLista = document.getElementById('lista-ocorrencias-admin');
     if (!filtrado.length) {
-        divLista.innerHTML = '<p style="color:#94a3b8; text-align:center;">Nenhum registro encontrado no período.</p>'; return;
+        divLista.innerHTML = '<p style="color:#94a3b8; text-align:center;">Nenhum registro encontrado no período.</p>';
+        return;
     }
 
     divLista.innerHTML = filtrado.map(o => `
         <div class="ocorrencia-card ${o.status === 'concluida' ? 'concluida' : 'pendente'}">
             <p><strong>📍 ${o.endereco} (${o.regiao})</strong></p>
-            ${exValores ? `<p>💰 R$ ${o.valor.toFixed(2)}${exComissao ? `| Comisión: R$ ${o.comissao.toFixed(2)}` : ''}</p>` : ''}
+            ${exValores ? `<p>💰 R$ ${o.valor.toFixed(2)}${exComissao ? ` | Comissão: R$ ${o.comissao.toFixed(2)}` : ''}</p>` : ''}
             ${exAte ? `<p>👤 Atendente: ${o.aceitoPor || 'Não atribuído'}</p>` : ''}
-            ${exDatas ? `<p>📅 Lançamento: ${o.data} ${o.hora \vert{}\vert{} ''}${o.dataConclusao ? `| Conclusão: ${o.dataConclusao}` : ''}</p>` : ''}
+            ${exDatas ? `<p>📅 Lançamento: ${o.data} ${o.hora}${o.dataConclusao ? ` | Conclusão: ${o.dataConclusao}` : ''}</p>` : ''}
             ${exRelato && o.relato ? `<p style="font-size:13px; margin-top:5px;">📝 Relato: ${o.relato}</p>` : ''}
             ${exFotos && o.fotos?.length ? `<p style="font-size:12px; color:#94a3b8;">📸 Fotos: ${o.fotos.length} arquivos enviados</p>` : ''}
         </div>
@@ -914,9 +899,11 @@ function salvarDados() {
 }
 
 function sair() {
-    usuarioAtual = null; servicoAceito = null;
+    usuarioAtual = null;
+    servicoAceito = null;
     if (watchId) navigator.geolocation.clearWatch(watchId);
-    localizacaoAtiva = false; voltarInicio();
+    localizacaoAtiva = false;
+    voltarInicio();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

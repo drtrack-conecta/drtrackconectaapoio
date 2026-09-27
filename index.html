@@ -6,36 +6,72 @@
     <title>DRTRACK Conecta 🛡️</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        :root { --fundo: #0f172a; --azul: #1e40af; --verde: #16a34a; --amarelo: #eab308; --vermelho: #dc2626; --texto: #f1f5f9; --cinza: #94a3b8; }
+        :root { 
+            --fundo: #0f172a; --azul: #1e40af; --verde: #16a34a; --amarelo: #eab308; 
+            --vermelho: #dc2626; --texto: #f1f5f9; --cinza: #94a3b8; --roxo: #7c3aed;
+        }
         body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: var(--texto); padding: 20px; }
-        .tela { display: none; max-width: 500px; margin: 0 auto; }
+        .tela { display: none; max-width: 550px; margin: 0 auto; }
         .ativa { display: block; }
         h1 { text-align: center; margin: 20px 0; font-size: 28px; }
         h2 { font-size: 20px; margin-bottom: 20px; }
+        h3 { font-size: 17px; margin: 15px 0 10px; color: #cbd5e1; }
         .subtitulo { text-align: center; color: var(--cinza); margin-bottom: 40px; }
-        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin: 10px 0; transition: transform 0.2s; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin: 8px 0; transition: transform 0.2s; }
         .btn:active { transform: scale(0.98); }
         .btn-verde { background: var(--verde); color: white; }
         .btn-amarelo { background: var(--amarelo); color: #000; }
         .btn-vermelho { background: var(--vermelho); color: white; }
         .btn-azul { background: var(--azul); color: white; }
+        .btn-roxo { background: var(--roxo); color: white; }
+        .btn-cinza { background: #475569; color: white; }
         .card { background: #1e293b; padding: 20px; border-radius: 16px; margin-bottom: 15px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 8px; background: #334155; color: white; font-size: 16px; }
-        label { display: block; margin-top: 12px; font-weight: 500; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 8px; background: #334155; color: white; font-size: 15px; }
+        label { display: block; margin-top: 12px; font-weight: 500; font-size: 14px; }
         .ocorrencia { border-left: 4px solid var(--amarelo); padding: 15px; margin: 10px 0; background: #1e293b; border-radius: 0 10px 10px 0; }
-        .piscando { animation: piscar 1s infinite; }
-        @keyframes piscar { 0%,100% {opacity:1;} 50% {opacity:0.5;} }
+        .piscando { animation: piscar 0.8s infinite; }
+        @keyframes piscar { 0%,100% {opacity:1;} 50% {opacity:0.4;} }
         .escondido { display: none !important; }
-        .link { color: #60a5fa; text-decoration: underline; cursor: pointer; margin-top: 15px; display: inline-block; }
-        .aviso { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin: 15px 0; text-align: center; }
-        #mapa { height: 300px; border-radius: 12px; margin: 15px 0; }
-        .botoes { display: flex; gap: 10px; margin-top: 20px; }
-        .botoes .btn { flex: 1; }
+        .link { color: #60a5fa; text-decoration: underline; cursor: pointer; margin-top: 12px; display: inline-block; font-size: 14px; }
+        .aviso { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin: 15px 0; text-align: center; font-weight: 500; }
+        .aviso-erro { background: #fee2e2; color: #991b1b; }
+        .aviso-sucesso { background: #dcfce7; color: #166534; }
+        #mapa { height: 320px; border-radius: 12px; margin: 15px 0; }
+        .botoes { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
+        .botoes .btn { flex: 1; min-width: 100px; padding: 12px; font-size: 14px; }
+        .chat-box { height: 200px; overflow-y: auto; background: #0f172a; border-radius: 8px; padding: 12px; margin: 10px 0; }
+        .msg { margin: 6px 0; padding: 8px 12px; border-radius: 16px; max-width: 80%; font-size: 14px; }
+        .msg-apoio { background: #1e40af; margin-left: auto; border-bottom-right-radius: 4px; }
+        .msg-admin { background: #334155; margin-right: auto; border-bottom-left-radius: 4px; }
+        .msg-horario { font-size: 11px; opacity: 0.7; margin-top: 3px; }
+        .relatorio-opcoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        .relatorio-opcoes label { display: flex; align-items: center; gap: 5px; margin: 0; font-weight: normal; }
+        .grid-fotos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; }
+        .grid-fotos img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; }
+        .status-tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-left: 8px; }
+        .status-pendente { background: #fef3c7; color: #92400e; }
+        .status-andamento { background: #dbeafe; color: #1e40af; }
+        .status-concluida { background: #dcfce7; color: #166534; }
+        .local-indicador { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 8px; margin: 10px 0; }
+        .local-ativo { background: #163425; border: 1px solid #16a34a; }
+        .local-inativo { background: #3b1f1f; border: 1px solid #dc2626; }
+        .piscar-sirene { animation: piscar-sirene 0.5s infinite; }
+        @keyframes piscar-sirene { 0%,100% {background-color: #dc2626;} 50% {background-color: transparent;} }
     </style>
 </head>
 <body>
+
+<!-- ÁUDIO -->
+<audio id="som-sirene" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-warning-1674.mp3" type="audio/mpeg">
+
+<audio id="som-aviso" preload="auto">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" type="audio/mpeg">
+
 
 <!-- TELA INICIAL -->
 <div id="tela-inicio" class="tela ativa">
@@ -70,6 +106,12 @@
         <label>Endereço Completo:</label>
         <input type="text" id="ocorr-endereco" placeholder="Rua, número, bairro - Cidade">
         
+        <label>Latitude:</label>
+        <input type="text" id="ocorr-lat" placeholder="-23.456789">
+        
+        <label>Longitude:</label>
+        <input type="text" id="ocorr-lng" placeholder="-46.789012">
+        
         <label>Região:</label>
         <input type="text" id="ocorr-regiao" placeholder="Ex: Zona Norte">
         
@@ -78,7 +120,7 @@
             <option value="Verificação">Verificação</option>
             <option value="Apoio">Apoio</option>
             <option value="Ronda">Ronda</option>
-            <option value="Recuperação">Recuperação de Veículo</option>
+            <option value="Recuperação de Veículo">Recuperação de Veículo</option>
             <option value="Outro">Outro</option>
         </select>
         <input type="text" id="ocorr-tipo-outro" placeholder="Especifique..." class="escondido">
@@ -99,10 +141,40 @@
     
     <div class="card">
         <h3>📋 Ocorrências</h3>
-        <button class="btn" onclick="filtrarOcorrencias('todas')">Todas</button>
-        <button class="btn" onclick="filtrarOcorrencias('pendentes')">Pendentes</button>
-        <button class="btn" onclick="filtrarOcorrencias('concluidas')">Concluídas</button>
+        <div class="botoes" style="flex-wrap: wrap;">
+            <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('todas')">Todas</button>
+            <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('pendentes')">Pendentes</button>
+            <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('andamento')">Em Andamento</button>
+            <button class="btn" style="flex:1; padding:10px; font-size:13px;" onclick="filtrarOcorrencias('concluidas')">Concluídas</button>
+        </div>
         <div id="lista-ocorrencias-admin" style="margin-top:15px;"></div>
+    </div>
+    
+    <div class="card">
+        <h3>📊 Relatórios</h3>
+        <label>Período:</label>
+        <div style="display:flex; gap:10px;">
+            <input type="date" id="relatorio-inicio" style="flex:1;">
+            <input type="date" id="relatorio-fim" style="flex:1;">
+        </div>
+        <label>Campos a incluir no relatório:</label>
+        <div class="relatorio-opcoes" id="campos-relatorio">
+            <label><input type="checkbox" checked value="endereco"> Endereço</label>
+            <label><input type="checkbox" checked value="regiao"> Região</label>
+            <label><input type="checkbox" checked value="tipo"> Tipo</label>
+            <label><input type="checkbox" checked value="valor"> Valor</label>
+            <label><input type="checkbox" checked value="data"> Data/Hora</label>
+            <label><input type="checkbox" checked value="apoio"> Apoio</label>
+            <label><input type="checkbox" checked value="relato"> Relatório</label>
+            <label><input type="checkbox" checked value="fotos"> Fotos</label>
+        </div>
+        <button class="btn btn-roxo" onclick="gerarRelatorioPDF()">📄 Gerar PDF A4</button>
+        <button class="btn btn-azul" onclick="enviarRelatorioWhatsApp()">📤 Enviar por WhatsApp</button>
+    </div>
+    
+    <div class="card">
+        <h3>🗺️ Mapa — Apoios em Tempo Real</h3>
+        <div id="mapa-admin" style="height:300px; border-radius:12px;"></div>
     </div>
     
     <button class="btn btn-vermelho" onclick="sair()">🚪 Sair</button>
@@ -134,14 +206,14 @@
         <label>Nome Completo:</label>
         <input type="text" id="cad-nome" placeholder="Seu nome completo">
         
+        <label>CPF:</label>
+        <input type="text" id="cad-cpf" placeholder="000.000.000-00">
+        
         <label>Telefone com WhatsApp:</label>
         <input type="tel" id="cad-tel" placeholder="(11) 99999-9999">
         
-        <label>E-mail:</label>
-        <input type="email" id="cad-email" placeholder="seu@email.com">
-        
-        <label>Região / Bairro de Atuação:</label>
-        <input type="text" id="cad-regiao" placeholder="Ex: Zona Norte - SP">
+        <label>Chave PIX para Recebimento:</label>
+        <input type="text" id="cad-pix" placeholder="Sua chave PIX">
         
         <label>Tipo de Veículo:</label>
         <select id="cad-veiculo">
@@ -153,11 +225,8 @@
         <label>Placa do Veículo:</label>
         <input type="text" id="cad-placa" placeholder="ABC-1234">
         
-        <label>Chave PIX para Recebimento:</label>
-        <input type="text" id="cad-pix" placeholder="Sua chave PIX">
-        
-        <label>Criar Senha:</label>
-        <input type="password" id="cad-senha" placeholder="Mínimo 6 caracteres">
+        <label>Criar Senha (mínimo 6 dígitos):</label>
+        <input type="password" id="cad-senha" placeholder="Senha">
         
         <button class="btn btn-verde" onclick="cadastrarApoio()">Enviar Cadastro</button>
         <p class="link" onclick="mostrarTela('tela-apoio-login')">← Já tenho conta</p>
@@ -175,15 +244,35 @@
     <button class="btn btn-vermelho" onclick="sair()">🚪 Sair</button>
 </div>
 
+<!-- TELA APOIO - LOCALIZAÇÃO OBRIGATÓRIA -->
+<div id="tela-apoio-localizacao" class="tela">
+    <h2>📍 Ativar Localização</h2>
+    <div class="card">
+        <p style="margin-bottom:15px;">Para visualizar e receber ocorrências, é obrigatório manter sua localização ativa em tempo real.</p>
+        <div id="status-localizacao" class="local-indicador local-inativo">
+            ❌ Localização Desativada
+        </div>
+        <button class="btn btn-verde" onclick="ativarLocalizacao()">📍 Ativar Localização</button>
+        <button class="btn btn-cinza" onclick="pararLocalizacao()">⏸️ Pausar</button>
+    </div>
+</div>
+
 <!-- TELA APOIO - PRINCIPAL -->
 <div id="tela-apoio-principal" class="tela">
     <h2>📍 Serviços Próximos</h2>
-    <div id="mapa"></div>
+    
+    <div class="card" style="padding:10px 15px;">
+        <div id="status-local-apoio" class="local-indicador local-ativo" style="margin:0;">
+            ✅ Localização Ativa
+        </div>
+    </div>
+    
+    <div id="mapa-apoio"></div>
     
     <h3>🔔 Ocorrências Disponíveis</h3>
     <div id="lista-ocorrencias-apoio"></div>
     
-    <button class="btn btn-vermelho" onclick="sair()">🚪 Sair</button>
+    <button class="btn btn-cinza" onclick="pararLocalizacaoESair()">⏸️ Pausar e Sair</button>
 </div>
 
 <!-- TELA APOIO - ATENDIMENTO -->
@@ -193,13 +282,23 @@
         <p><strong>Endereço:</strong> <span id="atvs-endereco"></span></p>
         <p><strong>Tipo:</strong> <span id="atvs-tipo"></span></p>
         <p><strong>Valor:</strong> R$ <span id="atvs-valor"></span></p>
+        <p><strong>Status:</strong> <span class="status-tag status-andamento">Em Andamento</span></p>
+    </div>
+    
+    <div class="card">
+        <h3>💬 Conversar com a Central</h3>
+        <div class="chat-box" id="caixa-chat"></div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+            <input type="text" id="msg-chat" placeholder="Digite sua mensagem..." style="flex:1; margin:0;">
+            <button class="btn btn-azul" style="width:auto; padding:12px 16px; margin:0;" onclick="enviarMensagemChat()">➤</button>
+        </div>
     </div>
     
     <div class="card">
         <h3>📸 Enviar Fotos (mínimo 5)</h3>
         <input type="file" id="fotos" accept="image/*" multiple capture="environment" onchange="processarFotos(this)">
-        <div id="preview-fotos" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
-        <p id="qtd-fotos" style="color:var(--cinza);">0 / 5 fotos mínimas</p>
+        <div id="preview-fotos" class="grid-fotos"></div>
+        <p id="qtd-fotos" style="color:var(--cinza); margin-top:8px;">0 / 5 fotos mínimas</p>
     </div>
     
     <div class="card">
@@ -208,43 +307,97 @@
     </div>
     
     <div class="botoes">
-        <button class="btn btn-vermelho" onclick="cancelarAtendimento()">❌ Cancelar</button>
+        <button class="btn btn-vermelho" onclick="cancelarAtendimento()">❌ Recusar / Cancelar</button>
+        <button class="btn btn-amarelo" onclick="pausarAtendimento()">⏸️ Pausar</button>
         <button class="btn btn-verde" onclick="finalizarAtendimento()">✅ Finalizar</button>
     </div>
+</div>
+
+<!-- TELA ADMIN - ACOMPANHAR OCORRÊNCIA -->
+<div id="tela-admin-acompanhar" class="tela">
+    <h2>👁️ Acompanhamento</h2>
+    <div class="card">
+        <p><strong>Endereço:</strong> <span id="acomp-endereco"></span></p>
+        <p><strong>Apoio:</strong> <span id="acomp-apoio"></span></p>
+        <p><strong>Status:</strong> <span id="acomp-status"></span></p>
+    </div>
+    
+    <div class="card">
+        <h3>🗺️ Localização do Apoio</h3>
+        <div id="mapa-acompanhar" style="height:250px; border-radius:12px;"></div>
+    </div>
+    
+    <div class="card">
+        <h3>💬 Conversa</h3>
+        <div class="chat-box" id="caixa-chat-admin"></div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+            <input type="text" id="msg-chat-admin" placeholder="Mensagem para o apoio..." style="flex:1; margin:0;">
+            <button class="btn btn-azul" style="width:auto; padding:12px 16px; margin:0;" onclick="enviarMensagemChatAdmin()">➤</button>
+        </div>
+    </div>
+    
+    <div class="card" id="dados-concluidos" class="escondido">
+        <h3>📋 Relatório Final</h3>
+        <p id="acomp-relato"></p>
+        <h4 style="margin:15px 0 8px;">📸 Fotos</h4>
+        <div id="acomp-fotos" class="grid-fotos"></div>
+        <button class="btn btn-azul" onclick="enviarRelatorioOcorrencia()">📤 Enviar por WhatsApp</button>
+    </div>
+    
+    <button class="btn" onclick="voltarAdmin()">← Voltar</button>
 </div>
 
 <script>
 // DADOS
 let cadastrosApoio = JSON.parse(localStorage.getItem('cadastrosApoio') || '[]');
 let listaOcorrencias = JSON.parse(localStorage.getItem('ocorrencias') || '[]');
+let mensagens = JSON.parse(localStorage.getItem('mensagens') || '{}');
 let usuarioAtual = null;
 let servicoAceito = null;
 let fotosEnviadas = [];
+let localizacaoAtiva = false;
+let watchId = null;
+let mapaAdmin = null, mapaApoio = null, mapaAcomp = null;
+let marcadoresApoios = {};
+let tipoAlerta = 'sirene'; // 'sirene' ou 'aviso'
 
-// TROCAR TELA
+// ====================================== FUNÇÕES BASE
+function salvarDados() {
+    localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
+    localStorage.setItem('ocorrencias', JSON.stringify(listaOcorrencias));
+    localStorage.setItem('mensagens', JSON.stringify(mensagens));
+}
+
 function mostrarTela(id) {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById(id).classList.add('ativa');
 }
 
-// SENHA ADMIN
+function tocarAlerta() {
+    if (tipoAlerta === 'sirene') {
+        document.getElementById('som-sirene').play().catch(()=>{});
+    } else {
+        document.getElementById('som-aviso').play().catch(()=>{});
+    }
+}
+
+// ====================================== ADMINISTRAÇÃO
 function verificarSenhaAdmin() {
     const senha = document.getElementById('senha-admin').value;
     if (senha === 'admin123') {
         mostrarTela('tela-admin');
         atualizarPainelAdmin();
+        inicializarMapaAdmin();
     } else {
         alert('Senha incorreta!');
     }
 }
 
-// CAMPO OUTRO
 function campoOutro() {
     const sel = document.getElementById('ocorr-tipo').value;
     document.getElementById('ocorr-tipo-outro').classList.toggle('escondido', sel !== 'Outro');
 }
 
-// LANÇAR OCORRÊNCIA
 function lancarOcorrencia() {
     const tipo = document.getElementById('ocorr-tipo').value;
     const tipoFinal = tipo === 'Outro' ? document.getElementById('ocorr-tipo-outro').value : tipo;
@@ -252,6 +405,8 @@ function lancarOcorrencia() {
     const ocorr = {
         id: Date.now(),
         endereco: document.getElementById('ocorr-endereco').value,
+        lat: parseFloat(document.getElementById('ocorr-lat').value) || null,
+        lng: parseFloat(document.getElementById('ocorr-lng').value) || null,
         regiao: document.getElementById('ocorr-regiao').value,
         tipo: tipoFinal,
         valor: parseFloat(document.getElementById('ocorr-valor').value) || 0,
@@ -261,41 +416,44 @@ function lancarOcorrencia() {
         status: 'pendente',
         aceitoPor: null,
         fotos: [],
-        relatorio: ''
+        relatorio: '',
+        dataConclusao: null
     };
     
     if (!ocorr.endereco) { alert('Preencha o endereço!'); return; }
     
     listaOcorrencias.unshift(ocorr);
+    mensagens[ocorr.id] = [];
     salvarDados();
     atualizarPainelAdmin();
     alert('✅ Ocorrência lançada! Os apoios já podem ver.');
     
     // Limpar
     document.getElementById('ocorr-endereco').value = '';
+    document.getElementById('ocorr-lat').value = '';
+    document.getElementById('ocorr-lng').value = '';
     document.getElementById('ocorr-regiao').value = '';
     document.getElementById('ocorr-valor').value = '';
     document.getElementById('ocorr-obs').value = '';
 }
 
-// ATUALIZAR PAINEL ADMIN
 function atualizarPainelAdmin() {
     document.getElementById('qtd-apoios').textContent = cadastrosApoio.length;
     
-    // Lista Apoios
     const listaApoio = document.getElementById('lista-apoios');
     listaApoio.innerHTML = cadastrosApoio.map((a, i) => `
-        <div style="padding:10px; background:#334155; border-radius:8px; margin:5px 0;">
+        <div style="padding:12px; background:#334155; border-radius:8px; margin:6px 0;">
             <p><strong>${a.nome}</strong> — ${a.veiculo}</p>
-            <p style="font-size:13px; color:#94a3b8;">${a.telefone} | ${a.regiao}</p>
+            <p style="font-size:13px; color:#94a3b8;">📱 ${a.telefone} | 💳 ${a.cpf || 'Sem CPF'}</p>
+            <p style="font-size:13px; color:#94a3b8;">📍 ${a.regiao || 'Região não informada'}</p>
             <p style="font-size:13px;">Status: ${a.aprovado ? '✅ Ativo' : '⏳ Pendente'}</p>
-            ${!a.aprovado ? `<button class="btn btn-verde" style="padding:8px; font-size:14px; margin:5px 0;" onclick="aprovarApoio(${i})">✅ Aprovar</button>` : ''}
+            ${!a.aprovado ? `<button class="btn btn-verde" style="padding:8px; font-size:14px; margin:6px 0;" onclick="aprovarApoio(${i})">✅ Aprovar</button>` : ''}
             <button class="btn btn-vermelho" style="padding:8px; font-size:14px;" onclick="excluirApoio(${i})">🗑️ Excluir</button>
         </div>
     `).join('');
     
-    // Lista Ocorrências
     atualizarRelatorioAdmin('todas');
+    atualizarMarcadoresApoios();
 }
 
 function aprovarApoio(indice) {
@@ -320,6 +478,7 @@ function filtrarOcorrencias(filtro) {
 function atualizarRelatorioAdmin(filtro) {
     let filtrado = listaOcorrencias;
     if (filtro === 'pendentes') filtrado = listaOcorrencias.filter(o => o.status === 'pendente');
+    if (filtro === 'andamento') filtrado = listaOcorrencias.filter(o => o.status === 'aceita');
     if (filtro === 'concluidas') filtrado = listaOcorrencias.filter(o => o.status === 'concluida');
     
     const div = document.getElementById('lista-ocorrencias-admin');
@@ -328,40 +487,226 @@ function atualizarRelatorioAdmin(filtro) {
         return;
     }
     
-    div.innerHTML = filtrado.map(o => `
-        <div style="padding:12px; background:#334155; border-radius:8px; margin:8px 0; border-left:3px solid ${o.status==='concluida'?'#16a34a':'#eab308'};">
+    div.innerHTML = filtrado.map(o => {
+        let classeStatus = o.status === 'concluida' ? 'status-concluida' : 
+                          o.status === 'aceita' ? 'status-andamento' : 'status-pendente';
+        let textoStatus = o.status === 'concluida' ? '✅ Concluída' : 
+                          o.status === 'aceita' ? '🔄 Em Andamento' : '⏳ Pendente';
+        return `
+        <div style="padding:14px; background:#334155; border-radius:8px; margin:8px 0; border-left:3px solid ${
+            o.status==='concluida'?'#16a34a':o.status==='aceita'?'#1e40af':'#eab308'
+        };">
             <p><strong>📍 ${o.endereco}</strong></p>
             <p>Tipo: ${o.tipo} | Valor: R$ ${o.valor.toFixed(2)}</p>
             <p style="font-size:13px; color:#94a3b8;">${o.data} ${o.hora}</p>
-            <p>Status: ${o.status === 'pendente' ? '⏳ Pendente' : o.status === 'aceita' ? '🔄 Em atendimento' : '✅ Concluída'}</p>
-            ${o.aceitoPor ? `<p>Apoio: ${o.aceitoPor.nome}</p>` : ''}
-            ${o.relatorio ? `<p style="margin-top:8px; font-size:13px;">📝 ${o.relatorio}</p>` : ''}
-            ${o.status === 'concluida' ? `<button class="btn btn-azul" style="padding:6px; font-size:14px; margin-top:8px;" onclick="enviarPorWhatsApp(${o.id})">📤 Enviar pelo WhatsApp</button>` : ''}
+            <span class="status-tag ${classeStatus}">${textoStatus}</span>
+            ${o.aceitoPor ? `<p style="margin-top:6px;">👤 Apoio: ${o.aceitoPor.nome}</p>` : ''}
+            ${o.status === 'aceita' ? 
+                `<button class="btn btn-azul" style="padding:8px; font-size:14px; margin-top:8px;" onclick="acompanharOcorrencia(${o.id})">👁️ Acompanhar</button>` : 
+                o.status === 'concluida' ? 
+                `<button class="btn btn-azul" style="padding:8px; font-size:14px; margin-top:8px;" onclick="acompanharOcorrencia(${o.id})">📋 Ver Relatório</button>
+                 <button class="btn btn-verde" style="padding:8px; font-size:14px; margin-top:8px;" onclick="enviarRelatorioOcorrencia(${o.id})">📤 Enviar WhatsApp</button>` : ''
+            }
         </div>
-    `).join('');
+    `}).join('');
 }
 
-// CADASTRO APOIO
+function acompanharOcorrencia(id) {
+    servicoAceito = listaOcorrencias.find(o => o.id === id);
+    if (!servicoAceito) return;
+    
+    mostrarTela('tela-admin-acompanhar');
+    document.getElementById('acomp-endereco').textContent = servicoAceito.endereco;
+    document.getElementById('acomp-apoio').textContent = servicoAceito.aceitoPor?.nome || '—';
+    
+    let statusTexto = servicoAceito.status === 'concluida' ? '✅ Concluída' : '🔄 Em Andamento';
+    document.getElementById('acomp-status').textContent = statusTexto;
+    
+    // Carregar mensagens
+    carregarChatAdmin();
+    
+    // Mostrar dados se concluída
+    const dadosConcl = document.getElementById('dados-concluidos');
+    if (servicoAceito.status === 'concluida') {
+        dadosConcl.classList.remove('escondido');
+        document.getElementById('acomp-relato').textContent = servicoAceito.relatorio || 'Sem relatório';
+        const divFotos = document.getElementById('acomp-fotos');
+        divFotos.innerHTML = (servicoAceito.fotos || []).map(f => `<img src="${f}">`).join('');
+    } else {
+        dadosConcl.classList.add('escondido');
+    }
+    
+    // Inicializar mapa de acompanhamento
+    setTimeout(() => {
+        if (!mapaAcomp) {
+            mapaAcomp = L.map('mapa-acompanhar').setView([-23.5505, -46.6333], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaAcomp);
+        }
+        if (servicoAceito.lat && servicoAceito.lng) {
+            mapaAcomp.setView([servicoAceito.lat, servicoAceito.lng], 15);
+            L.marker([servicoAceito.lat, servicoAceito.lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaAcomp).bindPopup('Local da Ocorrência');
+        }
+        if (servicoAceito.aceitoPor?.ultimaLat && servicoAceito.aceitoPor?.ultimaLng) {
+            L.marker([servicoAceito.aceitoPor.ultimaLat, servicoAceito.aceitoPor.ultimaLng], {icon: L.divIcon({html:'🛵', className:'', iconSize:[25,25]})}).addTo(mapaAcomp).bindPopup(servicoAceito.aceitoPor.nome);
+        }
+    }, 100);
+}
+
+function voltarAdmin() {
+    servicoAceito = null;
+    mostrarTela('tela-admin');
+    atualizarPainelAdmin();
+}
+
+function carregarChatAdmin() {
+    const caixa = document.getElementById('caixa-chat-admin');
+    const msgs = mensagens[servicoAceito.id] || [];
+    caixa.innerHTML = msgs.map(m => `
+        <div class="msg ${m.de === 'admin' ? 'msg-admin' : 'msg-apoio'}">
+            ${m.texto}
+            <div class="msg-horario">${m.hora}</div>
+        </div>
+    `).join('');
+    caixa.scrollTop = caixa.scrollHeight;
+}
+
+function enviarMensagemChatAdmin() {
+    const input = document.getElementById('msg-chat-admin');
+    const texto = input.value.trim();
+    if (!texto || !servicoAceito) return;
+    
+    if (!mensagens[servicoAceito.id]) mensagens[servicoAceito.id] = [];
+    mensagens[servicoAceito.id].push({
+        de: 'admin',
+        texto: texto,
+        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
+    });
+    salvarDados();
+    input.value = '';
+    carregarChatAdmin();
+}
+
+function enviarRelatorioOcorrencia(id) {
+    const o = listaOcorrencias.find(x => x.id === id);
+    if (!o) return;
+    
+    const msg = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA\n
+📍 Endereço: ${o.endereco}
+🏘️ Região: ${o.regiao || '—'}
+📌 Tipo: ${o.tipo}
+💰 Valor: R$ ${o.valor.toFixed(2)}
+👤 Apoio: ${o.aceitoPor?.nome || '—'}
+📱 Tel: ${o.aceitoPor?.telefone || '—'}
+📅 Data: ${o.data} ${o.hora}
+✅ Concluído em: ${o.dataConclusao || '—'}
+
+📝 RELATÓRIO:
+${o.relatorio || 'Sem relatório registrado'}
+
+📸 Fotos: ${(o.fotos || []).length} arquivos anexados`;
+    
+    window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function gerarRelatorioPDF() {
+    const inicio = document.getElementById('relatorio-inicio').value;
+    const fim = document.getElementById('relatorio-fim').value;
+    const checks = document.querySelectorAll('#campos-relatorio input:checked');
+    const campos = Array.from(checks).map(c => c.value);
+    
+    if (!inicio || !fim) { alert('Selecione o período!'); return; }
+    
+    const filtro = listaOcorrencias.filter(o => {
+        const [d, m, a] = o.data.split('/');
+        const dataOcorr = new Date(`${a}-${m}-${d}`);
+        return dataOcorr >= new Date(inicio) && dataOcorr <= new Date(fim);
+    });
+    
+    if (!filtrado.length) { alert('Nenhuma ocorrência no período selecionado.'); return; }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text('RELATÓRIO DE OCORRÊNCIAS', 105, 20, {align:'center'});
+    doc.setFontSize(11);
+    doc.text(`Período: ${inicio} a ${fim}`, 105, 30, {align:'center'});
+    
+    let y = 40;
+    filtro.forEach((o, idx) => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.setFontSize(12);
+        doc.setTextColor(0,0,0);
+        doc.text(`${idx+1}. ${o.endereco}`, 10, y); y += 7;
+        doc.setFontSize(10);
+        if (campos.includes('regiao')) doc.text(`Região: ${o.regiao || '—'}`, 14, y); y += 5;
+        if (campos.includes('tipo')) doc.text(`Tipo: ${o.tipo}`, 14, y); y += 5;
+        if (campos.includes('valor')) doc.text(`Valor: R$ ${o.valor.toFixed(2)}`, 14, y); y += 5;
+        if (campos.includes('data')) doc.text(`Data: ${o.data} ${o.hora}`, 14, y); y += 5;
+        if (campos.includes('apoio')) doc.text(`Apoio: ${o.aceitoPor?.nome || 'Não atribuído'}`, 14, y); y += 5;
+        if (campos.includes('relato') && o.relatorio) {
+            doc.text(`Relatório:`, 14, y); y += 5;
+            const linhas = doc.splitTextToSize(o.relatorio, 180);
+            doc.text(linhas, 14, y);
+            y += linhas.length * 5;
+        }
+        y += 8;
+    });
+    
+    doc.save(`relatorio-drtrack-${inicio}-a-${fim}.pdf`);
+    alert('✅ PDF gerado com sucesso!');
+}
+
+function enviarRelatorioWhatsApp() {
+    alert('📤 Relatório pronto! Use o PDF gerado acima para enviar por WhatsApp.');
+}
+
+function inicializarMapaAdmin() {
+    if (mapaAdmin) return;
+    mapaAdmin = L.map('mapa-admin').setView([-23.5505, -46.6333], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaAdmin);
+}
+
+function atualizarMarcadoresApoios() {
+    if (!mapaAdmin) return;
+    cadastrosApoio.forEach(a => {
+        if (a.ultimaLat && a.ultimaLng && a.aprovado) {
+            if (!marcadoresApoios[a.telefone]) {
+                marcadoresApoios[a.telefone] = L.marker([a.ultimaLat, a.ultimaLng], {
+                    icon: L.divIcon({html:a.veiculo.split(' ')[0], className:'', iconSize:[30,30]})
+                }).addTo(mapaAdmin).bindPopup(`<b>${a.nome}</b><br>${a.telefone}`);
+            } else {
+                marcadoresApoios[a.telefone].setLatLng([a.ultimaLat, a.ultimaLng]);
+            }
+        }
+    });
+    
+    listaOcorrencias.filter(o => o.lat && o.lng).forEach(o => {
+        L.marker([o.lat, o.lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaAdmin).bindPopup(`${o.endereco}<br>${o.status}`);
+    });
+}
+
+// ====================================== APOIO - CADASTRO E LOGIN
 function cadastrarApoio() {
     const dados = {
-        nome: document.getElementById('cad-nome').value,
-        telefone: document.getElementById('cad-tel').value,
-        email: document.getElementById('cad-email').value,
-        regiao: document.getElementById('cad-regiao').value,
+        nome: document.getElementById('cad-nome').value.trim(),
+        cpf: document.getElementById('cad-cpf').value.trim(),
+        telefone: document.getElementById('cad-tel').value.trim(),
+        pix: document.getElementById('cad-pix').value.trim(),
         veiculo: document.getElementById('cad-veiculo').value,
-        placa: document.getElementById('cad-placa').value,
-        pix: document.getElementById('cad-pix').value,
+        placa: document.getElementById('cad-placa').value.trim(),
         senha: document.getElementById('cad-senha').value,
+        regiao: '',
         aprovado: false,
-        dataCadastro: new Date().toLocaleDateString('pt-BR')
+        dataCadastro: new Date().toLocaleDateString('pt-BR'),
+        ultimaLat: null,
+        ultimaLng: null
     };
     
-    if (!dados.nome || !dados.telefone || dados.senha.length < 6) {
-        alert('Preencha todos os campos! Senha com mínimo 6 dígitos.');
+    if (!dados.nome || !dados.cpf || !dados.telefone || !dados.pix || !dados.placa || dados.senha.length < 6) {
+        alert('Preencha TODOS os campos! Senha com mínimo 6 dígitos.');
         return;
     }
     
-    // Verificar duplicidade de telefone
     const existe = cadastrosApoio.find(a => a.telefone === dados.telefone);
     if (existe) { alert('Esse telefone já está cadastrado!'); return; }
     
@@ -371,9 +716,8 @@ function cadastrarApoio() {
     mostrarTela('tela-apoio-aguardando');
 }
 
-// ENTRAR APOIO
 function entrarApoio() {
-    const tel = document.getElementById('apoio-tel').value;
+    const tel = document.getElementById('apoio-tel').value.trim();
     const senha = document.getElementById('apoio-senha').value;
     
     const apoio = cadastrosApoio.find(a => a.telefone === tel && a.senha === senha);
@@ -385,8 +729,7 @@ function entrarApoio() {
     if (!apoio.aprovado) {
         mostrarTela('tela-apoio-aguardando');
     } else {
-        mostrarTela('tela-apoio-principal');
-        carregarOcorrenciasApoio();
+        mostrarTela('tela-apoio-localizacao');
     }
 }
 
@@ -394,15 +737,80 @@ function verificarStatus() {
     const apoio = cadastrosApoio.find(a => a.telefone === usuarioAtual?.telefone);
     if (apoio?.aprovado) {
         usuarioAtual = apoio;
-        mostrarTela('tela-apoio-principal');
-        carregarOcorrenciasApoio();
+        mostrarTela('tela-apoio-localizacao');
     } else {
         alert('Ainda não aprovado. Aguarde!');
     }
 }
 
-// CARREGAR OCORRÊNCIAS PARA APOIO
-function carregarOcorrenciasApoio() {
+// ====================================== LOCALIZAÇÃO
+function ativarLocalizacao() {
+    if (!navigator.geolocation) {
+        alert('Geolocalização não suportada no aparelho.');
+        return;
+    }
+    
+    watchId = navigator.geolocation.watchPosition(
+        pos => {
+            localizacaoAtiva = true;
+            if (usuarioAtual) {
+                usuarioAtual.ultimaLat = pos.coords.latitude;
+                usuarioAtual.ultimaLng = pos.coords.longitude;
+                const idx = cadastrosApoio.findIndex(a => a.telefone === usuarioAtual.telefone);
+                if (idx !== -1) {
+                    cadastrosApoio[idx].ultimaLat = pos.coords.latitude;
+                    cadastrosApoio[idx].ultimaLng = pos.coords.longitude;
+                }
+                salvarDados();
+            }
+            
+            document.getElementById('status-localizacao').innerHTML = '✅ Localização Ativa';
+            document.getElementById('status-localizacao').classList.remove('local-inativo');
+            document.getElementById('status-localizacao').classList.add('local-ativo');
+            document.getElementById('status-local-apoio').innerHTML = '✅ Localização Ativa';
+            
+            mostrarTela('tela-apoio-principal');
+            inicializarMapaApoio(pos.coords.latitude, pos.coords.longitude);
+            verificarOcorrenciasPendentes();
+        },
+        erro => {
+            alert('Não foi possível acessar sua localização. Verifique as permissões.');
+        },
+        {enableHighAccuracy: true, maximumAge: 10000, timeout: 5000}
+    );
+}
+
+function pararLocalizacao() {
+    if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+    localizacaoAtiva = false;
+    document.getElementById('status-localizacao').innerHTML = '❌ Localização Pausada';
+    document.getElementById('status-localizacao').classList.remove('local-ativo');
+    document.getElementById('status-localizacao').classList.add('local-inativo');
+    mostrarTela('tela-apoio-localizacao');
+}
+
+function pararLocalizacaoESair() {
+    pararLocalizacao();
+    sair();
+}
+
+// ====================================== MAPA E OCORRÊNCIAS DO APOIO
+function inicializarMapaApoio(lat, lng) {
+    if (mapaApoio) return;
+    mapaApoio = L.map('mapa-apoio').setView([lat, lng], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaApoio);
+    L.marker([lat, lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaApoio).bindPopup('Sua localização');
+}
+
+function verificarOcorrenciasPendentes
+// continuação — RESTANTE DO CÓDIGO
+
+function verificarOcorrenciasPendentes() {
+    if (!localizacaoAtiva) return;
+    
     const pendentes = listaOcorrencias.filter(o => o.status === 'pendente');
     const div = document.getElementById('lista-ocorrencias-apoio');
     
@@ -411,14 +819,34 @@ function carregarOcorrenciasApoio() {
         return;
     }
     
+    // Tocar alerta se houver ocorrências novas
+    tocarAlerta();
+    
     div.innerHTML = pendentes.map(o => `
         <div class="ocorrencia piscando">
             <p><strong>📍 ${o.endereco}</strong></p>
             <p>Tipo: ${o.tipo}</p>
             <p>Valor: R$ ${o.valor.toFixed(2)}</p>
-            <button class="btn btn-verde" style="margin:10px 0 0 0;" onclick="aceitarServico(${o.id})">✅ Aceitar e Atender</button>
+            <div class="botoes">
+                <button class="btn btn-verde" style="flex:1;" onclick="aceitarServico(${o.id})">✅ Aceitar</button>
+                <button class="btn btn-vermelho" style="flex:1;" onclick="recusarServico(${o.id})">❌ Recusar</button>
+            </div>
         </div>
     `).join('');
+    
+    // Adicionar marcadores no mapa
+    pendentes.forEach(o => {
+        if (o.lat && o.lng && mapaApoio) {
+            L.marker([o.lat, o.lng], {
+                icon: L.divIcon({html:'🚨', className:'', iconSize:[30,30]})
+            }).addTo(mapaApoio).bindPopup(`${o.endereco}<br>${o.tipo}`);
+        }
+    });
+}
+
+function recusarServico(id) {
+    alert('Ocorrência recusada. Continuando em monitoramento...');
+    verificarOcorrenciasPendentes();
 }
 
 // ACEITAR SERVIÇO
@@ -428,16 +856,17 @@ function aceitarServico(id) {
     const ocorr = listaOcorrencias.find(o => o.id === id);
     if (!ocorr || ocorr.status !== 'pendente') {
         alert('Serviço já foi aceito por outro!');
-        carregarOcorrenciasApoio();
+        verificarOcorrenciasPendentes();
         return;
     }
     
     ocorr.status = 'aceita';
     ocorr.aceitoPor = usuarioAtual;
     servicoAceito = ocorr;
+    mensagens[ocorr.id] = mensagens[ocorr.id] || [];
     salvarDados();
     
-    // Preencher dados da tela de atendimento
+    // Preencher dados
     document.getElementById('atvs-endereco').textContent = ocorr.endereco;
     document.getElementById('atvs-tipo').textContent = ocorr.tipo;
     document.getElementById('atvs-valor').textContent = ocorr.valor.toFixed(2);
@@ -446,9 +875,40 @@ function aceitarServico(id) {
     document.getElementById('qtd-fotos').textContent = '0 / 5 fotos mínimas';
     
     mostrarTela('tela-atendimento');
+    carregarChatApoio();
 }
 
-// PROCESSAR FOTOS
+// CHAT
+function carregarChatApoio() {
+    if (!servicoAceito) return;
+    const caixa = document.getElementById('caixa-chat');
+    const msgs = mensagens[servicoAceito.id] || [];
+    caixa.innerHTML = msgs.map(m => `
+        <div class="msg ${m.de === 'apoio' ? 'msg-apoio' : 'msg-admin'}">
+            ${m.texto}
+            <div class="msg-horario">${m.hora}</div>
+        </div>
+    `).join('');
+    caixa.scrollTop = caixa.scrollHeight;
+}
+
+function enviarMensagemChat() {
+    const input = document.getElementById('msg-chat');
+    const texto = input.value.trim();
+    if (!texto || !servicoAceito) return;
+    
+    if (!mensagens[servicoAceito.id]) mensagens[servicoAceito.id] = [];
+    mensagens[servicoAceito.id].push({
+        de: 'apoio',
+        texto: texto,
+        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
+    });
+    salvarDados();
+    input.value = '';
+    carregarChatApoio();
+}
+
+// FOTOS
 function processarFotos(input) {
     const arquivos = input.files;
     for (let i = 0; i < arquivos.length; i++) {
@@ -464,12 +924,30 @@ function processarFotos(input) {
 function atualizarPreview() {
     const div = document.getElementById('preview-fotos');
     div.innerHTML = fotosEnviadas.map((f, i) => `
-        <img src="${f}" style="width:80px; height:80px; object-fit:cover; border-radius:8px;">
+        <img src="${f}" alt="Foto ${i+1}">
     `).join('');
     document.getElementById('qtd-fotos').textContent = `${fotosEnviadas.length} / 5 fotos mínimas`;
 }
 
-// FINALIZAR ATENDIMENTO
+// PAUSAR / CANCELAR / FINALIZAR
+function pausarAtendimento() {
+    if (!confirm('Pausar este atendimento? Você pode retomar depois.')) return;
+    alert('⏸️ Atendimento pausado.');
+}
+
+function cancelarAtendimento() {
+    if (!confirm('Cancelar este atendimento?')) return;
+    if (servicoAceito) {
+        servicoAceito.status = 'pendente';
+        servicoAceito.aceitoPor = null;
+        salvarDados();
+    }
+    servicoAceito = null;
+    fotosEnviadas = [];
+    mostrarTela('tela-apoio-principal');
+    verificarOcorrenciasPendentes();
+}
+
 function finalizarAtendimento() {
     if (fotosEnviadas.length < 5) {
         alert(`Envie no mínimo 5 fotos! Você enviou ${fotosEnviadas.length}`);
@@ -487,80 +965,56 @@ function finalizarAtendimento() {
     servicoAceito.dataConclusao = new Date().toLocaleString('pt-BR');
     salvarDados();
     
-    // Gerar mensagem WhatsApp
-    const msg = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA\n
+    // Mensagem WhatsApp
+    const msg = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
+
 📍 Endereço: ${servicoAceito.endereco}
+🏘️ Região: ${servicoAceito.regiao || '—'}
 👤 Apoio: ${usuarioAtual.nome}
 📱 Tel: ${usuarioAtual.telefone}
+💳 CPF: ${usuarioAtual.cpf || '—'}
 🚗 Veículo: ${usuarioAtual.veiculo} — ${usuarioAtual.placa}
-💵 Valor: R$ ${servicoAceito.valor.toFixed(2)}
+💰 Valor: R$ ${servicoAceito.valor.toFixed(2)}
+💵 PIX: ${usuarioAtual.pix}
 
 📝 RELATÓRIO:
 ${servicoAceito.relatorio}
 
-📸 Fotos: ${fotosEnviadas.length} arquivos enviados.
+📸 Fotos: ${fotosEnviadas.length} arquivos enviados
 
 ✅ Concluído em: ${servicoAceito.dataConclusao}`;
     
-    const link = `https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`;
-    window.open(link, '_blank');
+    window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`, '_blank');
     
     alert('✅ Atendimento finalizado! Relatório enviado pelo WhatsApp.');
     servicoAceito = null;
     fotosEnviadas = [];
     mostrarTela('tela-apoio-principal');
-    carregarOcorrenciasApoio();
-}
-
-function cancelarAtendimento() {
-    if (confirm('Cancelar este atendimento?')) {
-        if (servicoAceito) {
-            servicoAceito.status = 'pendente';
-            servicoAceito.aceitoPor = null;
-            salvarDados();
-        }
-        servicoAceito = null;
-        fotosEnviadas = [];
-        mostrarTela('tela-apoio-principal');
-        carregarOcorrenciasApoio();
-    }
-}
-
-function enviarPorWhatsApp(id) {
-    const ocorr = listaOcorrencias.find(o => o.id === id);
-    if (!ocorr) return;
-    
-    const msg = `📋 RELATÓRIO CONCLUÍDO\n
-📍 Endereço: ${ocorr.endereco}
-🏘️ Região: ${ocorr.regiao}
-📌 Tipo: ${ocorr.tipo}
-💰 Valor: R$ ${ocorr.valor.toFixed(2)}
-👤 Atendente: ${ocorr.aceitoPor?.nome || '—'}
-📅 Data: ${ocorr.data} ${ocorr.hora}
-
-📝 RELATÓRIO:
-${ocorr.relatorio || 'Sem relatório'}
-
-📸 Fotos: ${ocorr.fotos?.length || 0} arquivos`;
-    
-    window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-function salvarDados() {
-    localStorage.setItem('cadastrosApoio', JSON.stringify(cadastrosApoio));
-    localStorage.setItem('ocorrencias', JSON.stringify(listaOcorrencias));
+    verificarOcorrenciasPendentes();
 }
 
 function sair() {
+    if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
     usuarioAtual = null;
     servicoAceito = null;
     fotosEnviadas = [];
+    localizacaoAtiva = false;
     mostrarTela('tela-inicio');
 }
 
+// Atualização automática a cada 15s
+setInterval(() => {
+    if (usuarioAtual && usuarioAtual.aprovado && localizacaoAtiva) {
+        verificarOcorrenciasPendentes();
+    }
+}, 15000);
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('✅ DRTRACK Conecta carregado!');
+    console.log('✅ DRTRACK Conecta — Sistema Carregado!');
 });
 </script>
 </body>

@@ -11,7 +11,7 @@
         :root { --fundo: #0f172a; --azul: #1e40af; --verde: #16a34a; --amarelo: #eab308; --vermelho: #dc2626; --texto: #f1f5f9; --cinza: #94a3b8; }
         body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: var(--texto); padding: 20px; }
         .tela { display: none; max-width: 550px; margin: 0 auto; }
-        .ativa { display: block; }
+        .ativa { display: block !important; }
         h1 { text-align: center; margin: 20px 0; font-size: 26px; }
         h2 { font-size: 20px; margin-bottom: 20px; }
         h3 { font-size: 17px; margin: 15px 0 8px; }
@@ -24,19 +24,18 @@
         .card { background: #1e293b; padding: 20px; border-radius: 16px; margin-bottom: 15px; }
         input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 8px; background: #334155; color: white; font-size: 15px; }
         label { display: block; margin-top: 12px; font-weight: 500; }
-        .ocorrencia { border-left: 4px solid var(--amarelo); padding: 15px; margin: 10px 0; background: #1e293b; border-radius: 0 10px 10px 0; cursor: pointer; }
+        .ocorrencia { border-left: 4px solid var(--amarelo); padding: 15px; margin: 10px 0; background: #1e293b; border-radius: 0 10px 10px 0; }
         .piscando { animation: piscar 0.8s infinite; }
         @keyframes piscar { 0%,100% {opacity:1;} 50% {opacity:0.4;} }
         .escondido { display: none !important; }
         .link { color: #60a5fa; cursor: pointer; text-decoration: underline; margin-top: 12px; display: inline-block; }
         .aviso { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin: 15px 0; text-align: center; }
-        #mapa-apoio { height: 300px; border-radius: 12px; margin: 15px 0; }
+        #mapa-apoio { height: 250px; border-radius: 12px; margin: 15px 0; }
         .botoes { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
         .botoes .btn { flex: 1; padding: 12px; font-size: 14px; min-width: 100px; }
         .grid-fotos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 12px 0; }
         .foto-container { background: #0f172a; padding: 6px; border-radius: 8px; border: 1px solid #334155; }
         .grid-fotos img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; }
-        .detalhes { margin-top: 10px; padding: 10px; background: #0f172a; border-radius: 8px; font-size: 14px; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -45,8 +44,8 @@
 <div id="inicio" class="tela ativa">
     <h1>🛡️ DRTRACK Conecta</h1>
     <p style="text-align:center; color:var(--cinza); margin-bottom:30px;">Rede de Apoio e Segurança</p>
-    <button class="btn btn-verde" onclick="mostrar('login-apoio')">🛵 Sou Apoio</button>
-    <button class="btn btn-amarelo" onclick="mostrar('senha-admin')">⚙️ Administrador</button>
+    <button class="btn btn-verde" onclick="mostrarTela('login-apoio')">🛵 Sou Apoio</button>
+    <button class="btn btn-amarelo" onclick="mostrarTela('senha-admin')">⚙️ Administrador</button>
 </div>
 
 <!-- LOGIN ADMIN -->
@@ -56,7 +55,7 @@
         <label>Senha:</label>
         <input type="password" id="senha-adm">
         <button class="btn btn-amarelo" onclick="entrarAdmin()">Entrar</button>
-        <p class="link" onclick="mostrar('inicio')">← Voltar</p>
+        <p class="link" onclick="mostrarTela('inicio')">← Voltar</p>
     </div>
 </div>
 
@@ -103,9 +102,9 @@
 
     <div id="detalhes-ocorrencia" class="card escondido">
         <h3>📄 Relatório Completo</h3>
-        <div id="conteudo-detalhes" class="detalhes"></div>
+        <div id="conteudo-detalhes"></div>
         <div class="botoes">
-            <button class="btn btn-verde" onclick="enviarRelatorioWhatsApp()">📲 Enviar pelo WhatsApp</button>
+            <button class="btn btn-verde" onclick="enviarRelatorioWhatsApp()">📲 Enviar WhatsApp</button>
             <button class="btn btn-cinza" onclick="fecharDetalhes()">← Voltar</button>
         </div>
     </div>
@@ -127,8 +126,8 @@
         <label>Senha:</label>
         <input type="password" id="senha-apoio">
         <button class="btn btn-verde" onclick="entrarApoio()">Entrar</button>
-        <p style="margin-top:15px;">Sem conta? <span class="link" onclick="mostrar('cadastro')">Cadastrar</span></p>
-        <p class="link" onclick="mostrar('inicio')">← Voltar</p>
+        <p style="margin-top:15px;">Sem conta? <span class="link" onclick="mostrarTela('cadastro')">Cadastrar</span></p>
+        <p class="link" onclick="mostrarTela('inicio')">← Voltar</p>
     </div>
 </div>
 
@@ -157,7 +156,7 @@
         <label>Senha (6+ dígitos):</label>
         <input type="password" id="c-senha">
         <button class="btn btn-verde" onclick="salvarCadastro()">Enviar</button>
-        <p class="link" onclick="mostrar('login-apoio')">← Voltar</p>
+        <p class="link" onclick="mostrarTela('login-apoio')">← Voltar</p>
     </div>
 </div>
 
@@ -165,16 +164,16 @@
 <div id="aguardando" class="tela">
     <h2>⏳ Aguardando</h2>
     <div class="aviso">Cadastro recebido! Aguarde o administrador aprovar.</div>
-    <button class="btn btn-verde" onclick="verificar()">🔄 Verificar</button>
+    <button class="btn btn-verde" onclick="verificar()">🔄 Verificar Status</button>
     <button class="btn btn-cinza" onclick="sair()">🚪 Sair</button>
 </div>
 
 <!-- ATIVAR LOCALIZAÇÃO -->
 <div id="localizacao" class="tela">
-    <h2>📍 Localização</h2>
+    <h2>📍 Ativar Localização</h2>
     <div class="card">
-        <p>Ative sua localização para ver ocorrências próximas.</p>
-        <button class="btn btn-verde" onclick="ativarGPS()">📍 Ativar</button>
+        <p>Precisamos da sua localização para mostrar ocorrências próximas.</p>
+        <button class="btn btn-verde" onclick="ativarGPS()">📍 Ativar Localização</button>
     </div>
 </div>
 
@@ -186,7 +185,7 @@
     <button class="btn btn-cinza" onclick="sair()">🚪 Sair</button>
 </div>
 
-<!-- TELA DE PRESTAÇÃO DE CONTAS -- AQUI APARECE TUDO -->
+<!-- TELA DE ATENDIMENTO — PRESTAR CONTAS -- TELA QUE VAI APARECER!!! -->
 <div id="atendimento" class="tela">
     <h2>✅ Prestar Contas do Atendimento</h2>
     
@@ -206,12 +205,12 @@
     </div>
 
     <div class="card">
-        <h3>📝 Relatar o que aconteceu</h3>
-        <textarea id="relatorio" rows="6" placeholder="Descreva: horário de chegada, o que encontrou no local, o que fez, situação final, tudo o que observou..."></textarea>
+        <h3>📝 Relatório — Descreva o que aconteceu</h3>
+        <textarea id="relatorio" rows="6" placeholder="Chegada ao local, o que encontrou, ações tomadas, situação final, observações..."></textarea>
     </div>
 
     <div class="botoes">
-        <button class="btn btn-vermelho" onclick="cancelar()">❌ Cancelar</button>
+        <button class="btn btn-vermelho" onclick="cancelar()">❌ Cancelar Atendimento</button>
         <button class="btn btn-verde" onclick="enviarRelatorio()">✅ Enviar Relatório</button>
     </div>
 </div>
@@ -231,16 +230,18 @@ function salvarDados() {
     localStorage.setItem('ocorrencias', JSON.stringify(ocorrencias));
 }
 
-function mostrar(id) {
+// FUNÇÃO CORRIGIDA — TROCA DE TELA GARANTIDA
+function mostrarTela(id) {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById(id).classList.add('ativa');
+    
     if(id === 'admin') atualizarPainelAdmin();
     if(id === 'principal') atualizarListaApoio();
 }
 
 function entrarAdmin() {
     if(document.getElementById('senha-adm').value === 'admin123') {
-        mostrar('admin');
+        mostrarTela('admin');
     } else {
         alert('Senha incorreta!');
     }
@@ -280,7 +281,7 @@ function lancar() {
     });
     salvarDados();
     atualizarPainelAdmin();
-    alert('✅ Lançada!');
+    alert('✅ Ocorrência lançada!');
     document.getElementById('end').value = '';
     document.getElementById('lat').value = '';
     document.getElementById('lng').value = '';
@@ -339,7 +340,7 @@ function filtrar(filtro) {
             <p style="font-size:13px; color:var(--cinza);">${o.data} ${o.hora}</p>
             <p>${statusTxt}</p>
         </div>`;
-    }).join('') : '<p style="color:var(--cinza); text-align:center; padding:15px;">Nenhuma ocorrência</p>';
+    }).join('') : '<p style="color:var(--cinza); text-align:center; padding:15px;">Nenhuma ocorrência encontrada</p>';
 }
 
 function abrirDetalhes(id) {
@@ -361,7 +362,7 @@ function abrirDetalhes(id) {
         <p><strong>Valor:</strong> R$ ${o.valor.toFixed(2)}</p>
         <p><strong>Data/Hora:</strong> ${o.data} ${o.hora}</p>
         ${o.apoio ? `<p><strong>Apoio:</strong> ${o.apoio.nome} | ${o.apoio.telefone} | PIX: ${o.apoio.pix}</p>` : ''}
-        ${o.relatorio ? `<hr style="border:0; border-top:1px solid #333; margin:10px 0;"><p><strong>Relatório:</strong></p><p style="white-space:pre-wrap;">${o.relatorio}</p>` : ''}
+        ${o.relatorio ? `<hr style="border:0; border-top:1px solid #333; margin:10px 0;"><p><strong>Relatório do Apoio:</strong></p><p style="white-space:pre-wrap;">${o.relatorio}</p>` : ''}
         ${fotosHtml}
     `;
     document.getElementById('detalhes-ocorrencia').classList.remove('escondido');
@@ -413,8 +414,8 @@ function salvarCadastro() {
     }
     apoios.push(dados);
     salvarDados();
-    alert('✅ Cadastrado! Aguarde aprovação.');
-    mostrar('aguardando');
+    alert('✅ Cadastro enviado! Aguarde aprovação.');
+    mostrarTela('aguardando');
 }
 
 function entrarApoio() {
@@ -423,12 +424,12 @@ function entrarApoio() {
     const a = apoios.find(x => x.telefone === tel && x.senha === senha);
     if(!a) { alert('Dados incorretos!'); return; }
     usuario = a;
-    mostrar(a.aprovado ? 'localizacao' : 'aguardando');
+    mostrarTela(a.aprovado ? 'localizacao' : 'aguardando');
 }
 
 function verificar() {
     const a = apoios.find(x => x.telefone === usuario?.telefone);
-    if(a?.aprovado) { usuario = a; mostrar('localizacao'); }
+    if(a?.aprovado) { usuario = a; mostrarTela('localizacao'); }
     else alert('Ainda não aprovado.');
 }
 
@@ -446,7 +447,7 @@ function ativarGPS() {
                 }
                 salvarDados();
             }
-            mostrar('principal');
+            mostrarTela('principal');
             if(!mapa) {
                 mapa = L.map('mapa-apoio').setView([pos.coords.latitude, pos.coords.longitude], 14);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
@@ -480,10 +481,15 @@ function atualizarListaApoio() {
     `).join('');
 }
 
+// FUNÇÃO PRINCIPAL CORRIGIDA — AGORA ABRE A TELA DE VERDADE!
 function aceitarServico(id) {
     if(!confirm('Aceitar este atendimento?')) return;
     const o = ocorrencias.find(x => x.id === id);
-    if(!o || o.status !== 'pendente') { alert('Já foi aceito!'); atualizarListaApoio(); return; }
+    if(!o || o.status !== 'pendente') { 
+        alert('Já foi aceito por outro apoio!'); 
+        atualizarListaApoio(); 
+        return; 
+    }
     
     o.status = 'aceita';
     o.apoio = usuario;
@@ -491,7 +497,7 @@ function aceitarServico(id) {
     fotosEnviadas = [];
     salvarDados();
     
-    // PREENCHE TELA DE PRESTAÇÃO DE CONTAS — AGORA APARECE TUDO!
+    // PREENCHE OS DADOS
     document.getElementById('atv-end').textContent = o.endereco;
     document.getElementById('atv-tipo').textContent = o.tipo;
     document.getElementById('atv-valor').textContent = o.valor.toFixed(2);
@@ -499,7 +505,8 @@ function aceitarServico(id) {
     document.getElementById('qtd-fotos').textContent = '0 / 5 fotos';
     document.getElementById('relatorio').value = '';
     
-    mostrar('atendimento'); // ← AQUI ABRE A TELA DO RELATÓRIO
+    // ← AQUI É ONDE ABRE A TELA — GARANTIDO!
+    mostrarTela('atendimento');
 }
 
 function processarFotos(input) {
@@ -539,7 +546,7 @@ function processarFotos(input) {
 }
 
 function cancelar() {
-    if(!confirm('Cancelar atendimento?')) return;
+    if(!confirm('Cancelar este atendimento?')) return;
     if(servicoAtual) {
         servicoAtual.status = 'pendente';
         servicoAtual.apoio = null;
@@ -547,30 +554,27 @@ function cancelar() {
     }
     servicoAtual = null;
     fotosEnviadas = [];
-    mostrar('principal');
+    mostrarTela('principal');
     atualizarListaApoio();
 }
 
 function enviarRelatorio() {
-    // VALIDAÇÃO OBRIGATÓRIA
     if(fotosEnviadas.length < 5) {
         alert(`⚠️ Envie no mínimo 5 fotos! Enviadas: ${fotosEnviadas.length}`);
         return;
     }
     const rel = document.getElementById('relatorio').value.trim();
     if(!rel) {
-        alert('⚠️ Descreva o atendimento no relatório!');
+        alert('⚠️ Preencha o relatório!');
         return;
     }
     
-    // SALVA NO SISTEMA
     servicoAtual.status = 'concluida';
     servicoAtual.fotos = [...fotosEnviadas];
     servicoAtual.relatorio = rel;
     servicoAtual.dataConclusao = new Date().toLocaleString('pt-BR');
     salvarDados();
     
-    // ENVIA PARA SEU WHATSAPP
     const mensagem = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
 
 📍 Endereço: ${servicoAtual.endereco}
@@ -592,14 +596,14 @@ ${rel}
     alert('✅ Relatório enviado com sucesso!');
     servicoAtual = null;
     fotosEnviadas = [];
-    mostrar('principal');
+    mostrarTela('principal');
     atualizarListaApoio();
 }
 
 function sair() {
     if(watchGPS) navigator.geolocation.clearWatch(watchGPS);
     usuario = null; servicoAtual = null; fotosEnviadas = []; mapa = null;
-    mostrar('inicio');
+    mostrarTela('inicio');
 }
 </script>
 </body>

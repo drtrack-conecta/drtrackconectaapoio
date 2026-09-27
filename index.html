@@ -59,8 +59,6 @@
         .local-indicador { display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 8px; margin: 10px 0; }
         .local-ativo { background: #163425; border: 1px solid #16a34a; }
         .local-inativo { background: #3b1f1f; border: 1px solid #dc2626; }
-        .piscar-sirene { animation: piscar-sirene 0.5s infinite; }
-        @keyframes piscar-sirene { 0%,100% {background-color: #dc2626;} 50% {background-color: transparent;} }
     </style>
 </head>
 <body>
@@ -359,7 +357,7 @@ let localizacaoAtiva = false;
 let watchId = null;
 let mapaAdmin = null, mapaApoio = null, mapaAcomp = null;
 let marcadoresApoios = {};
-let tipoAlerta = 'sirene'; // 'sirene' ou 'aviso'
+let tipoAlerta = 'sirene';
 
 // ====================================== FUNÇÕES BASE
 function salvarDados() {
@@ -428,7 +426,6 @@ function lancarOcorrencia() {
     atualizarPainelAdmin();
     alert('✅ Ocorrência lançada! Os apoios já podem ver.');
     
-    // Limpar
     document.getElementById('ocorr-endereco').value = '';
     document.getElementById('ocorr-lat').value = '';
     document.getElementById('ocorr-lng').value = '';
@@ -522,10 +519,8 @@ function acompanharOcorrencia(id) {
     let statusTexto = servicoAceito.status === 'concluida' ? '✅ Concluída' : '🔄 Em Andamento';
     document.getElementById('acomp-status').textContent = statusTexto;
     
-    // Carregar mensagens
     carregarChatAdmin();
     
-    // Mostrar dados se concluída
     const dadosConcl = document.getElementById('dados-concluidos');
     if (servicoAceito.status === 'concluida') {
         dadosConcl.classList.remove('escondido');
@@ -536,7 +531,6 @@ function acompanharOcorrencia(id) {
         dadosConcl.classList.add('escondido');
     }
     
-    // Inicializar mapa de acompanhamento
     setTimeout(() => {
         if (!mapaAcomp) {
             mapaAcomp = L.map('mapa-acompanhar').setView([-23.5505, -46.6333], 12);
@@ -590,7 +584,8 @@ function enviarRelatorioOcorrencia(id) {
     const o = listaOcorrencias.find(x => x.id === id);
     if (!o) return;
     
-    const msg = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA\n
+    const msg = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
+
 📍 Endereço: ${o.endereco}
 🏘️ Região: ${o.regiao || '—'}
 📌 Tipo: ${o.tipo}
@@ -611,8 +606,6 @@ ${o.relatorio || 'Sem relatório registrado'}
 function gerarRelatorioPDF() {
     const inicio = document.getElementById('relatorio-inicio').value;
     const fim = document.getElementById('relatorio-fim').value;
-    const checks = document.querySelectorAll('#campos-relatorio input:checked');
-    const campos = Array.from(checks).map(c => c.value);
     
     if (!inicio || !fim) { alert('Selecione o período!'); return; }
     
@@ -622,7 +615,7 @@ function gerarRelatorioPDF() {
         return dataOcorr >= new Date(inicio) && dataOcorr <= new Date(fim);
     });
     
-    if (!filtrado.length) { alert('Nenhuma ocorrência no período selecionado.'); return; }
+    if (!filtro.length) { alert('Nenhuma ocorrência no período selecionado.'); return; }
     
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -635,15 +628,14 @@ function gerarRelatorioPDF() {
     filtro.forEach((o, idx) => {
         if (y > 270) { doc.addPage(); y = 20; }
         doc.setFontSize(12);
-        doc.setTextColor(0,0,0);
         doc.text(`${idx+1}. ${o.endereco}`, 10, y); y += 7;
         doc.setFontSize(10);
-        if (campos.includes('regiao')) doc.text(`Região: ${o.regiao || '—'}`, 14, y); y += 5;
-        if (campos.includes('tipo')) doc.text(`Tipo: ${o.tipo}`, 14, y); y += 5;
-        if (campos.includes('valor')) doc.text(`Valor: R$ ${o.valor.toFixed(2)}`, 14, y); y += 5;
-        if (campos.includes('data')) doc.text(`Data: ${o.data} ${o.hora}`, 14, y); y += 5;
-        if (campos.includes('apoio')) doc.text(`Apoio: ${o.aceitoPor?.nome || 'Não atribuído'}`, 14, y); y += 5;
-        if (campos.includes('relato') && o.relatorio) {
+        doc.text(`Região: ${o.regiao || '—'}`, 14, y); y += 5;
+        doc.text(`Tipo: ${o.tipo}`, 14, y); y += 5;
+        doc.text(`Valor: R$ ${o.valor.toFixed(2)}`, 14, y); y += 5;
+        doc.text(`Data: ${o.data} ${o.hora}`, 14, y); y += 5;
+        doc.text(`Apoio: ${o.aceitoPor?.nome || 'Não atribuído'}`, 14, y); y += 5;
+        if (o.relatorio) {
             doc.text(`Relatório:`, 14, y); y += 5;
             const linhas = doc.splitTextToSize(o.relatorio, 180);
             doc.text(linhas, 14, y);
@@ -657,7 +649,7 @@ function gerarRelatorioPDF() {
 }
 
 function enviarRelatorioWhatsApp() {
-    alert('📤 Relatório pronto! Use o PDF gerado acima para enviar por WhatsApp.');
+    alert('📤 Use o PDF gerado acima para enviar pelo WhatsApp.');
 }
 
 function inicializarMapaAdmin() {
@@ -678,10 +670,6 @@ function atualizarMarcadoresApoios() {
                 marcadoresApoios[a.telefone].setLatLng([a.ultimaLat, a.ultimaLng]);
             }
         }
-    });
-    
-    listaOcorrencias.filter(o => o.lat && o.lng).forEach(o => {
-        L.marker([o.lat, o.lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaAdmin).bindPopup(`${o.endereco}<br>${o.status}`);
     });
 }
 
@@ -805,9 +793,6 @@ function inicializarMapaApoio(lat, lng) {
     L.marker([lat, lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaApoio).bindPopup('Sua localização');
 }
 
-function verificarOcorrenciasPendentes
-// continuação — RESTANTE DO CÓDIGO
-
 function verificarOcorrenciasPendentes() {
     if (!localizacaoAtiva) return;
     
@@ -819,7 +804,6 @@ function verificarOcorrenciasPendentes() {
         return;
     }
     
-    // Tocar alerta se houver ocorrências novas
     tocarAlerta();
     
     div.innerHTML = pendentes.map(o => `
@@ -834,9 +818,9 @@ function verificarOcorrenciasPendentes() {
         </div>
     `).join('');
     
-    // Adicionar marcadores no mapa
     pendentes.forEach(o => {
-        if (o.lat && o.lng && mapaApoio) {
+        if (
+        (o.lat && o.lng && mapaApoio) {
             L.marker([o.lat, o.lng], {
                 icon: L.divIcon({html:'🚨', className:'', iconSize:[30,30]})
             }).addTo(mapaApoio).bindPopup(`${o.endereco}<br>${o.tipo}`);
@@ -866,7 +850,7 @@ function aceitarServico(id) {
     mensagens[ocorr.id] = mensagens[ocorr.id] || [];
     salvarDados();
     
-    // Preencher dados
+    // Preencher dados na tela
     document.getElementById('atvs-endereco').textContent = ocorr.endereco;
     document.getElementById('atvs-tipo').textContent = ocorr.tipo;
     document.getElementById('atvs-valor').textContent = ocorr.valor.toFixed(2);
@@ -878,7 +862,7 @@ function aceitarServico(id) {
     carregarChatApoio();
 }
 
-// CHAT
+// CHAT — APOIO
 function carregarChatApoio() {
     if (!servicoAceito) return;
     const caixa = document.getElementById('caixa-chat');
@@ -965,7 +949,7 @@ function finalizarAtendimento() {
     servicoAceito.dataConclusao = new Date().toLocaleString('pt-BR');
     salvarDados();
     
-    // Mensagem WhatsApp
+    // Mensagem WhatsApp para a Central
     const msg = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
 
 📍 Endereço: ${servicoAceito.endereco}
@@ -1005,7 +989,7 @@ function sair() {
     mostrarTela('tela-inicio');
 }
 
-// Atualização automática a cada 15s
+// Atualização automática a cada 15 segundos
 setInterval(() => {
     if (usuarioAtual && usuarioAtual.aprovado && localizacaoAtiva) {
         verificarOcorrenciasPendentes();
@@ -1019,3 +1003,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+

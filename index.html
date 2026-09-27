@@ -68,10 +68,11 @@
 
 <audio id="som-sirene" preload="auto">
     <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-warning-1674.mp3" type="audio/mpeg">
+</audio>
 
 <audio id="som-aviso" preload="auto">
     <source src="https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3" type="audio/mpeg">
-
+</audio>
 
 <div id="tela-inicio" class="tela ativa">
     <h1>🛡️ DRTRACK Conecta</h1>
@@ -718,8 +719,7 @@ function inicializarMapaApoio(lat, lng) {
     if (!mapaApoio) {
         mapaApoio = L.map('mapa-apoio').setView([lat, lng], 14);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution: '© DRTRACK Conecta'}).addTo(mapaApoio);
-        L.marker([lat, lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]
-})}).bindPopup('Sua localização');
+        L.marker([lat, lng], {icon: L.divIcon({html:'📍', className:'', iconSize:[25,25]})}).addTo(mapaApoio).bindPopup('Sua localização');
     } else {
         mapaApoio.setView([lat, lng], 14);
     }

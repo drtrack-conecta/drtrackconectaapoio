@@ -32,7 +32,7 @@
         .escondido { display: none !important; }
         .link { color: #60a5fa; cursor: pointer; text-decoration: underline; margin-top: 12px; display: inline-block; }
         .aviso { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin: 15px 0; text-align: center; }
-        #mapa-apoio { height: 250px; border-radius: 12px; margin: 15px 0; }
+        #mapa-apoio { height: 200px; border-radius: 12px; margin: 15px 0; }
         .botoes { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
         .botoes .btn { flex: 1; padding: 12px; font-size: 14px; min-width: 100px; }
         .grid-fotos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 12px 0; }
@@ -94,20 +94,7 @@
     </div>
 
     <div class="card">
-        <h3>📋 Filtrar por Período</h3>
-        <label>Data Início:</label>
-        <input type="date" id="data-inicio">
-        <label>Data Fim:</label>
-        <input type="date" id="data-fim">
-        <div class="botoes">
-            <button class="btn btn-azul" onclick="filtrarPeriodo()">🔍 Filtrar Período</button>
-            <button class="btn btn-roxo" onclick="filtrarQuinzena()">📅 Quinzena Atual</button>
-            <button class="btn btn-amarelo" onclick="filtrarMes()">📆 Mês Atual</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <h3>📋 Ocorrências — <span id="total-filtrado">0</span> encontradas</h3>
+        <h3>📋 Ocorrências</h3>
         <div class="botoes">
             <button class="btn btn-cinza" onclick="filtrar('todas')">Todas</button>
             <button class="btn btn-amarelo" onclick="filtrar('pendentes')">Pendentes</button>
@@ -118,16 +105,16 @@
     </div>
 
     <div id="detalhes-ocorrencia" class="card escondido">
-        <h3>📄 Relatório Completo</h3>
+        <h3>📄 RELATÓRIO COMPLETO — Para enviar ao Cliente</h3>
         <div id="conteudo-detalhes"></div>
         <div class="botoes">
-            <button class="btn btn-verde" onclick="enviarRelatorioWhatsApp()">📲 Enviar WhatsApp</button>
+            <button class="btn btn-verde" onclick="enviarRelatorioWhatsApp()">📲 Enviar pelo WhatsApp</button>
             <button class="btn btn-cinza" onclick="fecharDetalhes()">← Voltar</button>
         </div>
     </div>
 
     <div class="card">
-        <h3>👥 Apoios Cadastrados (<span id="qtd-apoios">0</span>)</h3>
+        <h3>👥 Apoios Cadastrados</h3>
         <div id="lista-apoios"></div>
     </div>
 
@@ -201,46 +188,50 @@
     <div id="lista-apoio"></div>
     
     <div class="card">
-        <h3>📊 Meu Histórico — <span id="qtd-concluidas">0</span> atendimentos concluídos</h3>
-        <div class="botoes">
-            <button class="btn btn-roxo" onclick="mostrarHistorico('quinzena')">📅 Quinzena</button>
-            <button class="btn btn-amarelo" onclick="mostrarHistorico('mes')">📆 Mês</button>
-            <button class="btn btn-cinza" onclick="mostrarHistorico('tudo')">📋 Geral</button>
-        </div>
-        <div id="historico-apoio" style="margin-top:15px;"></div>
+        <h3>📊 Meu Histórico de Atendimentos</h3>
+        <div id="historico-apoio"></div>
     </div>
     
     <button class="btn btn-cinza" onclick="sair()">🚪 Sair</button>
 </div>
 
-<!-- TELA DE ATENDIMENTO / PRESTAR CONTAS -->
+<!-- ==============================================
+TELA DE PRESTAÇÃO DE CONTAS — AQUI APARECE SEMPRE
+NÃO SOME, NÃO DESAPARECE, FICA VISÍVEL
+============================================== -->
 <div id="atendimento" class="tela">
-    <h2>✅ Prestar Contas do Atendimento</h2>
+    <h2>📝 PRESTAR CONTAS — Enviar Relatório</h2>
     
     <div class="card">
-        <h3>📍 Dados da Ocorrência</h3>
+        <h3>📍 Dados do Atendimento</h3>
         <p><strong>Endereço:</strong> <span id="atv-end"></span></p>
-        <p><strong>Tipo:</strong> <span id="atv-tipo"></span></p>
-        <p><strong>Valor:</strong> R$ <span id="atv-valor"></span></p>
-        <p><strong>Data/Hora Aceite:</strong> <span id="atv-data-aceite"></span></p>
+        <p><strong>Tipo de Serviço:</strong> <span id="atv-tipo"></span></p>
+        <p><strong>Valor Acordado:</strong> R$ <span id="atv-valor"></span></p>
+        <p><strong>Data/Hora Aceite:</strong> <span id="atv-data"></span></p>
     </div>
 
     <div class="card">
-        <h3>📸 Enviar Fotos (mínimo 5)</h3>
-        <p style="font-size:13px; color:var(--cinza); margin-bottom:8px;">As fotos recebem carimbo de localização e data.</p>
+        <h3>📸 1 — Enviar Fotos (MÍNIMO 5)</h3>
+        <p style="font-size:13px; color:var(--cinza); margin-bottom:8px;">Tire fotos do local. Cada foto recebe carimbo de data, hora e localização.</p>
         <input type="file" id="fotos" accept="image/*" multiple capture="environment" onchange="processarFotos(this)">
         <div id="preview-fotos" class="grid-fotos"></div>
-        <p id="qtd-fotos" style="color:var(--cinza); margin-top:8px;">0 / 5 fotos</p>
+        <p id="qtd-fotos" style="color:var(--cinza); margin-top:8px;">0 de 5 fotos enviadas</p>
     </div>
 
     <div class="card">
-        <h3>📝 Relatório — Descreva o atendimento</h3>
-        <textarea id="relatorio" rows="6" placeholder="Horário de chegada, o que encontrou no local, ações tomadas, situação final, tudo o que observou..."></textarea>
+        <h3>✍️ 2 — RELATÓRIO: O que aconteceu?</h3>
+        <textarea id="relatorio" rows="8" placeholder="Descreva tudo com detalhes:
+• Horário de chegada ao local
+• O que encontrou (situação no local)
+• Providências tomadas
+• Com quem falou (se alguém)
+• Estado final do local
+• Qualquer observação importante"></textarea>
     </div>
 
     <div class="botoes">
-        <button class="btn btn-vermelho" onclick="cancelar()">❌ Cancelar</button>
-        <button class="btn btn-verde" onclick="enviarRelatorio()">✅ Enviar e Concluir</button>
+        <button class="btn btn-vermelho" onclick="cancelar()">❌ Cancelar Atendimento</button>
+        <button class="btn btn-verde" onclick="enviarRelatorio()">✅ ENVIAR RELATÓRIO PARA A BASE</button>
     </div>
 </div>
 
@@ -252,8 +243,6 @@ let servicoAtual = null;
 let fotosEnviadas = [];
 let mapa = null;
 let watchGPS = null;
-let ocorrenciaSelecionada = null;
-let filtroPeriodo = {inicio: null, fim: null};
 
 function salvarDados() {
     localStorage.setItem('apoios', JSON.stringify(apoios));
@@ -295,10 +284,6 @@ function lancar() {
     }
 
     const agora = new Date();
-    const dataCompleta = agora.toLocaleDateString('pt-BR');
-    const horaCompleta = agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    const dataISO = agora.toISOString().split('T')[0];
-
     ocorrencias.unshift({
         id: Date.now(),
         endereco: end,
@@ -308,9 +293,9 @@ function lancar() {
         tipo: tipo,
         valor: parseFloat(document.getElementById('valor').value) || 0,
         obs: document.getElementById('obs').value.trim(),
-        data: dataCompleta,
-        dataISO: dataISO,
-        hora: horaCompleta,
+        data: agora.toLocaleDateString('pt-BR'),
+        dataISO: agora.toISOString().split('T')[0],
+        hora: agora.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
         status: 'pendente',
         apoio: null,
         dataAceite: null,
@@ -331,17 +316,15 @@ function lancar() {
 }
 
 function atualizarPainelAdmin() {
-    document.getElementById('qtd-apoios').textContent = apoios.length;
     document.getElementById('lista-apoios').innerHTML = apoios.map((a, i) => {
         const concluidas = ocorrencias.filter(o => o.status === 'concluida' && o.apoio?.telefone === a.telefone).length;
         return `
         <div style="padding:10px; background:#334155; border-radius:8px; margin:5px 0;">
             <p><strong>${a.nome}</strong></p>
             <p style="font-size:13px; color:var(--cinza);">📱 ${a.telefone} | 🚗 ${a.veiculo} — ${a.placa}</p>
-            <p>✅ Atendimentos concluídos: <span style="color:var(--verde); font-weight:bold;">${concluidas}</span></p>
+            <p>✅ Atendimentos concluídos: ${concluidas}</p>
             <p>Status: ${a.aprovado ? '<span style="color:var(--verde);">✅ Aprovado</span>' : '<span style="color:var(--amarelo);">⏳ Pendente</span>'}</p>
-            ${!a.aprovado ? `<button class="btn btn-verde" style="padding:8px; margin-top:5px;" onclick="aprovarApoio(${i})">✅ Aprovar</button>` : ''}
-            <button class="btn btn-vermelho" style="padding:8px; margin-top:5px;" onclick="excluirApoio(${i})">🗑️ Excluir</button>
+            ${!a.aprovado ? `<button class="btn btn-verde" style="padding:8px;" onclick="aprovarApoio(${i})">✅ Aprovar</button>` : ''}
         </div>`;
     }).join('');
     filtrar('todas');
@@ -354,89 +337,23 @@ function aprovarApoio(i) {
     alert('✅ Aprovado!');
 }
 
-function excluirApoio(i) {
-    if(confirm('Excluir este apoio?')) {
-        apoios.splice(i, 1);
-        salvarDados();
-        atualizarPainelAdmin();
-    }
-}
-
-function filtrarPeriodo() {
-    filtroPeriodo.inicio = document.getElementById('data-inicio').value || null;
-    filtroPeriodo.fim = document.getElementById('data-fim').value || null;
-    aplicarFiltroPeriodo();
-}
-
-function filtrarQuinzena() {
-    const hoje = new Date();
-    const dia = hoje.getDate();
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-    const ano = hoje.getFullYear();
-    
-    if(dia <= 15) {
-        filtroPeriodo.inicio = `${ano}-${mes}-01`;
-        filtroPeriodo.fim = `${ano}-${mes}-15`;
-    } else {
-        filtroPeriodo.inicio = `${ano}-${mes}-16`;
-        const proximoMes = hoje.getMonth() + 1;
-        const ultimoDia = new Date(ano, proximoMes, 0).getDate();
-        filtroPeriodo.fim = `${ano}-${mes}-${ultimoDia}`;
-    }
-    document.getElementById('data-inicio').value = filtroPeriodo.inicio;
-    document.getElementById('data-fim').value = filtroPeriodo.fim;
-    aplicarFiltroPeriodo();
-}
-
-function filtrarMes() {
-    const hoje = new Date();
-    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-    const ano = hoje.getFullYear();
-    const ultimoDia = new Date(ano, hoje.getMonth() + 1, 0).getDate();
-    
-    filtroPeriodo.inicio = `${ano}-${mes}-01`;
-    filtroPeriodo.fim = `${ano}-${mes}-${ultimoDia}`;
-    document.getElementById('data-inicio').value = filtroPeriodo.inicio;
-    document.getElementById('data-fim').value = filtroPeriodo.fim;
-    aplicarFiltroPeriodo();
-}
-
-function aplicarFiltroPeriodo() {
-    let lista = ocorrencias;
-    if(filtroPeriodo.inicio && filtroPeriodo.fim) {
-        lista = ocorrencias.filter(o => o.dataISO >= filtroPeriodo.inicio && o.dataISO <= filtroPeriodo.fim);
-    }
-    document.getElementById('total-filtrado').textContent = lista.length;
-    renderizarListaOcorrencias(lista);
-}
-
 function filtrar(tipo) {
-    filtroPeriodo.inicio = null;
-    filtroPeriodo.fim = null;
-    document.getElementById('data-inicio').value = '';
-    document.getElementById('data-fim').value = '';
-    
     let lista = ocorrencias;
     if(tipo === 'pendentes') lista = ocorrencias.filter(o => o.status === 'pendente');
     if(tipo === 'andamento') lista = ocorrencias.filter(o => o.status === 'aceita');
     if(tipo === 'concluidas') lista = ocorrencias.filter(o => o.status === 'concluida');
     
-    document.getElementById('total-filtrado').textContent = lista.length;
-    renderizarListaOcorrencias(lista);
-}
-
-function renderizarListaOcorrencias(lista) {
     document.getElementById('lista-admin').innerHTML = lista.length ? lista.map(o => {
         let classe = '';
         let statusTxt = '';
-        if(o.status === 'pendente') { classe = 'piscando'; statusTxt = '⏳ Pendente'; }
-        if(o.status === 'aceita') statusTxt = '🔄 Em Andamento — ' + (o.apoio?.nome || 'Apoio');
-        if(o.status === 'concluida') { classe = 'ocorrencia-concluida'; statusTxt = '✅ Concluída'; }
+        if(o.status === 'pendente') { classe = 'piscando'; statusTxt = '⏳ AGUARDANDO APOIO'; }
+        if(o.status === 'aceita') statusTxt = '🔄 EM ANDAMENTO — ' + (o.apoio?.nome || 'Apoio');
+        if(o.status === 'concluida') { classe = 'ocorrencia-concluida'; statusTxt = '✅ CONCLUÍDA — Clique para ver relatório'; }
         
         return `
-        <div class="ocorrencia ${classe}" onclick="abrirDetalhes(${o.id})">
+        <div class="ocorrencia ${classe}" onclick="abrirDetalhes(${o.id})" style="cursor:pointer;">
             <p><strong>${o.endereco}</strong></p>
-            <p style="font-size:14px;">${o.tipo} — R$ ${o.valor.toFixed(2)}</p>
+            <p>${o.tipo} — R$ ${o.valor.toFixed(2)}</p>
             <p style="font-size:13px; color:var(--cinza);">📅 ${o.data} ${o.hora}</p>
             <p>${statusTxt}</p>
         </div>`;
@@ -444,52 +361,55 @@ function renderizarListaOcorrencias(lista) {
 }
 
 function abrirDetalhes(id) {
-    ocorrenciaSelecionada = ocorrencias.find(o => o.id === id);
-    if(!ocorrenciaSelecionada) return;
+    const o = ocorrencias.find(x => x.id === id);
+    if(!o) return;
     
-    const o = ocorrenciaSelecionada;
     let fotosHtml = '';
     if(o.fotos && o.fotos.length > 0) {
-        fotosHtml = '<p><strong>Fotos enviadas:</strong></p><div class="grid-fotos">' + 
+        fotosHtml = '<p><strong>📸 Fotos enviadas pelo Apoio:</strong></p><div class="grid-fotos">' + 
             o.fotos.map(f => `<div class="foto-container"><img src="${f}"></div>`).join('') + '</div>';
     }
 
     document.getElementById('conteudo-detalhes').innerHTML = `
-        <p><strong>Endereço:</strong> ${o.endereco}</p>
-        <p><strong>Região:</strong> ${o.regiao || '—'}</p>
-        <p><strong>Coordenadas:</strong> ${o.lat || '—'} / ${o.lng || '—'}</p>
-        <p><strong>Tipo:</strong> ${o.tipo}</p>
-        <p><strong>Valor:</strong> R$ ${o.valor.toFixed(2)}</p>
-        <p><strong>Data Lançamento:</strong> ${o.data} ${o.hora}</p>
-        ${o.dataAceite ? `<p><strong>Aceite em:</strong> ${o.dataAceite}</p>` : ''}
-        ${o.dataConclusao ? `<p><strong>Concluído em:</strong> ${o.dataConclusao}</p>` : ''}
-        ${o.apoio ? `<p><strong>Apoio Responsável:</strong> ${o.apoio.nome} | ${o.apoio.telefone} | PIX: ${o.apoio.pix}</p>` : ''}
-        ${o.relatorio ? `<hr style="border:0; border-top:1px solid #333; margin:10px 0;"><p><strong>Relatório do Atendimento:</strong></p><p style="white-space:pre-wrap;">${o.relatorio}</p>` : ''}
+        <p><strong>📍 Endereço:</strong> ${o.endereco}</p>
+        <p><strong>🗺️ Região:</strong> ${o.regiao || '—'}</p>
+        <p><strong>📌 Tipo:</strong> ${o.tipo}</p>
+        <p><strong>💰 Valor:</strong> R$ ${o.valor.toFixed(2)}</p>
+        <p><strong>📅 Lançamento:</strong> ${o.data} às ${o.hora}</p>
+        ${o.dataAceite ? `<p><strong>✅ Aceite em:</strong> ${o.dataAceite}</p>` : ''}
+        ${o.apoio ? `<p><strong>👤 Apoio Responsável:</strong> ${o.apoio.nome}</p><p>📱 Telefone: ${o.apoio.telefone}</p><p>🚗 Veículo: ${o.apoio.veiculo} — ${o.apoio.placa}</p>` : ''}
+        ${o.relatorio ? `<hr style="border:0; border-top:1px solid #333; margin:15px 0;"><p><strong>✍️ RELATÓRIO DO ATENDIMENTO:</strong></p><p style="white-space:pre-wrap; background:#0f172a; padding:15px; border-radius:8px; margin-top:8px;">${o.relatorio}</p>` : ''}
         ${fotosHtml}
+        ${o.dataConclusao ? `<p style="margin-top:15px; color:var(--verde); font-weight:bold;">✅ CONCLUÍDO em: ${o.dataConclusao}</p>` : ''}
     `;
     document.getElementById('detalhes-ocorrencia').classList.remove('escondido');
 }
 
 function fecharDetalhes() {
     document.getElementById('detalhes-ocorrencia').classList.add('escondido');
-    ocorrenciaSelecionada = null;
 }
 
 function enviarRelatorioWhatsApp() {
-    if(!ocorrenciaSelecionada) return;
-    const o = ocorrenciaSelecionada;
-    let mensagem = `📋 RELATÓRIO — DRTRACK CONECTA
+    const idSelecionado = ocorrencias.findIndex(o => o.status === 'concluida');
+    if(idSelecionado === -1) return;
+    const o = ocorrencias[idSelecionado];
+    const mensagem = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK
 
-📍 Endereço: ${o.endereco}
-🗺️ Região: ${o.regiao || '—'}
-📌 Tipo: ${o.tipo}
-💰 Valor: R$ ${o.valor.toFixed(2)}
-📅 Lançamento: ${o.data} ${o.hora}
-${o.dataAceite ? `✅ Aceite: ${o.dataAceite}` : ''}
-${o.dataConclusao ? `✅ Conclusão: ${o.dataConclusao}` : ''}
-${o.apoio ? `👤 Apoio: ${o.apoio.nome}\n📱 Telefone: ${o.apoio.telefone}\n💵 PIX: ${o.apoio.pix}` : ''}
-${o.relatorio ? `\n📝 RELATÓRIO:\n${o.relatorio}` : ''}
-${o.fotos ? `\n📸 ${o.fotos.length} fotos anexadas` : ''}`;
+📍 ENDEREÇO: ${o.endereco}
+📌 TIPO: ${o.tipo}
+💰 VALOR: R$ ${o.valor.toFixed(2)}
+📅 DATA: ${o.data}
+
+👤 APOIO: ${o.apoio?.nome || '—'}
+📱 TEL: ${o.apoio?.telefone || '—'}
+
+📝 RELATÓRIO:
+${o.relatorio || 'Sem relatório'}
+
+✅ CONCLUÍDO em: ${o.dataConclusao || '—'}
+
+Atenciosamente,
+DRTRACK Conecta`;
 
     window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(mensagem)}`, '_blank');
 }
@@ -509,7 +429,7 @@ function salvarCadastro() {
         ultimaLng: null
     };
     if(!dados.nome || !dados.cpf || !dados.telefone || !dados.pix || !dados.placa || dados.senha.length < 6) {
-        alert('Preencha todos os campos! Senha com mínimo 6 dígitos.');
+        alert('Preencha todos os campos!');
         return;
     }
     if(apoios.find(a => a.telefone === dados.telefone)) {
@@ -556,8 +476,6 @@ function ativarGPS() {
                 mapa = L.map('mapa-apoio').setView([pos.coords.latitude, pos.coords.longitude], 14);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapa);
                 L.marker([pos.coords.latitude, pos.coords.longitude]).addTo(mapa).bindPopup('Você');
-            } else {
-                mapa.setView([pos.coords.latitude, pos.coords.longitude], 14);
             }
         },
         () => alert('Permita a localização!'),
@@ -569,29 +487,32 @@ function atualizarListaApoio() {
     const pendentes = ocorrencias.filter(o => o.status === 'pendente');
     const div = document.getElementById('lista-apoio');
     if(!pendentes.length) {
-        div.innerHTML = '<p style="color:var(--cinza); text-align:center; padding:20px;">Nenhuma ocorrência disponível no momento</p>';
+        div.innerHTML = '<p style="color:var(--cinza); text-align:center; padding:20px;">Nenhuma ocorrência disponível</p>';
         return;
     }
     div.innerHTML = pendentes.map(o => `
         <div class="ocorrencia piscando">
             <p><strong>📍 ${o.endereco}</strong></p>
             <p>${o.tipo} — R$ ${o.valor.toFixed(2)}</p>
-            <p style="font-size:13px; color:var(--cinza);">📅 ${o.data} ${o.hora}</p>
+            <p style="font-size:13px; color:var(--cinza);">${o.data} ${o.hora}</p>
             <div class="botoes">
-                <button class="btn btn-verde" onclick="aceitarServico(${o.id})">✅ Aceitar</button>
+                <button class="btn btn-verde" onclick="aceitarServico(${o.id})">✅ ACEITAR E PRESTAR CONTAS</button>
                 <button class="btn btn-cinza" onclick="atualizarListaApoio()">❌ Recusar</button>
             </div>
         </div>
     `).join('');
 }
 
-// FUNÇÃO CORRIGIDA — AGORA ABRE CERTINHO, NÃO SOME MAIS!
+// ==============================================
+// FUNÇÃO ACEITAR — AGORA ABRE A TELA, NÃO SOME!
+// ==============================================
 function aceitarServico(id) {
-    if(!confirm('Aceitar este atendimento?')) return;
+    if(!confirm('Aceitar este atendimento?\n\nVocê deverá preencher o relatório e enviar fotos.')) return;
+    
     const o = ocorrencias.find(x => x.id === id);
     if(!o || o.status !== 'pendente') { 
-        alert('Já foi aceito por outro apoio! Atualize a lista.'); 
-        atualizarListaApoio(); 
+        alert('Já foi aceito por outro apoio!'); 
+        atualizarListaApoio();
         return; 
     }
     
@@ -603,16 +524,16 @@ function aceitarServico(id) {
     fotosEnviadas = [];
     salvarDados();
     
-    // PREENCHE TELA DE PRESTAÇÃO DE CONTAS
+    // PREENCHE OS DADOS NA TELA
     document.getElementById('atv-end').textContent = o.endereco;
     document.getElementById('atv-tipo').textContent = o.tipo;
     document.getElementById('atv-valor').textContent = o.valor.toFixed(2);
-    document.getElementById('atv-data-aceite').textContent = o.dataAceite;
+    document.getElementById('atv-data').textContent = o.dataAceite;
     document.getElementById('preview-fotos').innerHTML = '';
-    document.getElementById('qtd-fotos').textContent = '0 / 5 fotos';
+    document.getElementById('qtd-fotos').textContent = '0 de 5 fotos';
     document.getElementById('relatorio').value = '';
     
-    // ← AQUI ABRE A TELA — GARANTIDO!
+    // ← AQUI ABRE A TELA DE PRESTAÇÃO DE CONTAS — GARANTIDO!
     mostrarTela('atendimento');
 }
 
@@ -628,15 +549,15 @@ function processarFotos(input) {
                 canvas.height = img.height;
                 ctx.drawImage(img, 0, 0);
                 
-                const lat = usuario?.ultimaLat ? usuario.ultimaLat.toFixed(6) : 'N/A';
-                const lng = usuario?.ultimaLng ? usuario.ultimaLng.toFixed(6) : 'N/A';
+                const lat = usuario?.ultimaLat ? usuario.ultimaLat.toFixed(6) : 'Indisponível';
+                const lng = usuario?.ultimaLng ? usuario.ultimaLng.toFixed(6) : 'Indisponível';
                 const dataHora = new Date().toLocaleString('pt-BR');
                 const texto = `📍 LAT: ${lat} | LNG: ${lng} — ${dataHora}`;
                 
-                ctx.font = 'bold 18px sans-serif';
+                ctx.font = 'bold 16px sans-serif';
                 const w = ctx.measureText(texto).width;
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(10, canvas.height - 40, w + 20, 35);
+                ctx.fillStyle = 'rgba(0,0,0,0.75)';
+                ctx.fillRect(10, canvas.height - 38, w + 20, 33);
                 ctx.fillStyle = '#fff';
                 ctx.fillText(texto, 20, canvas.height - 15);
                 
@@ -644,7 +565,7 @@ function processarFotos(input) {
                 document.getElementById('preview-fotos').innerHTML = fotosEnviadas.map(f => 
                     `<div class="foto-container"><img src="${f}"></div>`
                 ).join('');
-                document.getElementById('qtd-fotos').textContent = `${fotosEnviadas.length} / 5 fotos`;
+                document.getElementById('qtd-fotos').textContent = `${fotosEnviadas.length} de 5 fotos`;
             };
             img.src = e.target.result;
         };
@@ -653,7 +574,7 @@ function processarFotos(input) {
 }
 
 function cancelar() {
-    if(!confirm('Cancelar este atendimento?')) return;
+    if(!confirm('Cancelar este atendimento?\nA ocorrência voltará para a lista disponível.')) return;
     if(servicoAtual) {
         servicoAtual.status = 'pendente';
         servicoAtual.apoio = null;
@@ -667,16 +588,18 @@ function cancelar() {
 }
 
 function enviarRelatorio() {
+    // VALIDAÇÃO OBRIGATÓRIA
     if(fotosEnviadas.length < 5) {
-        alert(`⚠️ Envie no mínimo 5 fotos! Enviadas: ${fotosEnviadas.length}`);
+        alert(`⚠️ Você precisa enviar NO MÍNIMO 5 fotos!\nEnviadas: ${fotosEnviadas.length}`);
         return;
     }
     const rel = document.getElementById('relatorio').value.trim();
-    if(!rel) {
-        alert('⚠️ Descreva o atendimento no relatório!');
+    if(!rel || rel.length < 20) {
+        alert('⚠️ Preencha o relatório com detalhes sobre o que aconteceu no local!');
         return;
     }
     
+    // SALVA TUDO
     const agora = new Date();
     servicoAtual.status = 'concluida';
     servicoAtual.fotos = [...fotosEnviadas];
@@ -685,83 +608,54 @@ function enviarRelatorio() {
     servicoAtual.dataISOConclusao = agora.toISOString().split('T')[0];
     salvarDados();
     
-    const mensagem = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
+    // ENVIA PRO SEU WHATSAPP
+    const mensagem = `📋 RELATÓRIO RECEBIDO — DRTRACK
 
-📍 Endereço: ${servicoAtual.endereco}
-📌 Tipo: ${servicoAtual.tipo}
-💰 Valor: R$ ${servicoAtual.valor.toFixed(2)}
-👤 Apoio: ${usuario.nome}
-📱 Telefone: ${usuario.telefone}
-🚗 Veículo: ${usuario.veiculo} — ${usuario.placa}
+📍 ENDEREÇO: ${servicoAtual.endereco}
+📌 TIPO: ${servicoAtual.tipo}
+💰 VALOR: R$ ${servicoAtual.valor.toFixed(2)}
+
+👤 APOIO: ${usuario.nome}
+📱 TELEFONE: ${usuario.telefone}
+🚗 VEÍCULO: ${usuario.veiculo} — ${usuario.placa}
 💵 PIX: ${usuario.pix}
-✅ Aceite: ${servicoAtual.dataAceite}
-✅ Concluído: ${servicoAtual.dataConclusao}
+
+✅ ACEITE: ${servicoAtual.dataAceite}
+✅ CONCLUSÃO: ${servicoAtual.dataConclusao}
 
 📝 RELATÓRIO:
 ${rel}
 
-📸 ${fotosEnviadas.length} fotos com geolocalização carimbada.`;
+📸 ${fotosEnviadas.length} fotos com geolocalização anexadas.
+
+---
+Atenciosamente,
+DRTRACK Conecta`;
 
     window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(mensagem)}`, '_blank');
     
-    alert('✅ Relatório enviado! Registrado no seu histórico.');
+    alert('✅ RELATÓRIO ENVIADO!\n\nRegistrado no sistema. O administrador já pode visualizar.');
+    
     servicoAtual = null;
     fotosEnviadas = [];
     mostrarTela('principal');
 }
 
-// === HISTÓRICO DO APOIO ===
-function mostrarHistorico(tipo) {
-    atualizarHistoricoApoio(tipo);
-}
-
-function atualizarHistoricoApoio(tipoPadrao = 'tudo') {
+function atualizarHistoricoApoio() {
     if(!usuario) return;
-    
-    let hoje = new Date();
-    let dataInicio = null;
-    
-    if(tipoPadrao === 'quinzena') {
-        if(hoje.getDate() <= 15) {
-            dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-        } else {
-            dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 16);
-        }
-    } else if(tipoPadrao === 'mes') {
-        dataInicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    }
-    
-    let historico = ocorrencias.filter(o => 
+    const historico = ocorrencias.filter(o => 
         o.status === 'concluida' && o.apoio?.telefone === usuario.telefone
     );
     
-    if(dataInicio) {
-        const dataInicioISO = dataInicio.toISOString().split('T')[0];
-        historico = historico.filter(o => o.dataISO >= dataInicioISO);
-    }
-    
-    document.getElementById('qtd-concluidas').textContent = historico.length;
-    
-    if(!historico.length) {
-        document.getElementById('historico-apoio').innerHTML = 
-            '<p style="color:var(--cinza); text-align:center; padding:15px;">Nenhum atendimento registrado neste período</p>';
-        return;
-    }
-    
-    const totalValor = historico.reduce((s, o) => s + o.valor, 0);
-    
-    document.getElementById('historico-apoio').innerHTML = `
-        <div class="resumo">
-            <p>📊 Total: <span>${historico.length}</span> atendimentos | 💰 Valor: <span>R$ ${totalValor.toFixed(2)}</span></p>
-        </div>
+    document.getElementById('historico-apoio').innerHTML = historico.length ? `
+        <p style="margin-bottom:10px;">Total: <strong>${historico.length}</strong> atendimentos concluídos</p>
         ${historico.map(o => `
-        <div class="ocorrencia ocorrencia-concluida" style="cursor:default;">
+        <div class="ocorrencia ocorrencia-concluida" style="margin:5px 0;">
             <p><strong>📍 ${o.endereco}</strong></p>
             <p>${o.tipo} — R$ ${o.valor.toFixed(2)}</p>
-            <p style="font-size:13px; color:var(--cinza);">✅ Concluído: ${o.dataConclusao}</p>
-            <p style="font-size:12px; color:var(--cinza);">Relatório salvo no sistema</p>
+            <p style="font-size:13px; color:var(--cinza);">✅ ${o.dataConclusao}</p>
         </div>`).join('')}
-    `;
+    ` : '<p style="color:var(--cinza);">Nenhum atendimento concluído ainda</p>';
 }
 
 function sair() {

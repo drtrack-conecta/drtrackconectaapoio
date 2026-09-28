@@ -9,35 +9,39 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
         :root { --fundo: #0f172a; --azul: #1e40af; --verde: #16a34a; --amarelo: #eab308; --vermelho: #dc2626; --texto: #f1f5f9; --cinza: #94a3b8; --roxo: #7c3aed; }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: var(--texto); padding: 20px; }
-        .tela { display: none; max-width: 550px; margin: 0 auto; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: var(--texto); padding: 15px; }
+        .tela { display: none; max-width: 580px; margin: 0 auto; }
         .ativa { display: block !important; }
-        h1 { text-align: center; margin: 20px 0; font-size: 26px; }
-        h2 { font-size: 20px; margin-bottom: 20px; }
-        h3 { font-size: 17px; margin: 15px 0 8px; }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; margin: 8px 0; }
+        h1 { text-align: center; margin: 20px 0; font-size: 24px; }
+        h2 { font-size: 19px; margin-bottom: 15px; }
+        h3 { font-size: 16px; margin: 12px 0 6px; }
+        .btn { width: 100%; padding: 13px; border: none; border-radius: 10px; font-size: 15px; font-weight: bold; cursor: pointer; margin: 6px 0; }
         .btn-verde { background: var(--verde); color: white; }
         .btn-amarelo { background: var(--amarelo); color: #000; }
         .btn-vermelho { background: var(--vermelho); color: white; }
         .btn-azul { background: var(--azul); color: white; }
         .btn-roxo { background: var(--roxo); color: white; }
         .btn-cinza { background: #475569; color: white; }
-        .card { background: #1e293b; padding: 20px; border-radius: 16px; margin-bottom: 15px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 6px 0; border: none; border-radius: 8px; background: #334155; color: white; font-size: 15px; }
-        label { display: block; margin-top: 12px; font-weight: 500; }
-        .ocorrencia { border-left: 4px solid var(--amarelo); padding: 15px; margin: 10px 0; background: #1e293b; border-radius: 0 10px 10px 0; }
+        .card { background: #1e293b; padding: 18px; border-radius: 14px; margin-bottom: 12px; }
+        input, select, textarea { width: 100%; padding: 11px; margin: 5px 0; border: none; border-radius: 7px; background: #334155; color: white; font-size: 15px; }
+        label { display: block; margin-top: 10px; font-weight: 500; }
+        .ocorrencia { border-left: 4px solid var(--amarelo); padding: 14px; margin: 10px 0; background: #1e293b; border-radius: 0 10px 10px 0; }
         .ocorrencia-concluida { border-left-color: var(--verde); }
-        .piscando { animation: piscar 0.8s infinite; }
-        @keyframes piscar { 0%,100% {opacity:1;} 50% {opacity:0.4;} }
+        .piscando { animation: piscar 0.7s infinite; }
+        @keyframes piscar { 0%,100% {opacity:1;} 50% {opacity:0.35;} }
         .escondido { display: none !important; }
-        .link { color: #60a5fa; cursor: pointer; text-decoration: underline; margin-top: 12px; display: inline-block; }
-        .aviso { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin: 15px 0; text-align: center; }
-        #mapa-apoio { height: 200px; border-radius: 12px; margin: 15px 0; }
-        .botoes { display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap; }
-        .botoes .btn { flex: 1; padding: 12px; font-size: 14px; min-width: 100px; }
-        .grid-fotos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 12px 0; }
-        .foto-container { background: #0f172a; padding: 6px; border-radius: 8px; border: 1px solid #334155; }
-        .grid-fotos img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; }
+        .link { color: #60a5fa; cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; }
+        .aviso { background: #fef3c7; color: #92400e; padding: 12px; border-radius: 8px; margin: 12px 0; text-align: center; }
+        #mapa-apoio { height: 200px; border-radius: 10px; margin: 12px 0; }
+        .botoes { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .botoes .btn { flex: 1; padding: 11px; font-size: 14px; min-width: 90px; }
+        .grid-fotos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 10px 0; }
+        .foto-container { background: #0f172a; padding: 5px; border-radius: 7px; border: 1px solid #334155; }
+        .grid-fotos img { width: 100%; height: 110px; object-fit: cover; border-radius: 5px; }
+        .chat-box { height: 250px; overflow-y: auto; background: #0f172a; padding: 12px; border-radius: 8px; margin: 8px 0; }
+        .msg { margin: 6px 0; padding: 9px; border-radius: 8px; max-width: 85%; }
+        .msg-apoio { background: var(--azul); margin-left: auto; }
+        .msg-admin { background: #475569; margin-right: auto; }
         .resumo { background: #0f172a; padding: 12px; border-radius: 8px; margin: 8px 0; }
         .resumo span { font-weight: bold; color: var(--verde); }
     </style>
@@ -47,7 +51,7 @@
 <!-- TELA INÍCIO -->
 <div id="inicio" class="tela ativa">
     <h1>🛡️ DRTRACK Conecta</h1>
-    <p style="text-align:center; color:var(--cinza); margin-bottom:30px;">Rede de Apoio e Segurança</p>
+    <p style="text-align:center; color:var(--cinza); margin-bottom:25px;">Rede de Apoio e Segurança</p>
     <button class="btn btn-verde" onclick="mostrarTela('login-apoio')">🛵 Sou Apoio</button>
     <button class="btn btn-amarelo" onclick="mostrarTela('senha-admin')">⚙️ Administrador</button>
 </div>
@@ -94,6 +98,20 @@
     </div>
 
     <div class="card">
+        <h3>📊 RELATÓRIO PERIÓDICO — Enviar ao Cliente</h3>
+        <label>Data Início:</label>
+        <input type="date" id="data-inicio">
+        <label>Data Fim:</label>
+        <input type="date" id="data-fim">
+        <div class="botoes">
+            <button class="btn btn-roxo" onclick="preencherQuinzena()">📅 Quinzena</button>
+            <button class="btn btn-amarelo" onclick="preencherMes()">📆 Mês</button>
+        </div>
+        <button class="btn btn-verde" onclick="gerarRelatorioPeriodo()">📲 Gerar e Enviar por WhatsApp</button>
+        <div id="resumo-periodo" class="resumo escondido"></div>
+    </div>
+
+    <div class="card">
         <h3>📋 Ocorrências</h3>
         <div class="botoes">
             <button class="btn btn-cinza" onclick="filtrar('todas')">Todas</button>
@@ -101,14 +119,24 @@
             <button class="btn btn-azul" onclick="filtrar('andamento')">Em Andamento</button>
             <button class="btn btn-verde" onclick="filtrar('concluidas')">Concluídas</button>
         </div>
-        <div id="lista-admin" style="margin-top:15px;"></div>
+        <div id="lista-admin" style="margin-top:12px;"></div>
     </div>
 
     <div id="detalhes-ocorrencia" class="card escondido">
-        <h3>📄 RELATÓRIO COMPLETO — Para enviar ao Cliente</h3>
+        <h3>📄 Relatório Completo</h3>
         <div id="conteudo-detalhes"></div>
+        
+        <div class="card" style="margin-top:15px; background:#27374d;">
+            <h3>💬 Chat com Apoio</h3>
+            <div id="chat-admin" class="chat-box"></div>
+            <div class="botoes" style="margin-top:8px;">
+                <input type="text" id="msg-admin" placeholder="Digite sua mensagem..." style="flex:1; margin:0;">
+                <button class="btn btn-verde" onclick="enviarMsgAdmin()">Enviar</button>
+            </div>
+        </div>
+        
         <div class="botoes">
-            <button class="btn btn-verde" onclick="enviarRelatorioWhatsApp()">📲 Enviar pelo WhatsApp</button>
+            <button class="btn btn-verde" onclick="enviarRelatorioWhatsApp()">📲 Enviar Relatório</button>
             <button class="btn btn-cinza" onclick="fecharDetalhes()">← Voltar</button>
         </div>
     </div>
@@ -130,7 +158,7 @@
         <label>Senha:</label>
         <input type="password" id="senha-apoio">
         <button class="btn btn-verde" onclick="entrarApoio()">Entrar</button>
-        <p style="margin-top:15px;">Sem conta? <span class="link" onclick="mostrarTela('cadastro')">Cadastrar</span></p>
+        <p style="margin-top:12px;">Sem conta? <span class="link" onclick="mostrarTela('cadastro')">Cadastrar</span></p>
         <p class="link" onclick="mostrarTela('inicio')">← Voltar</p>
     </div>
 </div>
@@ -188,50 +216,56 @@
     <div id="lista-apoio"></div>
     
     <div class="card">
-        <h3>📊 Meu Histórico de Atendimentos</h3>
+        <h3>📊 Meu Histórico</h3>
         <div id="historico-apoio"></div>
     </div>
     
     <button class="btn btn-cinza" onclick="sair()">🚪 Sair</button>
 </div>
 
-<!-- ==============================================
-TELA DE PRESTAÇÃO DE CONTAS — AQUI APARECE SEMPRE
-NÃO SOME, NÃO DESAPARECE, FICA VISÍVEL
-============================================== -->
+<!-- TELA DE PRESTAÇÃO DE CONTAS — AGORA ABRE SEMPRE! -->
 <div id="atendimento" class="tela">
-    <h2>📝 PRESTAR CONTAS — Enviar Relatório</h2>
+    <h2>✅ PRESTAR CONTAS — Relatório Completo</h2>
     
     <div class="card">
         <h3>📍 Dados do Atendimento</h3>
         <p><strong>Endereço:</strong> <span id="atv-end"></span></p>
-        <p><strong>Tipo de Serviço:</strong> <span id="atv-tipo"></span></p>
-        <p><strong>Valor Acordado:</strong> R$ <span id="atv-valor"></span></p>
-        <p><strong>Data/Hora Aceite:</strong> <span id="atv-data"></span></p>
+        <p><strong>Tipo:</strong> <span id="atv-tipo"></span></p>
+        <p><strong>Valor:</strong> R$ <span id="atv-valor"></span></p>
+        <p><strong>Aceite em:</strong> <span id="atv-data"></span></p>
     </div>
 
     <div class="card">
-        <h3>📸 1 — Enviar Fotos (MÍNIMO 5)</h3>
-        <p style="font-size:13px; color:var(--cinza); margin-bottom:8px;">Tire fotos do local. Cada foto recebe carimbo de data, hora e localização.</p>
+        <h3>📸 1 — Fotos (MÍNIMO 5)</h3>
+        <p style="font-size:13px; color:var(--cinza); margin-bottom:8px;">Cada foto recebe carimbo de localização e data.</p>
         <input type="file" id="fotos" accept="image/*" multiple capture="environment" onchange="processarFotos(this)">
         <div id="preview-fotos" class="grid-fotos"></div>
-        <p id="qtd-fotos" style="color:var(--cinza); margin-top:8px;">0 de 5 fotos enviadas</p>
+        <p id="qtd-fotos" style="color:var(--cinza); margin-top:8px;">0 de 5 fotos</p>
     </div>
 
     <div class="card">
-        <h3>✍️ 2 — RELATÓRIO: O que aconteceu?</h3>
-        <textarea id="relatorio" rows="8" placeholder="Descreva tudo com detalhes:
-• Horário de chegada ao local
-• O que encontrou (situação no local)
+        <h3>✍️ 2 — Relatório do Atendimento</h3>
+        <textarea id="relatorio" rows="7" placeholder="Descreva detalhadamente:
+• Horário de chegada
+• O que encontrou no local
 • Providências tomadas
-• Com quem falou (se alguém)
-• Estado final do local
+• Com quem falou
+• Situação final do local
 • Qualquer observação importante"></textarea>
     </div>
 
+    <div class="card">
+        <h3>💬 3 — Falar com a Administração</h3>
+        <div id="chat-apoio" class="chat-box"></div>
+        <div class="botoes" style="margin-top:8px;">
+            <input type="text" id="msg-apoio" placeholder="Sua mensagem..." style="flex:1; margin:0;">
+            <button class="btn btn-azul" onclick="enviarMsgApoio()">Enviar</button>
+        </div>
+    </div>
+
     <div class="botoes">
-        <button class="btn btn-vermelho" onclick="cancelar()">❌ Cancelar Atendimento</button>
-        <button class="btn btn-verde" onclick="enviarRelatorio()">✅ ENVIAR RELATÓRIO PARA A BASE</button>
+        <button class="btn btn-vermelho" onclick="cancelar()">❌ Cancelar</button>
+        <button class="btn btn-verde" onclick="enviarRelatorio()">✅ ENVIAR TUDO PARA A BASE</button>
     </div>
 </div>
 
@@ -243,6 +277,7 @@ let servicoAtual = null;
 let fotosEnviadas = [];
 let mapa = null;
 let watchGPS = null;
+let ocorrenciaChat = null;
 
 function salvarDados() {
     localStorage.setItem('apoios', JSON.stringify(apoios));
@@ -258,6 +293,7 @@ function mostrarTela(id) {
         atualizarListaApoio();
         atualizarHistoricoApoio();
     }
+    if(id === 'atendimento' && servicoAtual) carregarChat();
 }
 
 function entrarAdmin() {
@@ -301,7 +337,8 @@ function lancar() {
         dataAceite: null,
         fotos: [],
         relatorio: '',
-        dataConclusao: null
+        dataConclusao: null,
+        mensagens: []
     });
     salvarDados();
     atualizarPainelAdmin();
@@ -322,7 +359,7 @@ function atualizarPainelAdmin() {
         <div style="padding:10px; background:#334155; border-radius:8px; margin:5px 0;">
             <p><strong>${a.nome}</strong></p>
             <p style="font-size:13px; color:var(--cinza);">📱 ${a.telefone} | 🚗 ${a.veiculo} — ${a.placa}</p>
-            <p>✅ Atendimentos concluídos: ${concluidas}</p>
+            <p>✅ Atendimentos: ${concluidas}</p>
             <p>Status: ${a.aprovado ? '<span style="color:var(--verde);">✅ Aprovado</span>' : '<span style="color:var(--amarelo);">⏳ Pendente</span>'}</p>
             ${!a.aprovado ? `<button class="btn btn-verde" style="padding:8px;" onclick="aprovarApoio(${i})">✅ Aprovar</button>` : ''}
         </div>`;
@@ -337,6 +374,65 @@ function aprovarApoio(i) {
     alert('✅ Aprovado!');
 }
 
+function preencherQuinzena() {
+    const hoje = new Date();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const ano = hoje.getFullYear();
+    if(hoje.getDate() <= 15) {
+        document.getElementById('data-inicio').value = `${ano}-${mes}-01`;
+        document.getElementById('data-fim').value = `${ano}-${mes}-15`;
+    } else {
+        document.getElementById('data-inicio').value = `${ano}-${mes}-16`;
+        const ultimoDia = new Date(ano, hoje.getMonth() + 1, 0).getDate();
+        document.getElementById('data-fim').value = `${ano}-${mes}-${ultimoDia}`;
+    }
+}
+
+function preencherMes() {
+    const hoje = new Date();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const ano = hoje.getFullYear();
+    const ultimoDia = new Date(ano, hoje.getMonth() + 1, 0).getDate();
+    document.getElementById('data-inicio').value = `${ano}-${mes}-01`;
+    document.getElementById('data-fim').value = `${ano}-${mes}-${ultimoDia}`;
+}
+
+function gerarRelatorioPeriodo() {
+    const ini = document.getElementById('data-inicio').value;
+    const fim = document.getElementById('data-fim').value;
+    if(!ini || !fim) { alert('Preencha as datas!'); return; }
+    
+    const lista = ocorrencias.filter(o => o.status === 'concluida' && o.dataISO >= ini && o.dataISO <= fim);
+    const totalValor = lista.reduce((s, o) => s + o.valor, 0);
+    
+    document.getElementById('resumo-periodo').classList.remove('escondido');
+    document.getElementById('resumo-periodo').innerHTML = `
+        <p>📅 Período: ${ini} a ${fim}</p>
+        <p>✅ Atendimentos: <strong>${lista.length}</strong></p>
+        <p>💰 Valor Total: <strong>R$ ${totalValor.toFixed(2)}</strong></p>
+    `;
+    
+    let texto = `📋 RELATÓRIO QUINZENAL/MENSAL — DRTRACK
+Período: ${ini} a ${fim}
+
+Total de atendimentos concluídos: ${lista.length}
+Valor total: R$ ${totalValor.toFixed(2)}
+
+--- DETALHES ---
+`;
+    lista.forEach(o => {
+        texto += `
+📅 ${o.data}
+📍 ${o.endereco}
+📌 ${o.tipo}
+💰 R$ ${o.valor.toFixed(2)}
+👤 ${o.apoio?.nome || '—'}
+`;
+    });
+    
+    window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(texto)}`, '_blank');
+}
+
 function filtrar(tipo) {
     let lista = ocorrencias;
     if(tipo === 'pendentes') lista = ocorrencias.filter(o => o.status === 'pendente');
@@ -344,11 +440,10 @@ function filtrar(tipo) {
     if(tipo === 'concluidas') lista = ocorrencias.filter(o => o.status === 'concluida');
     
     document.getElementById('lista-admin').innerHTML = lista.length ? lista.map(o => {
-        let classe = '';
-        let statusTxt = '';
-        if(o.status === 'pendente') { classe = 'piscando'; statusTxt = '⏳ AGUARDANDO APOIO'; }
-        if(o.status === 'aceita') statusTxt = '🔄 EM ANDAMENTO — ' + (o.apoio?.nome || 'Apoio');
-        if(o.status === 'concluida') { classe = 'ocorrencia-concluida'; statusTxt = '✅ CONCLUÍDA — Clique para ver relatório'; }
+        let classe = '', statusTxt = '';
+        if(o.status === 'pendente') { classe = 'piscando'; statusTxt = '⏳ Aguardando'; }
+        if(o.status === 'aceita') statusTxt = '🔄 Em Andamento — ' + (o.apoio?.nome || 'Apoio');
+        if(o.status === 'concluida') { classe = 'ocorrencia-concluida'; statusTxt = '✅ Concluída — Clique para ver'; }
         
         return `
         <div class="ocorrencia ${classe}" onclick="abrirDetalhes(${o.id})" style="cursor:pointer;">
@@ -357,42 +452,79 @@ function filtrar(tipo) {
             <p style="font-size:13px; color:var(--cinza);">📅 ${o.data} ${o.hora}</p>
             <p>${statusTxt}</p>
         </div>`;
-    }).join('') : '<p style="color:var(--cinza); text-align:center; padding:15px;">Nenhuma ocorrência encontrada</p>';
+    }).join('') : '<p style="color:var(--cinza); text-align:center; padding:15px;">Nenhuma ocorrência</p>';
 }
 
 function abrirDetalhes(id) {
-    const o = ocorrencias.find(x => x.id === id);
-    if(!o) return;
+    ocorrenciaChat = ocorrencias.find(x => x.id === id);
+    if(!ocorrenciaChat) return;
     
     let fotosHtml = '';
-    if(o.fotos && o.fotos.length > 0) {
-        fotosHtml = '<p><strong>📸 Fotos enviadas pelo Apoio:</strong></p><div class="grid-fotos">' + 
-            o.fotos.map(f => `<div class="foto-container"><img src="${f}"></div>`).join('') + '</div>';
+    if(ocorrenciaChat.fotos?.length) {
+        fotosHtml = '<p><strong>📸 Fotos:</strong></p><div class="grid-fotos">' + 
+            ocorrenciaChat.fotos.map(f => `<div class="foto-container"><img src="${f}"></div>`).join('') + '</div>';
     }
 
     document.getElementById('conteudo-detalhes').innerHTML = `
-        <p><strong>📍 Endereço:</strong> ${o.endereco}</p>
-        <p><strong>🗺️ Região:</strong> ${o.regiao || '—'}</p>
-        <p><strong>📌 Tipo:</strong> ${o.tipo}</p>
-        <p><strong>💰 Valor:</strong> R$ ${o.valor.toFixed(2)}</p>
-        <p><strong>📅 Lançamento:</strong> ${o.data} às ${o.hora}</p>
-        ${o.dataAceite ? `<p><strong>✅ Aceite em:</strong> ${o.dataAceite}</p>` : ''}
-        ${o.apoio ? `<p><strong>👤 Apoio Responsável:</strong> ${o.apoio.nome}</p><p>📱 Telefone: ${o.apoio.telefone}</p><p>🚗 Veículo: ${o.apoio.veiculo} — ${o.apoio.placa}</p>` : ''}
-        ${o.relatorio ? `<hr style="border:0; border-top:1px solid #333; margin:15px 0;"><p><strong>✍️ RELATÓRIO DO ATENDIMENTO:</strong></p><p style="white-space:pre-wrap; background:#0f172a; padding:15px; border-radius:8px; margin-top:8px;">${o.relatorio}</p>` : ''}
+        <p><strong>📍 Endereço:</strong> ${ocorrenciaChat.endereco}</p>
+        <p><strong>📌 Tipo:</strong> ${ocorrenciaChat.tipo}</p>
+        <p><strong>💰 Valor:</strong> R$ ${ocorrenciaChat.valor.toFixed(2)}</p>
+        <p><strong>📅 Lançamento:</strong> ${ocorrenciaChat.data} ${ocorrenciaChat.hora}</p>
+        ${ocorrenciaChat.dataAceite ? `<p><strong>✅ Aceite:</strong> ${ocorrenciaChat.dataAceite}</p>` : ''}
+        ${ocorrenciaChat.apoio ? `<p><strong>👤 Apoio:</strong> ${ocorrenciaChat.apoio.nome} | ${ocorrenciaChat.apoio.telefone}</p>` : ''}
+        ${ocorrenciaChat.relatorio ? `<hr style="border:0; border-top:1px solid #333; margin:12px 0;"><p><strong>✍️ RELATÓRIO:</strong></p><p style="white-space:pre-wrap; background:#0f172a; padding:12px; border-radius:8px; margin-top:6px;">${ocorrenciaChat.relatorio}</p>` : ''}
         ${fotosHtml}
-        ${o.dataConclusao ? `<p style="margin-top:15px; color:var(--verde); font-weight:bold;">✅ CONCLUÍDO em: ${o.dataConclusao}</p>` : ''}
+        ${ocorrenciaChat.dataConclusao ? `<p style="margin-top:12px; color:var(--verde); font-weight:bold;">✅ CONCLUÍDO em: ${ocorrenciaChat.dataConclusao}</p>` : ''}
     `;
     document.getElementById('detalhes-ocorrencia').classList.remove('escondido');
+    carregarChat();
 }
 
 function fecharDetalhes() {
     document.getElementById('detalhes-ocorrencia').classList.add('escondido');
+    ocorrenciaChat = null;
+}
+
+function carregarChat() {
+    if(!ocorrenciaChat) return;
+    const div = document.getElementById(usuario?.nome ? 'chat-apoio' : 'chat-admin');
+    div.innerHTML = (ocorrenciaChat.mensagens || []).map(m => `
+        <div class="msg ${m.de === 'apoio' ? 'msg-apoio' : 'msg-admin'}">
+            <strong>${m.de === 'apoio' ? (usuario?.nome || 'Apoio') : 'Administrador'}:</strong><br>
+            ${m.texto}
+            <div style="font-size:11px; opacity:0.7; margin-top:4px;">${m.hora}</div>
+        </div>
+    `).join('');
+    div.scrollTop = div.scrollHeight;
+}
+
+function enviarMsgAdmin() {
+    if(!ocorrenciaChat) return;
+    const texto = document.getElementById('msg-admin').value.trim();
+    if(!texto) return;
+    const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    if(!ocorrenciaChat.mensagens) ocorrenciaChat.mensagens = [];
+    ocorrenciaChat.mensagens.push({de: 'admin', texto, hora: agora});
+    salvarDados();
+    document.getElementById('msg-admin').value = '';
+    carregarChat();
+}
+
+function enviarMsgApoio() {
+    if(!servicoAtual) return;
+    const texto = document.getElementById('msg-apoio').value.trim();
+    if(!texto) return;
+    const agora = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    if(!servicoAtual.mensagens) servicoAtual.mensagens = [];
+    servicoAtual.mensagens.push({de: 'apoio', texto, hora: agora});
+    salvarDados();
+    document.getElementById('msg-apoio').value = '';
+    carregarChat();
 }
 
 function enviarRelatorioWhatsApp() {
-    const idSelecionado = ocorrencias.findIndex(o => o.status === 'concluida');
-    if(idSelecionado === -1) return;
-    const o = ocorrencias[idSelecionado];
+    if(!ocorrenciaChat) return;
+    const o = ocorrenciaChat;
     const mensagem = `📋 RELATÓRIO DE ATENDIMENTO — DRTRACK
 
 📍 ENDEREÇO: ${o.endereco}
@@ -410,7 +542,6 @@ ${o.relatorio || 'Sem relatório'}
 
 Atenciosamente,
 DRTRACK Conecta`;
-
     window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(mensagem)}`, '_blank');
 }
 
@@ -504,14 +635,14 @@ function atualizarListaApoio() {
 }
 
 // ==============================================
-// FUNÇÃO ACEITAR — AGORA ABRE A TELA, NÃO SOME!
+// ACEITAR → ABRE TELA DE PRESTAÇÃO DE CONTAS — GARANTIDO!
 // ==============================================
 function aceitarServico(id) {
-    if(!confirm('Aceitar este atendimento?\n\nVocê deverá preencher o relatório e enviar fotos.')) return;
+    if(!confirm('Aceitar este atendimento?\n\nVocê vai preencher relatório, enviar fotos e conversar com a base.')) return;
     
     const o = ocorrencias.find(x => x.id === id);
     if(!o || o.status !== 'pendente') { 
-        alert('Já foi aceito por outro apoio!'); 
+        alert('Já foi aceito por outro apoio! Atualize a lista.'); 
         atualizarListaApoio();
         return; 
     }
@@ -524,7 +655,7 @@ function aceitarServico(id) {
     fotosEnviadas = [];
     salvarDados();
     
-    // PREENCHE OS DADOS NA TELA
+    // PREENCHE TELA
     document.getElementById('atv-end').textContent = o.endereco;
     document.getElementById('atv-tipo').textContent = o.tipo;
     document.getElementById('atv-valor').textContent = o.valor.toFixed(2);
@@ -533,7 +664,7 @@ function aceitarServico(id) {
     document.getElementById('qtd-fotos').textContent = '0 de 5 fotos';
     document.getElementById('relatorio').value = '';
     
-    // ← AQUI ABRE A TELA DE PRESTAÇÃO DE CONTAS — GARANTIDO!
+    // ← A TELA ABRE AQUI — NÃO SOME!
     mostrarTela('atendimento');
 }
 
@@ -554,12 +685,12 @@ function processarFotos(input) {
                 const dataHora = new Date().toLocaleString('pt-BR');
                 const texto = `📍 LAT: ${lat} | LNG: ${lng} — ${dataHora}`;
                 
-                ctx.font = 'bold 16px sans-serif';
+                ctx.font = 'bold 15px sans-serif';
                 const w = ctx.measureText(texto).width;
                 ctx.fillStyle = 'rgba(0,0,0,0.75)';
-                ctx.fillRect(10, canvas.height - 38, w + 20, 33);
+                ctx.fillRect(10, canvas.height - 36, w + 18, 31);
                 ctx.fillStyle = '#fff';
-                ctx.fillText(texto, 20, canvas.height - 15);
+                ctx.fillText(texto, 18, canvas.height - 14);
                 
                 fotosEnviadas.push(canvas.toDataURL('image/jpeg', 0.85));
                 document.getElementById('preview-fotos').innerHTML = fotosEnviadas.map(f => 
@@ -574,7 +705,7 @@ function processarFotos(input) {
 }
 
 function cancelar() {
-    if(!confirm('Cancelar este atendimento?\nA ocorrência voltará para a lista disponível.')) return;
+    if(!confirm('Cancelar atendimento? Voltará para a lista.')) return;
     if(servicoAtual) {
         servicoAtual.status = 'pendente';
         servicoAtual.apoio = null;
@@ -588,18 +719,16 @@ function cancelar() {
 }
 
 function enviarRelatorio() {
-    // VALIDAÇÃO OBRIGATÓRIA
     if(fotosEnviadas.length < 5) {
-        alert(`⚠️ Você precisa enviar NO MÍNIMO 5 fotos!\nEnviadas: ${fotosEnviadas.length}`);
+        alert(`⚠️ Envie no mínimo 5 fotos! Enviadas: ${fotosEnviadas.length}`);
         return;
     }
     const rel = document.getElementById('relatorio').value.trim();
     if(!rel || rel.length < 20) {
-        alert('⚠️ Preencha o relatório com detalhes sobre o que aconteceu no local!');
+        alert('⚠️ Preencha o relatório com detalhes sobre o atendimento!');
         return;
     }
     
-    // SALVA TUDO
     const agora = new Date();
     servicoAtual.status = 'concluida';
     servicoAtual.fotos = [...fotosEnviadas];
@@ -608,7 +737,6 @@ function enviarRelatorio() {
     servicoAtual.dataISOConclusao = agora.toISOString().split('T')[0];
     salvarDados();
     
-    // ENVIA PRO SEU WHATSAPP
     const mensagem = `📋 RELATÓRIO RECEBIDO — DRTRACK
 
 📍 ENDEREÇO: ${servicoAtual.endereco}
@@ -621,21 +749,16 @@ function enviarRelatorio() {
 💵 PIX: ${usuario.pix}
 
 ✅ ACEITE: ${servicoAtual.dataAceite}
-✅ CONCLUSÃO: ${servicoAtual.dataConclusao}
+✅ CONCLUÍDO: ${servicoAtual.dataConclusao}
 
 📝 RELATÓRIO:
 ${rel}
 
-📸 ${fotosEnviadas.length} fotos com geolocalização anexadas.
-
----
-Atenciosamente,
-DRTRACK Conecta`;
+📸 ${fotosEnviadas.length} fotos com geolocalização anexadas.`;
 
     window.open(`https://wa.me/5511994944410?text=${encodeURIComponent(mensagem)}`, '_blank');
     
-    alert('✅ RELATÓRIO ENVIADO!\n\nRegistrado no sistema. O administrador já pode visualizar.');
-    
+    alert('✅ ENVIADO!\n\nAdministrador já pode visualizar tudo.');
     servicoAtual = null;
     fotosEnviadas = [];
     mostrarTela('principal');
@@ -655,12 +778,12 @@ function atualizarHistoricoApoio() {
             <p>${o.tipo} — R$ ${o.valor.toFixed(2)}</p>
             <p style="font-size:13px; color:var(--cinza);">✅ ${o.dataConclusao}</p>
         </div>`).join('')}
-    ` : '<p style="color:var(--cinza);">Nenhum atendimento concluído ainda</p>';
+    ` : '<p style="color:var(--cinza);">Nenhum atendimento concluído</p>';
 }
 
 function sair() {
     if(watchGPS) navigator.geolocation.clearWatch(watchGPS);
-    usuario = null; servicoAtual = null; fotosEnviadas = []; mapa = null;
+    usuario = null; servicoAtual = null; fotosEnviadas = []; mapa = null; ocorrenciaChat = null;
     mostrarTela('inicio');
 }
 </script>

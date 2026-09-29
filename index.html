@@ -771,10 +771,10 @@ function atualizarListaApoiosAdmin() {
                 <p><strong>${a.nome}</strong></p>
                 <span class="etiqueta ${classe}">${etiqueta}</span>
             </div>
-            <p class="texto-menor">📱 ${a.telefone} | 🚗 ${a.veiculo} · ${a.placa || 'Sem placa
-'} | 💰 R$ ${valor.toFixed(2)}
-            </p>
-            <p class="texto-menor">📋 ${qtd} atendimentos concluídos</p>
+            <p class="texto-menor">📱 ${a.telefone} | 🚗 ${a.veiculo} · ${a.placa || 'Sem placa'}</p>
+            <p class="texto-menor">💰 R$ ${valor.toFixed(
+2)} | 📋 ${qtd} atendimentos concluídos</p>
+            <p class="texto-menor">PIX: ${a.pix || 'Não informado'}</p>
             <div class="botoes" style="margin-top:8px;">
                 ${!a.aprovado ? `<button class="btn btn-verde btn-pequeno" onclick="aprovarApoio('${a.telefone}')">✅ Aprovar</button>` : ''}
                 ${a.aprovado && !a.suspenso ? `<button class="btn btn-vermelho btn-pequeno" onclick="suspenderApoio('${a.telefone}')">⚠️ Suspender</button>` : ''}
@@ -1138,9 +1138,8 @@ function cancelar() {
 }
 
 function carregarChatApoio() {
-    if(!servicoAtual) return;
-    const telAdmin = servicoAtual.apoio?.telefone || usuario?.telefone;
-    const chave = Object.keys(conversas).find(k => k === telAdmin) || 'admin';
+    if(!usuario) return;
+    const chave = usuario.telefone;
     if(!conversas[chave]) conversas[chave] = [];
     
     document.getElementById('chat-apoio-mensagens').innerHTML = conversas[chave].length ? 
@@ -1155,7 +1154,7 @@ function carregarChatApoio() {
 }
 
 function enviarMsgApoio() {
-    if(!servicoAtual && !usuario) return;
+    if(!usuario) return;
     const texto = document.getElementById('chat-apoio-texto').value.trim();
     if(!texto) return;
     

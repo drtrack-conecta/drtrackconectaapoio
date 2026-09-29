@@ -6,7 +6,7 @@
     <title>DRTRACK Conecta</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        :root { --fundo: #0f172a; --azul: #1e40af; --verde: #16a34a; --amarelo: #eab308; --vermelho: #dc2626; --texto: #f1f5f9; --cinza: #94a3b8; }
+        :root { --fundo: #0f172a; --azul: #1e40af; --verde: #16a34a; --amarelo: #eab308; --vermelho: #dc2626; --texto: #f1f5f9; --cinza: #94a3b8; --azul-claro: #3b82f6; --verde-escuro: #15803d; }
         body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: var(--texto); padding: 15px; }
         .tela { display: none; max-width: 580px; margin: 0 auto; }
         .ativa { display: block !important; }
@@ -20,7 +20,7 @@
         .btn-azul { background: var(--azul); color: white; }
         .btn-cinza { background: #475569; color: white; }
         .card { background: #1e293b; padding: 18px; border-radius: 14px; margin-bottom: 12px; }
-        input, textarea { width: 100%; padding: 11px; margin: 5px 0; border: none; border-radius: 7px; background: #334155; color: white; font-size: 15px; }
+        input, textarea, select { width: 100%; padding: 11px; margin: 5px 0; border: none; border-radius: 7px; background: #334155; color: white; font-size: 15px; }
         label { display: block; margin-top: 10px; font-weight: 500; }
         .ocorrencia { border-left: 4px solid var(--amarelo); padding: 14px; margin: 10px 0; background: #1e293b; border-radius: 0 10px 10px 0; }
         .ocorrencia-concluida { border-left-color: var(--verde); }
@@ -34,6 +34,19 @@
         .grid-fotos img { width: 100%; height: 110px; object-fit: cover; border-radius: 5px; }
         .botoes { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
         .botoes .btn { flex: 1; padding: 11px; font-size: 14px; min-width: 90px; }
+        
+        /* ESTILOS DO CHAT */
+        .chat-container { height: 350px; overflow-y: auto; background: #0f172a; border-radius: 10px; padding: 15px; margin-bottom: 12px; border: 1px solid #334155; }
+        .msg { margin-bottom: 12px; max-width: 80%; padding: 10px 14px; border-radius: 18px; line-height: 1.4; }
+        .msg-apoio { background: var(--azul-claro); margin-left: auto; border-bottom-right-radius: 4px; }
+        .msg-admin { background: var(--verde-escuro); margin-right: auto; border-bottom-left-radius: 4px; }
+        .msg-hora { font-size: 11px; opacity: 0.7; margin-top: 4px; text-align: right; }
+        .chat-input-area { display: flex; gap: 8px; }
+        .chat-input-area input { flex: 1; margin: 0; }
+        .sem-mensagem { text-align: center; color: var(--cinza); padding: 20px; }
+        .aba { display: inline-block; padding: 8px 14px; background: #334155; border-radius: 8px 8px 0 0; margin-right: 4px; cursor: pointer; font-size: 14px; }
+        .aba.ativa { background: var(--azul); font-weight: bold; }
+        .abas { margin-bottom: 10px; border-bottom: 2px solid #334155; padding-bottom: 0; }
     </style>
 </head>
 <body>
@@ -61,32 +74,59 @@
 <div id="admin" class="tela">
     <h2>⚙️ Painel Administrativo</h2>
     
-    <div class="card">
-        <h3>📤 Lançar Ocorrência</h3>
-        <label>Endereço Completo:</label>
-        <input type="text" id="end" placeholder="Rua, número, bairro, cidade">
-        <label>Valor R$:</label>
-        <input type="number" id="valor" step="0.01" placeholder="0,00">
-        <button class="btn btn-azul" onclick="lancar()">📢 Lançar Ocorrência</button>
+    <div class="abas">
+        <span class="aba ativa" onclick="trocarAbaAdmin('ocorrencias')">📋 Ocorrências</span>
+        <span class="aba" onclick="trocarAbaAdmin('chat')">💬 Conversas</span>
     </div>
 
-    <div class="card">
-        <h3>📋 Ocorrências</h3>
-        <div class="botoes">
-            <button class="btn btn-cinza" onclick="filtrar('todas')">Todas</button>
-            <button class="btn btn-amarelo" onclick="filtrar('pendentes')">Pendentes</button>
-            <button class="btn btn-azul" onclick="filtrar('andamento')">Em Andamento</button>
-            <button class="btn btn-verde" onclick="filtrar('concluidas')">Concluídas</button>
+    <!-- ABA: OCORRÊNCIAS -->
+    <div id="aba-ocorrencias">
+        <div class="card">
+            <h3>📤 Lançar Ocorrência</h3>
+            <label>Endereço Completo:</label>
+            <input type="text" id="end" placeholder="Rua, número, bairro, cidade">
+            <label>Valor R$:</label>
+            <input type="number" id="valor" step="0.01" placeholder="0,00">
+            <button class="btn btn-azul" onclick="lancar()">📢 Lançar Ocorrência</button>
         </div>
-        <div id="lista-admin" style="margin-top:12px;"></div>
+
+        <div class="card">
+            <h3>📋 Ocorrências</h3>
+            <div class="botoes">
+                <button class="btn btn-cinza" onclick="filtrar('todas')">Todas</button>
+                <button class="btn btn-amarelo" onclick="filtrar('pendentes')">Pendentes</button>
+                <button class="btn btn-azul" onclick="filtrar('andamento')">Em Andamento</button>
+                <button class="btn btn-verde" onclick="filtrar('concluidas')">Concluídas</button>
+            </div>
+            <div id="lista-admin" style="margin-top:12px;"></div>
+        </div>
+
+        <div id="detalhes-ocorrencia" class="card escondido">
+            <h3>📄 Relatório Completo</h3>
+            <div id="conteudo-detalhes"></div>
+            <div class="botoes">
+                <button class="btn btn-azul" onclick="abrirChatComApoio()">💬 Conversar com Apoio</button>
+                <button class="btn btn-verde" onclick="enviarRelatorioWhatsApp()">📲 Enviar ao Cliente</button>
+                <button class="btn btn-cinza" onclick="fecharDetalhes()">← Voltar</button>
+            </div>
+        </div>
     </div>
 
-    <div id="detalhes-ocorrencia" class="card escondido">
-        <h3>📄 Relatório Completo</h3>
-        <div id="conteudo-detalhes"></div>
-        <div class="botoes">
-            <button class="btn btn-verde" onclick="enviarRelatorioWhatsApp()">📲 Enviar ao Cliente</button>
-            <button class="btn btn-cinza" onclick="fecharDetalhes()">← Voltar</button>
+    <!-- ABA: CHAT -->
+    <div id="aba-chat" class="escondido">
+        <div class="card">
+            <h3>💬 Conversas com Apoios</h3>
+            <p style="font-size:13px; color:var(--cinza); margin-bottom:10px;">Clique numa conversa para responder</p>
+            <div id="lista-conversas-admin"></div>
+        </div>
+
+        <div id="chat-admin-area" class="card escondido">
+            <h4 id="chat-admin-nome"></h4>
+            <div id="chat-admin-mensagens" class="chat-container"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-admin-texto" placeholder="Digite sua mensagem...">
+                <button class="btn btn-verde" style="width:auto; padding:11px 16px; margin:0;" onclick="enviarMsgAdmin()">Enviar</button>
+            </div>
         </div>
     </div>
 
@@ -151,67 +191,142 @@
     <button class="btn btn-cinza" onclick="sair()">🚪 Sair</button>
 </div>
 
-<!-- TELA DE PRESTAÇÃO DE CONTAS -->
+<!-- TELA DE PRESTAÇÃO DE CONTAS + CHAT -->
 <div id="atendimento" class="tela">
     <h2>✅ PRESTAR CONTAS</h2>
     
-    <div class="card">
-        <h3>📍 Dados</h3>
-        <p><strong>Endereço:</strong> <span id="atv-end"></span></p>
-        <p><strong>Valor:</strong> R$ <span id="atv-valor"></span></p>
+    <div class="abas">
+        <span class="aba ativa" onclick="trocarAbaApoio('formulario')">📝 Relatório</span>
+        <span class="aba" onclick="trocarAbaApoio('chat')">💬 Falar com Admin</span>
     </div>
 
-    <div class="card">
-        <h3>📸 Fotos do Local (MÍNIMO 5 — escolha TODAS de uma vez)</h3>
-        <input type="file" id="fotos" accept="image/*" multiple capture="environment" onchange="processarFotos(this)">
-        <p style="font-size:13px; color:var(--cinza); margin:5px 0;">💡 Dica: segure e selecione várias fotos ao mesmo tempo</p>
-        <div id="preview-fotos" class="grid-fotos"></div>
-        <p id="qtd-fotos" style="color:var(--verde); margin-top:8px;">0 de 5 fotos</p>
+    <!-- ABA: FORMULÁRIO -->
+    <div id="aba-formulario">
+        <div class="card">
+            <h3>📍 Dados</h3>
+            <p><strong>Endereço:</strong> <span id="atv-end"></span></p>
+            <p><strong>Valor:</strong> R$ <span id="atv-valor"></span></p>
+        </div>
+
+        <div class="card">
+            <h3>📸 Fotos do Local (MÍNIMO 5 — selecione TODAS de uma vez)</h3>
+            <input type="file" id="fotos" accept="image/*" multiple capture="environment" onchange="processarFotos(this)">
+            <p style="font-size:13px; color:var(--cinza); margin:5px 0;">💡 Segure e selecione várias fotos ao mesmo tempo</p>
+            <div id="preview-fotos" class="grid-fotos"></div>
+            <p id="qtd-fotos" style="color:var(--verde); margin-top:8px;">0 de 5 fotos</p>
+        </div>
+
+        <div class="card">
+            <h3>👤 Responsável no Local</h3>
+            <input type="text" id="responsavel" placeholder="Nome de quem falou no local">
+        </div>
+
+        <div class="card">
+            <h3>✍️ Relatório</h3>
+            <textarea id="relatorio" rows="6" placeholder="O que aconteceu, o que fez, situação final..."></textarea>
+        </div>
+
+        <div class="botoes">
+            <button class="btn btn-vermelho" onclick="cancelar()">❌ Cancelar</button>
+            <button class="btn btn-verde" onclick="enviarRelatorio()">✅ ENVIAR PARA O ADMINISTRADOR</button>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>👤 Responsável no Local</h3>
-        <input type="text" id="responsavel" placeholder="Nome de quem falou no local">
-    </div>
-
-    <div class="card">
-        <h3>✍️ Relatório</h3>
-        <textarea id="relatorio" rows="6" placeholder="O que aconteceu, o que fez, situação final..."></textarea>
-    </div>
-
-    <div class="botoes">
-        <button class="btn btn-vermelho" onclick="cancelar()">❌ Cancelar</button>
-        <button class="btn btn-verde" onclick="enviarRelatorio()">✅ ENVIAR PARA O ADMINISTRADOR</button>
+    <!-- ABA: CHAT DO APOIO -->
+    <div id="aba-chat-apoio" class="escondido">
+        <div class="card">
+            <h3>💬 Conversa com Administrador</h3>
+            <div id="chat-apoio-mensagens" class="chat-container"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chat-apoio-texto" placeholder="Digite sua mensagem...">
+                <button class="btn btn-verde" style="width:auto; padding:11px 16px; margin:0;" onclick="enviarMsgApoio()">Enviar</button>
+            </div>
+            <p style="font-size:12px; color:var(--cinza); margin-top:8px;">📱 O administrador recebe e responde por aqui</p>
+        </div>
     </div>
 </div>
 
 <script>
-// SEU WHATSAPP — JÁ FIXO, NÃO MUDA
+// SEU WHATSAPP — JÁ FIXO
 const ADMIN_WHATSAPP = '5511994944410';
 
 let apoios = JSON.parse(localStorage.getItem('apoios') || '[]');
 let ocorrencias = JSON.parse(localStorage.getItem('ocorrencias') || '[]');
+let conversas = JSON.parse(localStorage.getItem('conversas') || '{}'); // { telefoneApoio: [{de, texto, hora}] }
 let usuario = null;
 let servicoAtual = null;
 let fotosEnviadas = [];
+let chatAbertoParaAdmin = null;
 
 function salvarDados() {
     localStorage.setItem('apoios', JSON.stringify(apoios));
     localStorage.setItem('ocorrencias', JSON.stringify(ocorrencias));
+    localStorage.setItem('conversas', JSON.stringify(conversas));
 }
 
 function mostrarTela(id) {
     document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
     document.getElementById(id).classList.add('ativa');
-    if(id === 'admin') filtrar('todas');
+    if(id === 'admin') { filtrar('todas'); atualizarListaConversasAdmin(); }
     if(id === 'principal') { atualizarListaApoio(); atualizarHistoricoApoio(); }
+    if(id === 'atendimento' && usuario) carregarChatApoio();
 }
 
+// ========== SISTEMA DE ABAS ==========
+function trocarAbaAdmin(nome) {
+    document.querySelectorAll('#admin .aba').forEach(a => a.classList.remove('ativa'));
+    event.target.classList.add('ativa');
+    document.getElementById('aba-ocorrencias').classList.toggle('escondido', nome !== 'ocorrencias');
+    document.getElementById('aba-chat').classList.toggle('escondido', nome !== 'chat');
+    if(nome === 'chat') atualizarListaConversasAdmin();
+}
+
+function trocarAbaApoio(nome) {
+    document.querySelectorAll('#atendimento .aba').forEach(a => a.classList.remove('ativa'));
+    event.target.classList.add('ativa');
+    document.getElementById('aba-formulario').classList.toggle('escondido', nome !== 'formulario');
+    document.getElementById('aba-chat-apoio').classList.toggle('escondido', nome !== 'chat');
+    if(nome === 'chat') carregarChatApoio();
+}
+
+// ========== LOGIN ==========
 function entrarAdmin() {
     if(document.getElementById('senha-adm').value === 'admin123') mostrarTela('admin');
     else alert('Senha incorreta!');
 }
 
+function salvarCadastro() {
+    const d = {
+        nome: document.getElementById('c-nome').value.trim(),
+        telefone: document.getElementById('c-tel').value.trim(),
+        veiculo: document.getElementById('c-veiculo').value,
+        placa: document.getElementById('c-placa').value.trim(),
+        pix: document.getElementById('c-pix').value.trim(),
+        senha: document.getElementById('c-senha').value,
+        aprovado: false
+    };
+    if(!d.nome || !d.telefone || d.senha.length < 6) { alert('Preencha tudo!'); return; }
+    if(apoios.find(a => a.telefone === d.telefone)) { alert('Já cadastrado!'); return; }
+    apoios.push(d); salvarDados();
+    alert('✅ Enviado! Aguarde aprovação.');
+    mostrarTela('aguardando');
+}
+
+function entrarApoio() {
+    const tel = document.getElementById('tel-apoio').value.trim();
+    const senha = document.getElementById('senha-apoio').value;
+    const a = apoios.find(x => x.telefone === tel && x.senha === senha);
+    if(!a) { alert('Dados incorretos!'); return; }
+    usuario = a; mostrarTela(a.aprovado ? 'principal' : 'aguardando');
+}
+
+function verificar() {
+    const a = apoios.find(x => x.telefone === usuario?.telefone);
+    if(a?.aprovado) { usuario = a; mostrarTela('principal'); }
+    else alert('Ainda não aprovado.');
+}
+
+// ========== LANÇAMENTO E LISTA ==========
 function lancar() {
     const end = document.getElementById('end').value.trim();
     if(!end) { alert('Preencha o endereço!'); return; }
@@ -267,10 +382,19 @@ function abrirDetalhes(id) {
         ${o.dataConclusao ? `<p style="margin-top:10px; color:var(--verde); font-weight:bold;">✅ Concluído: ${o.dataConclusao}</p>` : ''}
     `;
     document.getElementById('detalhes-ocorrencia').classList.remove('escondido');
+    servicoAtual = o;
 }
 
 function fecharDetalhes() {
     document.getElementById('detalhes-ocorrencia').classList.add('escondido');
+}
+
+function abrirChatComApoio() {
+    if(!servicoAtual?.apoio) { alert('Ainda não há apoio vinculado a esta ocorrência.'); return; }
+    chatAbertoParaAdmin = servicoAtual.apoio.telefone;
+    trocarAbaAdmin('chat');
+    document.getElementById('chat-admin-nome').textContent = `Conversa com: ${servicoAtual.apoio.nome}`;
+    carregarConversaAdmin(servicoAtual.apoio.telefone);
 }
 
 function enviarRelatorioWhatsApp() {
@@ -289,37 +413,7 @@ ${o.relatorio || '—'}
     window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-function salvarCadastro() {
-    const d = {
-        nome: document.getElementById('c-nome').value.trim(),
-        telefone: document.getElementById('c-tel').value.trim(),
-        veiculo: document.getElementById('c-veiculo').value,
-        placa: document.getElementById('c-placa').value.trim(),
-        pix: document.getElementById('c-pix').value.trim(),
-        senha: document.getElementById('c-senha').value,
-        aprovado: false
-    };
-    if(!d.nome || !d.telefone || d.senha.length < 6) { alert('Preencha tudo!'); return; }
-    if(apoios.find(a => a.telefone === d.telefone)) { alert('Já cadastrado!'); return; }
-    apoios.push(d); salvarDados();
-    alert('✅ Enviado! Aguarde aprovação.');
-    mostrarTela('aguardando');
-}
-
-function entrarApoio() {
-    const tel = document.getElementById('tel-apoio').value.trim();
-    const senha = document.getElementById('senha-apoio').value;
-    const a = apoios.find(x => x.telefone === tel && x.senha === senha);
-    if(!a) { alert('Dados incorretos!'); return; }
-    usuario = a; mostrarTela(a.aprovado ? 'principal' : 'aguardando');
-}
-
-function verificar() {
-    const a = apoios.find(x => x.telefone === usuario?.telefone);
-    if(a?.aprovado) { usuario = a; mostrarTela('principal'); }
-    else alert('Ainda não aprovado.');
-}
-
+// ========== APOIO — LISTA E ACEITE ==========
 function atualizarListaApoio() {
     const pendentes = ocorrencias.filter(o => o.status === 'pendente');
     const div = document.getElementById('lista-apoio');
@@ -341,7 +435,7 @@ function atualizarListaApoio() {
 }
 
 function aceitarServico(id) {
-    if(!confirm('Aceitar? Irá preencher relatório e enviar.')) return;
+    if(!confirm('Aceitar? Preencherá relatório, fotos e poderá conversar com o administrador.')) return;
     const o = ocorrencias.find(x => x.id === id);
     if(!o || o.status !== 'pendente') { alert('Já aceito por outro!'); atualizarListaApoio(); return; }
     
@@ -357,15 +451,13 @@ function aceitarServico(id) {
     document.getElementById('responsavel').value = '';
     document.getElementById('relatorio').value = '';
     
-    mostrarTela('atendimento'); // ABRE CERTO!
+    mostrarTela('atendimento');
 }
 
-// VÁRIAS FOTOS DE UMA VEZ — AQUI ESTÁ A MUDANÇA PRINCIPAL
+// ========== FOTOS ==========
 function processarFotos(input) {
     const arquivos = input.files;
     if(arquivos.length === 0) return;
-    
-    // Processa TODAS as fotos selecionadas ao mesmo tempo
     for(let i = 0; i < arquivos.length; i++) {
         const leitor = new FileReader();
         leitor.onload = e => {
@@ -385,6 +477,7 @@ function atualizarPreviewFotos() {
     aviso.style.color = fotosEnviadas.length >= 5 ? 'var(--verde)' : 'var(--amarelo)';
 }
 
+// ========== CANCELAR E ENVIAR RELATÓRIO ==========
 function cancelar() {
     if(!confirm('Cancelar?')) return;
     if(servicoAtual) {
@@ -398,7 +491,6 @@ function cancelar() {
 }
 
 function enviarRelatorio() {
-    // VALIDAÇÕES
     if(fotosEnviadas.length < 5) {
         alert(`⚠️ Envie no mínimo 5 fotos!\nSelecionadas: ${fotosEnviadas.length}`);
         return;
@@ -408,7 +500,6 @@ function enviarRelatorio() {
     if(!resp) { alert('⚠️ Coloque o nome do responsável!'); return; }
     if(!rel) { alert('⚠️ Escreva o relatório!'); return; }
     
-    // SALVA
     const agora = new Date();
     servicoAtual.status = 'concluida';
     servicoAtual.responsavel = resp;
@@ -417,7 +508,6 @@ function enviarRelatorio() {
     servicoAtual.dataConclusao = agora.toLocaleString('pt-BR');
     salvarDados();
     
-    // ✅ VAI DIRETO PRO SEU WHATSAPP — JÁ FIXO
     const mensagem = `📋 RELATÓRIO RECEBIDO — DRTRACK
 
 📍 ENDEREÇO: ${servicoAtual.endereco}
@@ -437,15 +527,14 @@ ${rel}
 
 ✅ CONCLUÍDO: ${servicoAtual.dataConclusao}`;
 
-    // ABRE DIRETO NO SEU WHATSAPP — NÃO PEDIE NADA, VAI DIRETO!
     window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${encodeURIComponent(mensagem)}`, '_blank');
-    
-    alert('✅ ENVIADO PARA O ADMINISTRADOR!');
+    alert('✅ ENVIADO!');
     
     servicoAtual = null; fotosEnviadas = [];
     mostrarTela('principal');
 }
 
+// ========== HISTÓRICO ==========
 function atualizarHistoricoApoio() {
     if(!usuario) return;
     const hist = ocorrencias.filter(o => o.status === 'concluida' && o.apoio?.telefone === usuario.telefone);
@@ -458,8 +547,115 @@ function atualizarHistoricoApoio() {
         </div>`).join('') : '<p style="color:var(--cinza);">Nenhum concluído</p>';
 }
 
+// ==================================================
+// 🔑 SISTEMA DE CHAT — FUNCIONANDO DE VERDADE
+// ==================================================
+
+// Apoio envia mensagem
+function enviarMsgApoio() {
+    const texto = document.getElementById('chat-apoio-texto').value.trim();
+    if(!texto || !usuario) return;
+    
+    if(!conversas[usuario.telefone]) conversas[usuario.telefone] = [];
+    conversas[usuario.telefone].push({
+        de: 'apoio',
+        texto: texto,
+        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
+    });
+    salvarDados();
+    document.getElementById('chat-apoio-texto').value = '';
+    carregarChatApoio();
+}
+
+// Carrega chat do lado do Apoio
+function carregarChatApoio() {
+    if(!usuario) return;
+    const caixa = document.getElementById('chat-apoio-mensagens');
+    const msgs = conversas[usuario.telefone] || [];
+    
+    if(!msgs.length) {
+        caixa.innerHTML = '<p class="sem-mensagem">Ainda não há mensagens.<br>Escreva abaixo para falar com o administrador.</p>';
+        return;
+    }
+    
+    caixa.innerHTML = msgs.map(m => `
+        <div class="msg ${m.de === 'apoio' ? 'msg-apoio' : 'msg-admin'}">
+            <div>${m.texto}</div>
+            <div class="msg-hora">${m.de === 'apoio' ? 'Você' : 'Admin'} — ${m.hora}</div>
+        </div>
+    `).join('');
+    caixa.scrollTop = caixa.scrollHeight; // rola pra baixo automático
+}
+
+// Admin: lista de conversas
+function atualizarListaConversasAdmin() {
+    const div = document.getElementById('lista-conversas-admin');
+    const telefones = Object.keys(conversas);
+    
+    if(!telefones.length) {
+        div.innerHTML = '<p style="color:var(--cinza); text-align:center; padding:15px;">Nenhuma conversa ainda</p>';
+        return;
+    }
+    
+    div.innerHTML = telefones.map(tel => {
+        const apoio = apoios.find(a => a.telefone === tel);
+        const ultima = conversas[tel][conversas[tel].length - 1];
+        return `
+            <div class="ocorrencia" style="cursor:pointer;" onclick="carregarConversaAdmin('${tel}')">
+                <p><strong>${apoio?.nome || tel}</strong></p>
+                <p style="font-size:13px; color:var(--cinza);">${ultima.texto.substring(0,30)}${ultima.texto.length>30?'...':''}</p>
+                <p style="font-size:12px; color:var(--cinza);">${ultima.hora}</p>
+            </div>
+        `;
+    }).join('');
+}
+
+// Admin: carrega conversa específica
+function carregarConversaAdmin(telefone) {
+    chatAbertoParaAdmin = telefone;
+    const apoio = apoios.find(a => a.telefone === telefone);
+    document.getElementById('chat-admin-nome').textContent = `Conversa com: ${apoio?.nome || telefone}`;
+    document.getElementById('chat-admin-area').classList.remove('escondido');
+    
+    const caixa = document.getElementById('chat-admin-mensagens');
+    const msgs = conversas[telefone] || [];
+    
+    caixa.innerHTML = msgs.map(m => `
+        <div class="msg ${m.de === 'apoio' ? 'msg-apoio' : 'msg-admin'}">
+            <div>${m.texto}</div>
+            <div class="msg-hora">${m.de === 'apoio' ? (apoio?.nome || 'Apoio') : 'Você'} — ${m.hora}</div>
+        </div>
+    `).join('');
+    caixa.scrollTop = caixa.scrollHeight;
+}
+
+// Admin envia mensagem
+function enviarMsgAdmin() {
+    if(!chatAbertoParaAdmin) return;
+    const texto = document.getElementById('chat-admin-texto').value.trim();
+    if(!texto) return;
+    
+    if(!conversas[chatAbertoParaAdmin]) conversas[chatAbertoParaAdmin] = [];
+    conversas[chatAbertoParaAdmin].push({
+        de: 'admin',
+        texto: texto,
+        hora: new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})
+    });
+    salvarDados();
+    document.getElementById('chat-admin-texto').value = '';
+    carregarConversaAdmin(chatAbertoParaAdmin);
+}
+
+// Envio com Enter
+document.addEventListener('keypress', function(e) {
+    if(e.key === 'Enter') {
+        if(document.activeElement.id === 'chat-apoio-texto') enviarMsgApoio();
+        if(document.activeElement.id === 'chat-admin-texto') enviarMsgAdmin();
+    }
+});
+
 function sair() {
-    usuario = null; servicoAtual = null; fotosEnviadas = [];
+    usuario = null; servicoAtual = null; fotosEnviadas = []; chatAbertoParaAdmin = null;
     mostrarTela('inicio');
 }
 </script>

@@ -131,6 +131,7 @@
 
     .form-group {
       margin-bottom: 1rem;
+      position: relative;
     }
 
     .form-group label {
@@ -155,13 +156,46 @@
       border-color: var(--accent);
     }
 
+    /* ESTILOS AUTOCOMPLETE */
+    .autocomplete-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 0.375rem 0.375rem;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+
+    .autocomplete-suggestion {
+      padding: 0.75rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .autocomplete-suggestion:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-suggestion:hover {
+      background-color: var(--accent);
+      color: white;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 1rem;
     }
 
-    #map {
+    #map, #admin-preview-map {
       height: 350px;
       width: 100%;
       border-radius: 0.5rem;
@@ -213,7 +247,6 @@
       background-color: var(--border);
     }
 
-    /* GRID DE FOTOS: 2 EM 2 SOBREPOSTAS */
     .photo-grid-2x2 {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -262,7 +295,6 @@
       display: none !important;
     }
 
-    /* TELA DE BLOQUEIO GPS */
     .gps-blocked-overlay {
       background-color: rgba(15, 23, 42, 0.95);
       border: 2px solid var(--danger);
@@ -272,7 +304,6 @@
       margin-bottom: 1rem;
     }
 
-    /* ALERT POPUP */
     .alert-banner {
       background-color: var(--danger);
       color: white;
@@ -292,7 +323,6 @@
       100% { opacity: 1; }
     }
 
-    /* Tabs */
     .tab-nav {
       display: flex;
       gap: 0.5rem;
@@ -453,7 +483,7 @@
         <button class="tab-btn" onclick="switchAdminTab('tab-relatorios', event)">Relatório Quinzenal</button>
       </div>
 
-      <!-- TAB: LANÇAR OCORRÊNCIA -->
+      <!-- TAB: LANÇAR OCORRÊNCIA COM GEOCODIFICAÇÃO E AUTOCOMPLETE -->
       <div id="tab-lancar" class="admin-tab">
         <div class="card">
           <h3>Nova Ocorrência</h3>
@@ -475,18 +505,23 @@
                 <input type="number" step="0.01" class="form-control" id="oc-valor" required>
               </div>
               <div class="form-group" style="grid-column: span 2;">
-                <label>Endereço Completo</label>
-                <input type="text" class="form-control" id="oc-endereco" placeholder="Rua, Número, Bairro, Cidade" required>
+                <label>Endereço Completo (Digite para buscar sugestões)</label>
+                <input type="text" class="form-control" id="oc-endereco" placeholder="Digite o endereço..." autocomplete="off" required>
+                <div id="oc-endereco-suggestions" class="autocomplete-suggestions hidden"></div>
               </div>
               <div class="form-group">
-                <label>Latitude (Obrigatório para GPS / Distância)</label>
-                <input type="text" class="form-control" id="oc-lat" placeholder="-23.5505" required>
+                <label>Latitude (Preenchida Automaticamente)</label>
+                <input type="text" class="form-control" id="oc-lat" placeholder="-23.5505" required readonly style="background-color: #1e293b;">
               </div>
               <div class="form-group">
-                <label>Longitude (Obrigatório para GPS / Distância)</label>
-                <input type="text" class="form-control" id="oc-lng" placeholder="-46.6333" required>
+                <label>Longitude (Preenchida Automaticamente)</label>
+                <input type="text" class="form-control" id="oc-lng" placeholder="-46.6333" required readonly style="background-color: #1e293b;">
               </div>
             </div>
+
+            <!-- Mapa de pré-visualização da localização inserida -->
+            <div id="admin-preview-map"></div>
+
             <div class="form-group">
               <label>Detalhes/Instruções da Central</label>
               <textarea class="form-control" id="oc-detalhes" rows="3"></textarea>
@@ -608,7 +643,6 @@
 
     <!-- TELA: PAINEL DO APOIO (AGENTE DE RUA) -->
     <section id="screen-dashboard-apoio" class="hidden">
-      <!-- PAINEL DE ERRO/BLOQUEIO DE GPS -->
       <div id="gps-blocked-banner" class="gps-blocked-overlay hidden">
         <h2 style="color: var(--danger); margin-bottom: 0.5rem;">🚨 LOCALIZAÇÃO EM TEMPO REAL OBRIGATÓRIA</h2>
         <p style="margin-bottom: 1rem; color: var(--text-dim);">
@@ -617,7 +651,6 @@
         <button class="btn btn-danger" onclick="ativarGPSSistema()">Tentar Ativar Localização Agora</button>
       </div>
 
-      <!-- BANNER DE ALERTA DE NOVA OCORRÊNCIA -->
       <div id="alert-nova-ocorrencia" class="alert-banner hidden">
         <span>🚨 NOVA OCORRÊNCIA DISPONÍVEL NA SUA REGIÃO!</span>
         <button class="btn btn-secondary" style="background: white; color: black; font-weight: bold;" onclick="pararAlertaSonoro()">Silenciar Alerta</button>
@@ -643,7 +676,6 @@
       <p id="exec-distancia-tempo" style="color: var(--warning); font-weight: bold; margin-bottom: 0.5rem;"></p>
       <p id="exec-detalhes" style="color: var(--text-dim); margin-bottom: 1rem;"></p>
 
-      <!-- CHAT DIRETO COM O ADMIN -->
       <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
         <h4>Chat Direto com a Central / Administrador</h4>
         <div class="chat-box" id="exec-chat-box"></div>
@@ -653,7 +685,6 @@
         </div>
       </div>
 
-      <!-- RELATÓRIO ESCRITO DAS AÇÕES -->
       <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
         <h4>Relatório por Escrito do Atendimento *</h4>
         <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
@@ -662,7 +693,6 @@
         <textarea id="relatorio-escrito-apoio" class="form-control" rows="4" placeholder="Ex: Cheguei ao local às 14h20. O imóvel encontrava-se com o portão fechado..."></textarea>
       </div>
 
-      <!-- FOTOS (MÍNIMO 5) - EXIBIÇÃO 2 A 2 SOBREPOSTAS -->
       <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
         <h4>Relatório Fotográfico do Local (Mínimo 5 Fotos)</h4>
         <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
@@ -695,6 +725,8 @@
     let selectedOcorrenciaId = null;
     let fotosOcorrenciaAtual = [];
     let map = null;
+    let adminPreviewMap = null;
+    let adminPreviewMarker = null;
     let userMarker = null;
     let userLat = null;
     let userLng = null;
@@ -703,6 +735,7 @@
     let alarmInterval = null;
     let ultimasOcorrenciasCount = 0;
     let mensagensPorOcorrencia = JSON.parse(localStorage.getItem('dr_chats')) || {};
+    let debounceTimer = null;
 
     if (ocorrencias.length === 0) {
       ocorrencias = [
@@ -724,6 +757,134 @@
       localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
     }
 
+    /* ==================== SISTEMA DE GEOCODIFICAÇÃO E AUTOCOMPLETE ==================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      const addrInput = document.getElementById('oc-endereco');
+      if (addrInput) {
+        addrInput.addEventListener('input', (e) => {
+          clearTimeout(debounceTimer);
+          const query = e.target.value.trim();
+          if (query.length < 3) {
+            document.getElementById('oc-endereco-suggestions').classList.add('hidden');
+            return;
+          }
+
+          debounceTimer = setTimeout(() => {
+            buscarSugestoesEndereco(query);
+          }, 400);
+        });
+
+        // Oculta sugestões ao clicar fora
+        document.addEventListener('click', (e) => {
+          if (!addrInput.contains(e.target)) {
+            document.getElementById('oc-endereco-suggestions').classList.add('hidden');
+          }
+        });
+      }
+    });
+
+    async function buscarSugestoesEndereco(query) {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=br`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+
+        const box = document.getElementById('oc-endereco-suggestions');
+        box.innerHTML = '';
+
+        if (!data || data.length === 0) {
+          box.classList.add('hidden');
+          return;
+        }
+
+        data.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'autocomplete-suggestion';
+          div.innerText = item.display_name;
+          div.onclick = () => selecionarEndereco(item.display_name, item.lat, item.lon);
+          box.appendChild(div);
+        });
+
+        box.classList.remove('hidden');
+      } catch (err) {
+        console.error("Erro na geocodificação:", err);
+      }
+    }
+
+    function selecionarEndereco(displayName, lat, lng) {
+      document.getElementById('oc-endereco').value = displayName;
+      document.getElementById('oc-lat').value = parseFloat(lat).toFixed(6);
+      document.getElementById('oc-lng').value = parseFloat(lng).toFixed(6);
+      document.getElementById('oc-endereco-suggestions').classList.add('hidden');
+
+      atualizarMapaPreviewAdmin(parseFloat(lat), parseFloat(lng));
+    }
+
+    function initAdminPreviewMap() {
+      if (!adminPreviewMap) {
+        const defaultLat = -23.5505;
+        const defaultLng = -46.6333;
+        adminPreviewMap = L.map('admin-preview-map').setView([defaultLat, defaultLng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(adminPreviewMap);
+      }
+      adminPreviewMap.invalidateSize();
+    }
+
+    function atualizarMapaPreviewAdmin(lat, lng) {
+      initAdminPreviewMap();
+      const latlng = [lat, lng];
+      adminPreviewMap.setView(latlng, 15);
+
+      if (adminPreviewMarker) {
+        adminPreviewMarker.setLatLng(latlng);
+      } else {
+        adminPreviewMarker = L.marker(latlng).addTo(adminPreviewMap);
+      }
+      adminPreviewMarker.bindPopup("<b>Local da Ocorrência</b>").openPopup();
+    }
+
+    /* ==================== CÁLCULO DE DISTÂNCIA E TEMPO POR ESTRADAS (OSRM / HAVERSINE) ==================== */
+    async function obterDistanciaETempoReal(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+
+      try {
+        // Tenta calcular rota real por estradas usando serviço público OSRM
+        const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+
+        if (data && data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
+          const distKm = route.distance / 1000;
+          const minutos = Math.round(route.duration / 60);
+          return {
+            distKm: distKm.toFixed(1),
+            minutos: minutos < 1 ? 1 : minutos,
+            metodo: 'estrada'
+          };
+        }
+      } catch (err) {
+        console.warn("Falha no OSRM, usando cálculo Haversine de reserva.", err);
+      }
+
+      // Fallback: Haversine
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distKm = R * c;
+      const mins = Math.round((distKm / 35) * 60);
+
+      return {
+        distKm: distKm.toFixed(1),
+        minutos: mins < 1 ? 1 : mins,
+        metodo: 'haversine'
+      };
+    }
+
     /* ==================== SISTEMA DE ÁUDIO E ALERTA SONORO ==================== */
     function tocarAlertaSonoro() {
       try {
@@ -740,7 +901,7 @@
           const osc = audioContext.createOscillator();
           const gain = audioContext.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(880, audioContext.currentTime); // Nota Lá (880Hz)
+          osc.frequency.setValueAtTime(880, audioContext.currentTime);
           gain.gain.setValueAtTime(0.3, audioContext.currentTime);
           osc.connect(gain);
           gain.connect(audioContext.destination);
@@ -780,7 +941,6 @@
           userLat = position.coords.latitude;
           userLng = position.coords.longitude;
 
-          // Esconde aviso de GPS bloqueado e libera painel
           document.getElementById('gps-blocked-banner').classList.add('hidden');
           document.getElementById('status-gps-texto').innerText = "🟢 GPS Ativo e Transmitindo em Tempo Real";
           document.getElementById('status-gps-texto').style.color = "var(--success)";
@@ -794,7 +954,6 @@
             }
           }
 
-          // Atualiza lista com novas distâncias e tempos calculados
           if (currentUser && currentUser.type === 'apoio') {
             renderApoioOcorrencias();
           }
@@ -829,6 +988,12 @@
         setTimeout(() => {
           initMap();
           renderApoioOcorrencias();
+        }, 200);
+      }
+
+      if (screenId === 'screen-dashboard-admin') {
+        setTimeout(() => {
+          initAdminPreviewMap();
         }, 200);
       }
     }
@@ -958,6 +1123,7 @@
       document.getElementById(tabId).classList.remove('hidden');
       if (event) event.target.classList.add('active');
 
+      if (tabId === 'tab-lancar') setTimeout(initAdminPreviewMap, 100);
       if (tabId === 'tab-ocorrencias') renderAdminOcorrencias();
       if (tabId === 'tab-apoios') renderAdminApoios();
       if (tabId === 'tab-relatorios') setupRelatoriosSelect();
@@ -976,6 +1142,11 @@
       const lng = parseFloat(document.getElementById('oc-lng').value);
       const detalhes = document.getElementById('oc-detalhes').value;
 
+      if (!lat || !lng) {
+        alert('Selecione um endereço válido na lista de sugestões para obter a Latitude e Longitude.');
+        return;
+      }
+
       const novaOc = {
         id: Date.now(),
         tipo, valor, endereco, lat, lng, detalhes,
@@ -988,8 +1159,10 @@
 
       ocorrencias.push(novaOc);
       saveData();
-      alert('Ocorrência lançada! O sinal e o som de alerta serão disparados nos dispositivos dos Apoios.');
+      alert('Ocorrência lançada com sucesso com geocodificação automática!');
       e.target.reset();
+      document.getElementById('oc-lat').value = '';
+      document.getElementById('oc-lng').value = '';
     }
 
     function renderAdminOcorrencias() {
@@ -1019,6 +1192,7 @@
             <span class="badge badge-${oc.status}">${oc.status}</span>
           </div>
           <p style="font-size: 0.875rem; color: var(--text-dim); margin: 0.5rem 0;">${oc.endereco}</p>
+          <p style="font-size: 0.75rem; color: var(--accent);">Lat: ${oc.lat} | Lng: ${oc.lng}</p>
           <p><strong>Valor:</strong> R$ ${oc.valor.toFixed(2)}</p>
           <p style="font-size: 0.875rem;"><strong>Apoio Assumido:</strong> ${apoioAtrib ? apoioAtrib.nome : 'Nenhum'}</p>
           <p style="font-size: 0.875rem; color: var(--text-dim);">Data: ${oc.data} | Fotos: ${oc.fotos ? oc.fotos.length : 0}</p>
@@ -1288,7 +1462,7 @@
       window.open(url, '_blank');
     }
 
-    /* ==================== PAINEL DO APOIO & CÁLCULOS DE DISTÂNCIA/TEMPO ==================== */
+    /* ==================== PAINEL DO APOIO & MAPA ==================== */
     function initMap() {
       if (!map) {
         map = L.map('map').setView([-23.5505, -46.6333], 12);
@@ -1297,36 +1471,14 @@
       map.invalidateSize();
     }
 
-    // Cálculo Haversine de Distância (em KM)
-    function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
-      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-      const R = 6371;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return (R * c);
-    }
-
-    // Estimativa de Tempo de Deslocamento (Velocidade Média Urbana de 35 km/h)
-    function calcularMinutosAproximados(distanciaKm) {
-      if (!distanciaKm) return null;
-      const velocidadeMedia = 35; // km/h
-      const horas = distanciaKm / velocidadeMedia;
-      const minutos = Math.round(horas * 60);
-      return minutos < 1 ? 1 : minutos;
-    }
-
-    function renderApoioOcorrencias() {
+    async function renderApoioOcorrencias() {
       const container = document.getElementById('apoio-ocorrencias-list');
       if (!container) return;
       container.innerHTML = '';
 
       if (!currentUser || currentUser.type !== 'apoio') return;
 
-      // Atualiza marcadores no Mapa
+      // Marcadores no Mapa
       ocorrencias.forEach(oc => {
         if (oc.lat && oc.lng && (oc.status === 'pendente' || oc.apoioId === currentUser.data.id)) {
           L.marker([oc.lat, oc.lng]).addTo(map)
@@ -1337,7 +1489,7 @@
       let pendentesCount = 0;
       let contagemExibidos = 0;
 
-      ocorrencias.forEach(oc => {
+      for (const oc of ocorrencias) {
         if (oc.status === 'pendente' || oc.apoioId === currentUser.data.id) {
           contagemExibidos++;
           if (oc.status === 'pendente') pendentesCount++;
@@ -1346,10 +1498,11 @@
           let minTexto = "Calculando min...";
 
           if (userLat && userLng && oc.lat && oc.lng) {
-            const distKm = calcularDistanciaKm(userLat, userLng, oc.lat, oc.lng);
-            const minutos = calcularMinutosAproximados(distKm);
-            kmTexto = `${distKm.toFixed(1)} km`;
-            minTexto = `~${minutos} min de deslocamento`;
+            const rota = await obterDistanciaETempoReal(userLat, userLng, oc.lat, oc.lng);
+            if (rota) {
+              kmTexto = `${rota.distKm} km`;
+              minTexto = `~${rota.minutos} min de deslocamento`;
+            }
           }
 
           const div = document.createElement('div');
@@ -1377,9 +1530,8 @@
           `;
           container.appendChild(div);
         }
-      });
+      }
 
-      // DISPARO DO ALERTA SONORO SE HOUVER NOVA OCORRÊNCIA PENDENTE
       if (pendentesCount > ultimasOcorrenciasCount) {
         document.getElementById('alert-nova-ocorrencia').classList.remove('hidden');
         tocarAlertaSonoro();
@@ -1405,7 +1557,7 @@
     }
 
     /* ==================== EXECUÇÃO DA OCORRÊNCIA (APOIO) ==================== */
-    function abrirExecucaoOcorrencia(id) {
+    async function abrirExecucaoOcorrencia(id) {
       selectedOcorrenciaId = id;
       const oc = ocorrencias.find(o => o.id === id);
       
@@ -1416,9 +1568,11 @@
       document.getElementById('exec-endereco').innerText = `📍 ${oc.endereco}`;
       
       if (userLat && userLng && oc.lat && oc.lng) {
-        const distKm = calcularDistanciaKm(userLat, userLng, oc.lat, oc.lng);
-        const mins = calcularMinutosAproximados(distKm);
-        document.getElementById('exec-distancia-tempo').innerText = `Distância: ${distKm.toFixed(1)} km | Tempo Estimado: ~${mins} minutos`;
+        document.getElementById('exec-distancia-tempo').innerText = "Calculando tempo e rota exata por estradas...";
+        const rota = await obterDistanciaETempoReal(userLat, userLng, oc.lat, oc.lng);
+        if (rota) {
+          document.getElementById('exec-distancia-tempo').innerText = `Distância: ${rota.distKm} km | Tempo Estimado: ~${rota.minutos} minutos`;
+        }
       } else {
         document.getElementById('exec-distancia-tempo').innerText = `Distância e Tempo: Ative o GPS para calcular`;
       }

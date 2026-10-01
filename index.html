@@ -93,6 +93,16 @@
       background-color: #b91c1c;
     }
 
+    .btn-warning {
+      background-color: var(--warning);
+      color: black;
+    }
+
+    .btn-warning:hover {
+      background-color: #a16207;
+      color: white;
+    }
+
     .btn-success {
       background-color: var(--success);
     }
@@ -168,6 +178,8 @@
     .badge-pendente { background-color: var(--warning); color: black; }
     .badge-aceito { background-color: var(--accent); color: white; }
     .badge-concluido { background-color: var(--success); color: white; }
+    .badge-suspenso { background-color: #f97316; color: white; }
+    .badge-rejeitado { background-color: var(--danger); color: white; }
 
     .chat-box {
       height: 200px;
@@ -224,6 +236,7 @@
       gap: 0.5rem;
       border-bottom: 1px solid var(--border);
       margin-bottom: 1rem;
+      overflow-x: auto;
     }
 
     .tab-btn {
@@ -233,6 +246,7 @@
       color: var(--text-dim);
       cursor: pointer;
       border-bottom: 2px solid transparent;
+      white-space: nowrap;
     }
 
     .tab-btn.active {
@@ -255,6 +269,12 @@
     th {
       color: var(--text-dim);
       font-size: 0.875rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.25rem;
+      flex-wrap: wrap;
     }
 
     @media (max-width: 600px) {
@@ -284,7 +304,7 @@
   </header>
 
   <main>
-    <!-- TELA: SELEÇÃO/LOGIN DE APOIO -->
+    <!-- TELA: LOGIN DE APOIO -->
     <section id="screen-login-apoio" class="card">
       <h2>Acesso do Apoio</h2>
       <p style="color: var(--text-dim); margin-bottom: 1rem;">Digite seu telefone cadastrado para entrar ou faça seu cadastro.</p>
@@ -298,10 +318,12 @@
         <input type="password" id="apoio-login-pass" class="form-control" placeholder="****">
       </div>
 
-      <div style="display: flex; gap: 0.5rem;">
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
         <button class="btn" onclick="loginApoio()">Entrar</button>
         <button class="btn btn-secondary" onclick="showScreen('screen-cadastro-apoio')">Cadastrar Novo Apoio</button>
       </div>
+
+      <a href="#" onclick="recuperarSenhaApoio(event)" style="color: var(--accent); font-size: 0.875rem; text-decoration: none;">Esqueceu a senha? Enviar por WhatsApp</a>
     </section>
 
     <!-- TELA: CADASTRO DE APOIO -->
@@ -360,10 +382,10 @@
     <!-- TELA: PAINEL DO ADMIN -->
     <section id="screen-dashboard-admin" class="hidden">
       <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchAdminTab('tab-lancar')">Lançar Ocorrência</button>
-        <button class="tab-btn" onclick="switchAdminTab('tab-ocorrencias')">Acompanhar Ocorrências</button>
-        <button class="tab-btn" onclick="switchAdminTab('tab-apoios')">Apoios Cadastrados</button>
-        <button class="tab-btn" onclick="switchAdminTab('tab-relatorios')">Relatório Quinzenal</button>
+        <button class="tab-btn active" onclick="switchAdminTab('tab-lancar', event)">Lançar Ocorrência</button>
+        <button class="tab-btn" onclick="switchAdminTab('tab-ocorrencias', event)">Acompanhar Ocorrências</button>
+        <button class="tab-btn" onclick="switchAdminTab('tab-apoios', event)">Apoios Cadastrados</button>
+        <button class="tab-btn" onclick="switchAdminTab('tab-relatorios', event)">Relatório Quinzenal</button>
       </div>
 
       <!-- TAB: LANÇAR OCORRÊNCIA -->
@@ -419,7 +441,7 @@
 
       <!-- TAB: APROVAR/GERENCIAR APOIOS -->
       <div id="tab-apoios" class="admin-tab hidden">
-        <div class="card">
+        <div class="card" style="overflow-x: auto;">
           <h3>Gestão de Prestadores Apoio</h3>
           <table>
             <thead>
@@ -561,7 +583,10 @@
       document.getElementById(screenId).classList.remove('hidden');
 
       if (screenId === 'screen-dashboard-apoio') {
-        setTimeout(initMap, 200); // delay para carregar CSS do leaflet
+        setTimeout(() => {
+          initMap();
+          renderApoioOcorrencias();
+        }, 100);
       }
     }
 
@@ -596,10 +621,11 @@
     }
 
     function loginApoio() {
-      const tel = document.getElementById('apoio-login-tel').value.trim();
-      const pass = document.getElementById('apoio-login-pass').value.trim();
+      const telInput = document.getElementById('apoio-login-tel').value.trim();
+      const passInput = document.getElementById('apoio-login-pass').value.trim();
+      const cleanTel = telInput.replace(/\D/g, '');
 
-      const apoio = apoios.find(a => a.tel === tel && a.pass === pass);
+      const apoio = apoios.find(a => a.tel.replace(/\D/g, '') === cleanTel && a.pass === passInput);
 
       if (!apoio) {
         alert('Telefone ou senha incorretos!');
@@ -612,14 +638,38 @@
       }
 
       if (apoio.status === 'rejeitado') {
-        alert('Seu cadastro foi recusado. Entre em contato com o suporte.');
+        alert('Seu cadastro foi recusado pela Central.');
+        return;
+      }
+
+      if (apoio.status === 'suspenso') {
+        alert('Seu cadastro está temporariamente suspenso. Entre em contato com a Central.');
         return;
       }
 
       currentUser = { type: 'apoio', data: apoio };
       updateNav();
-      renderApoioDashboard();
       showScreen('screen-dashboard-apoio');
+    }
+
+    function recuperarSenhaApoio(e) {
+      if (e) e.preventDefault();
+      const telInput = prompt('Digite seu telefone/WhatsApp cadastrado com DDD:');
+      if (!telInput) return;
+
+      const cleanTel = telInput.replace(/\D/g, '');
+      const apoio = apoios.find(a => a.tel.replace(/\D/g, '') === cleanTel);
+
+      if (!apoio) {
+        alert('Nenhum prestador encontrado com este número de telefone.');
+        return;
+      }
+
+      const mensagem = `Olá ${apoio.nome}, sua senha de acesso no DRTRACK Conecta é: *${apoio.pass}*`;
+      const urlWhats = `https://wa.me/55${cleanTel}?text=${encodeURIComponent(mensagem)}`;
+      
+      alert('Localizamos seu cadastro! Você será redirecionado para o WhatsApp com a sua senha.');
+      window.open(urlWhats, '_blank');
     }
 
     function cadastrarApoio(e) {
@@ -643,7 +693,7 @@
           id: Date.now(),
           nome, cpf, tel, pass, veiculo, pix,
           foto: evt.target.result,
-          status: 'pendente' // pendente, aprovado, rejeitado
+          status: 'pendente' // pendente, aprovado, rejeitado, suspenso
         };
 
         apoios.push(novoApoio);
@@ -656,12 +706,12 @@
     }
 
     /* ==================== PAINEL DO ADMIN ==================== */
-    function switchAdminTab(tabId) {
+    function switchAdminTab(tabId, event) {
       document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       
       document.getElementById(tabId).classList.remove('hidden');
-      event.target.classList.add('active');
+      if (event) event.target.classList.add('active');
 
       if (tabId === 'tab-ocorrencias') renderAdminOcorrencias();
       if (tabId === 'tab-apoios') renderAdminApoios();
@@ -722,6 +772,11 @@
       const tbody = document.getElementById('table-apoios-body');
       tbody.innerHTML = '';
 
+      if (apoios.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-dim);">Nenhum apoio cadastrado.</td></tr>';
+        return;
+      }
+
       apoios.forEach(a => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -729,12 +784,14 @@
           <td>${a.nome}</td>
           <td>${a.tel}</td>
           <td>${a.veiculo}</td>
-          <td><span class="badge badge-${a.status === 'aprovado' ? 'concluido' : 'pendente'}">${a.status}</span></td>
+          <td><span class="badge badge-${a.status}">${a.status}</span></td>
           <td>
-            ${a.status === 'pendente' ? `
+            <div class="action-buttons">
               <button class="btn btn-success" onclick="alterarStatusApoio(${a.id}, 'aprovado')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Aprovar</button>
-              <button class="btn btn-danger" onclick="alterarStatusApoio(${a.id}, 'rejeitado')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Rejeitar</button>
-            ` : ''}
+              <button class="btn btn-warning" onclick="alterarStatusApoio(${a.id}, 'suspenso')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Suspender</button>
+              <button class="btn btn-secondary" onclick="alterarStatusApoio(${a.id}, 'rejeitado')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Recusar</button>
+              <button class="btn btn-danger" onclick="excluirApoio(${a.id})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Excluir</button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
@@ -745,6 +802,14 @@
       const a = apoios.find(item => item.id === id);
       if (a) {
         a.status = status;
+        saveData();
+        renderAdminApoios();
+      }
+    }
+
+    function excluirApoio(id) {
+      if (confirm('Tem certeza que deseja excluir permanentemente este cadastro de Apoio?')) {
+        apoios = apoios.filter(item => item.id !== id);
         saveData();
         renderAdminApoios();
       }
@@ -811,6 +876,8 @@
         }).addTo(map);
       }
 
+      map.invalidateSize();
+
       // Obter Geolocation do celular
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
@@ -830,7 +897,7 @@
         }, err => {
           console.warn("GPS Indisponível/Negado.");
           renderApoioOcorrencias();
-        });
+        }, { enableHighAccuracy: true });
       } else {
         renderApoioOcorrencias();
       }
@@ -850,9 +917,12 @@
 
     function renderApoioOcorrencias() {
       const container = document.getElementById('apoio-ocorrencias-list');
+      if (!container) return;
       container.innerHTML = '';
 
-      // Plot no mapa
+      if (!currentUser || currentUser.type !== 'apoio') return;
+
+      // Limpa marcadores existentes se houver re-render
       ocorrencias.forEach(oc => {
         if (oc.lat && oc.lng && (oc.status === 'pendente' || oc.apoioId === currentUser.data.id)) {
           L.marker([oc.lat, oc.lng]).addTo(map)
@@ -860,9 +930,12 @@
         }
       });
 
+      let contagemExibidos = 0;
+
       ocorrencias.forEach(oc => {
         // Exibir somente se estiver pendente OU se já foi aceita por este Apoio específico
         if (oc.status === 'pendente' || oc.apoioId === currentUser.data.id) {
+          contagemExibidos++;
           const dist = (userLat && oc.lat) ? calcularDistancia(userLat, userLng, oc.lat, oc.lng) : null;
 
           const div = document.createElement('div');
@@ -875,7 +948,7 @@
           } else if (oc.status === 'aceito' && oc.apoioId === currentUser.data.id) {
             botaoAcao = `<button class="btn btn-success" style="width:100%;" onclick="abrirExecucaoOcorrencia(${oc.id})">Continuar Atendimento</button>`;
           } else if (oc.status === 'concluido') {
-            botaoAcao = `<span class="badge badge-concluido">Concluída</span>`;
+            botaoAcao = `<span class="badge badge-concluido">Concluída por você</span>`;
           }
 
           div.innerHTML = `
@@ -890,6 +963,10 @@
           container.appendChild(div);
         }
       });
+
+      if (contagemExibidos === 0) {
+        container.innerHTML = '<p style="color: var(--text-dim); grid-column: 1/-1;">Nenhuma ocorrência disponível no momento.</p>';
+      }
     }
 
     function aceitarOcorrencia(id) {
@@ -931,7 +1008,6 @@
 
       const reader = new FileReader();
       reader.onload = function(evt) {
-        // Tentar capturar geolocalização exata do momento do upload
         let locString = "Lat/Lng indisponível";
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(pos => {
@@ -1022,7 +1098,6 @@
       oc.status = 'concluido';
       saveData();
 
-      // Montar mensagem detalhada de fechamento para o WhatsApp da Central
       let whatsMsg = `*RELATÓRIO DE CONCLUSÃO DE OCORRÊNCIA*\n`;
       whatsMsg += `*DRTRACK CONECTA*\n\n`;
       whatsMsg += `*Agente Apoio:* ${currentUser.data.nome}\n`;
@@ -1033,7 +1108,7 @@
       whatsMsg += `*Registros Fotográficos Anexados:* ${fotosOcorrenciaAtual.length} imagens coletadas com geolocalização em sistema.\n\n`;
       whatsMsg += `Status: *LOCAL PRESERVADO E VISTORIADO COM SUCESSO.*`;
 
-      const numCentral = "5511994944410"; // Número fixo da central fornecido
+      const numCentral = "5511994944410";
       const urlWhats = `https://wa.me/${numCentral}?text=${encodeURIComponent(whatsMsg)}`;
 
       alert('Ocorrência concluída internamente! Você será redirecionado para enviar o resumo à Central via WhatsApp.');
@@ -1041,7 +1116,6 @@
 
       voltarDashboardApoio();
     }
-
   </script>
 </body>
 </html>

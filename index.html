@@ -31,6 +31,11 @@
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
 
+    /* Prevenção de oscilação da barra de rolagem */
+    html {
+      overflow-y: scroll;
+    }
+
     body {
       background-color: var(--bg-dark);
       color: var(--text);
@@ -195,12 +200,15 @@
       gap: 1rem;
     }
 
+    /* Trava de dimensão do mapa para não causar tremores no scroll */
     #map, #admin-preview-map {
       height: 350px;
+      min-height: 350px;
       width: 100%;
       border-radius: 0.5rem;
       border: 1px solid var(--border);
       margin-bottom: 1rem;
+      contain: layout;
     }
 
     .badge {
@@ -519,7 +527,6 @@
               </div>
             </div>
 
-            <!-- Mapa de pré-visualização da localização inserida -->
             <div id="admin-preview-map"></div>
 
             <div class="form-group">
@@ -725,6 +732,7 @@
     let selectedOcorrenciaId = null;
     let fotosOcorrenciaAtual = [];
     let map = null;
+    let mapMarkersGroup = null;
     let adminPreviewMap = null;
     let adminPreviewMarker = null;
     let userMarker = null;
@@ -774,7 +782,6 @@
           }, 400);
         });
 
-        // Oculta sugestões ao clicar fora
         document.addEventListener('click', (e) => {
           if (!addrInput.contains(e.target)) {
             document.getElementById('oc-endereco-suggestions').classList.add('hidden');
@@ -826,8 +833,9 @@
         const defaultLng = -46.6333;
         adminPreviewMap = L.map('admin-preview-map').setView([defaultLat, defaultLng], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(adminPreviewMap);
+      } else {
+        adminPreviewMap.invalidateSize();
       }
-      adminPreviewMap.invalidateSize();
     }
 
     function atualizarMapaPreviewAdmin(lat, lng) {
@@ -843,12 +851,11 @@
       adminPreviewMarker.bindPopup("<b>Local da Ocorrência</b>").openPopup();
     }
 
-    /* ==================== CÁLCULO DE DISTÂNCIA E TEMPO POR ESTRADAS (OSRM / HAVERSINE) ==================== */
+    /* ==================== CÁLCULO DE DISTÂNCIA E TEMPO POR ESTRADAS ==================== */
     async function obterDistanciaETempoReal(lat1, lon1, lat2, lon2) {
       if (!lat1 || !lon1 || !lat2 || !lon2) return null;
 
       try {
-        // Tenta calcular rota real por estradas usando serviço público OSRM
         const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`;
         const resp = await fetch(url);
         const data = await resp.json();
@@ -859,15 +866,14 @@
           const minutos = Math.round(route.duration / 60);
           return {
             distKm: distKm.toFixed(1),
-            minutos: minutos < 1 ? 1 : minutos,
-            metodo: 'estrada'
+            minutos: minutos < 1 ? 1 : minutos
           };
         }
       } catch (err) {
-        console.warn("Falha no OSRM, usando cálculo Haversine de reserva.", err);
+        console.warn("Falha no OSRM, utilizando cálculo Haversine de reserva.", err);
       }
 
-      // Fallback: Haversine
+      // Cálculo de contingência (Haversine)
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -880,8 +886,7 @@
 
       return {
         distKm: distKm.toFixed(1),
-        minutos: mins < 1 ? 1 : mins,
-        metodo: 'haversine'
+        minutos: mins < 1 ? 1 : mins
       };
     }
 
@@ -950,12 +955,12 @@
             if (userMarker) {
               userMarker.setLatLng(latlng);
             } else {
-              userMarker = L.marker(latlng).addTo(map).bindPopup('Sua Posição Atual (Em Tempo Real)').openPopup();
+              userMarker = L.marker(latlng).addTo(map).bindPopup('Sua Posição Atual').openPopup();
             }
           }
 
           if (currentUser && currentUser.type === 'apoio') {
-            renderApoioOcorrencias();
+            atualizarDistanciasInterface();
           }
         },
         (error) => {
@@ -988,13 +993,13 @@
         setTimeout(() => {
           initMap();
           renderApoioOcorrencias();
-        }, 200);
+        }, 100);
       }
 
       if (screenId === 'screen-dashboard-admin') {
         setTimeout(() => {
           initAdminPreviewMap();
-        }, 200);
+        }, 100);
       }
     }
 
@@ -1467,43 +1472,36 @@
       if (!map) {
         map = L.map('map').setView([-23.5505, -46.6333], 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        mapMarkersGroup = L.layerGroup().addTo(map);
+      } else {
+        map.invalidateSize();
       }
-      map.invalidateSize();
     }
 
-    async function renderApoioOcorrencias() {
+    function renderApoioOcorrencias() {
       const container = document.getElementById('apoio-ocorrencias-list');
       if (!container) return;
       container.innerHTML = '';
 
       if (!currentUser || currentUser.type !== 'apoio') return;
 
-      // Marcadores no Mapa
-      ocorrencias.forEach(oc => {
-        if (oc.lat && oc.lng && (oc.status === 'pendente' || oc.apoioId === currentUser.data.id)) {
-          L.marker([oc.lat, oc.lng]).addTo(map)
-            .bindPopup(`<b>${oc.tipo}</b><br>${oc.endereco}<br>Valor: R$ ${oc.valor.toFixed(2)}`);
-        }
-      });
+      if (map && mapMarkersGroup) {
+        mapMarkersGroup.clearLayers();
+        ocorrencias.forEach(oc => {
+          if (oc.lat && oc.lng && (oc.status === 'pendente' || oc.apoioId === currentUser.data.id)) {
+            L.marker([oc.lat, oc.lng]).addTo(mapMarkersGroup)
+              .bindPopup(`<b>${oc.tipo}</b><br>${oc.endereco}<br>Valor: R$ ${oc.valor.toFixed(2)}`);
+          }
+        });
+      }
 
       let pendentesCount = 0;
       let contagemExibidos = 0;
 
-      for (const oc of ocorrencias) {
+      ocorrencias.forEach(oc => {
         if (oc.status === 'pendente' || oc.apoioId === currentUser.data.id) {
           contagemExibidos++;
           if (oc.status === 'pendente') pendentesCount++;
-
-          let kmTexto = "Calculando km...";
-          let minTexto = "Calculando min...";
-
-          if (userLat && userLng && oc.lat && oc.lng) {
-            const rota = await obterDistanciaETempoReal(userLat, userLng, oc.lat, oc.lng);
-            if (rota) {
-              kmTexto = `${rota.distKm} km`;
-              minTexto = `~${rota.minutos} min de deslocamento`;
-            }
-          }
 
           const div = document.createElement('div');
           div.className = 'card';
@@ -1521,16 +1519,16 @@
           div.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
               <strong style="color:var(--accent);">${oc.tipo}</strong>
-              <span style="font-size:0.75rem; background:var(--border); padding:0.2rem 0.4rem; border-radius:0.25rem;">📍 ${kmTexto}</span>
+              <span id="badge-km-${oc.id}" style="font-size:0.75rem; background:var(--border); padding:0.2rem 0.4rem; border-radius:0.25rem;">📍 -- km</span>
             </div>
             <p style="font-size:0.875rem; margin-bottom:0.25rem;">${oc.endereco}</p>
-            <p style="font-size:0.8rem; color:var(--warning); font-weight:bold; margin-bottom:0.5rem;">⏱️ ${minTexto}</p>
+            <p id="badge-tempo-${oc.id}" style="font-size:0.8rem; color:var(--warning); font-weight:bold; margin-bottom:0.5rem;">⏱️ Aguardando GPS...</p>
             <p style="font-size:0.875rem; color:var(--text-dim); margin-bottom:1rem;">${oc.detalhes}</p>
             ${botaoAcao}
           `;
           container.appendChild(div);
         }
-      }
+      });
 
       if (pendentesCount > ultimasOcorrenciasCount) {
         document.getElementById('alert-nova-ocorrencia').classList.remove('hidden');
@@ -1540,6 +1538,30 @@
 
       if (contagemExibidos === 0) {
         container.innerHTML = '<p style="color: var(--text-dim); grid-column: 1/-1;">Nenhuma ocorrência disponível na sua região.</p>';
+      } else {
+        atualizarDistanciasInterface();
+      }
+    }
+
+    async function atualizarDistanciasInterface() {
+      if (!userLat || !userLng) return;
+
+      for (const oc of ocorrencias) {
+        const badgeKm = document.getElementById(`badge-km-${oc.id}`);
+        const badgeTempo = document.getElementById(`badge-tempo-${oc.id}`);
+
+        if (badgeKm || badgeTempo) {
+          if (oc.lat && oc.lng) {
+            const rota = await obterDistanciaETempoReal(userLat, userLng, oc.lat, oc.lng);
+            if (rota) {
+              if (badgeKm) badgeKm.innerText = `📍 ${rota.distKm} km`;
+              if (badgeTempo) badgeTempo.innerText = `⏱️ ~${rota.minutos} min de deslocamento`;
+            }
+          } else {
+            if (badgeKm) badgeKm.innerText = `📍 Indisponível`;
+            if (badgeTempo) badgeTempo.innerText = `⏱️ Sem Coordenadas`;
+          }
+        }
       }
     }
 
@@ -1568,7 +1590,7 @@
       document.getElementById('exec-endereco').innerText = `📍 ${oc.endereco}`;
       
       if (userLat && userLng && oc.lat && oc.lng) {
-        document.getElementById('exec-distancia-tempo').innerText = "Calculando tempo e rota exata por estradas...";
+        document.getElementById('exec-distancia-tempo').innerText = "Calculando rota e tempo de deslocamento...";
         const rota = await obterDistanciaETempoReal(userLat, userLng, oc.lat, oc.lng);
         if (rota) {
           document.getElementById('exec-distancia-tempo').innerText = `Distância: ${rota.distKm} km | Tempo Estimado: ~${rota.minutos} minutos`;

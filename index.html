@@ -7,7 +7,7 @@
 
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- JSZip para compactação e download das fotos pelo apoio/admin -->
+  <!-- JSZip para compactação de fotos -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <style>
@@ -213,7 +213,7 @@
       background-color: var(--border);
     }
 
-    /* GRID DE FOTOS: 2 EM 2 (DUAS COLUNAS DUPLAS, UMA EM CIMA DA OUTRA) */
+    /* GRID DE FOTOS: 2 EM 2 SOBREPOSTAS */
     .photo-grid-2x2 {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -260,6 +260,36 @@
 
     .hidden {
       display: none !important;
+    }
+
+    /* TELA DE BLOQUEIO GPS */
+    .gps-blocked-overlay {
+      background-color: rgba(15, 23, 42, 0.95);
+      border: 2px solid var(--danger);
+      padding: 2rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    /* ALERT POPUP */
+    .alert-banner {
+      background-color: var(--danger);
+      color: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
     }
 
     /* Tabs */
@@ -319,7 +349,7 @@
         justify-content: space-around;
       }
       .photo-grid-2x2 {
-        grid-template-columns: repeat(2, 1fr); /* Mantém 2 a 2 no mobile para fotos ajustadas */
+        grid-template-columns: repeat(2, 1fr);
       }
     }
   </style>
@@ -342,7 +372,7 @@
     <!-- TELA: LOGIN DE APOIO -->
     <section id="screen-login-apoio" class="card">
       <h2>Acesso do Apoio</h2>
-      <p style="color: var(--text-dim); margin-bottom: 1rem;">Digite seu telefone cadastrado para entrar ou faça seu cadastro.</p>
+      <p style="color: var(--text-dim); margin-bottom: 1rem;">Digite seu telefone para acessar. O GPS deve estar ativo no login.</p>
       
       <div class="form-group">
         <label>Telefone / WhatsApp</label>
@@ -354,7 +384,7 @@
       </div>
 
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
-        <button class="btn" onclick="loginApoio()">Entrar</button>
+        <button class="btn" onclick="loginApoio()">Entrar e Ativar GPS</button>
         <button class="btn btn-secondary" onclick="showScreen('screen-cadastro-apoio')">Cadastrar Novo Apoio</button>
       </div>
 
@@ -449,19 +479,19 @@
                 <input type="text" class="form-control" id="oc-endereco" placeholder="Rua, Número, Bairro, Cidade" required>
               </div>
               <div class="form-group">
-                <label>Latitude (Opcional p/ Mapa)</label>
-                <input type="text" class="form-control" id="oc-lat" placeholder="-23.5505">
+                <label>Latitude (Obrigatório para GPS / Distância)</label>
+                <input type="text" class="form-control" id="oc-lat" placeholder="-23.5505" required>
               </div>
               <div class="form-group">
-                <label>Longitude (Opcional p/ Mapa)</label>
-                <input type="text" class="form-control" id="oc-lng" placeholder="-46.6333">
+                <label>Longitude (Obrigatório para GPS / Distância)</label>
+                <input type="text" class="form-control" id="oc-lng" placeholder="-46.6333" required>
               </div>
             </div>
             <div class="form-group">
               <label>Detalhes/Instruções da Central</label>
               <textarea class="form-control" id="oc-detalhes" rows="3"></textarea>
             </div>
-            <button type="submit" class="btn">Lançar no Sistema</button>
+            <button type="submit" class="btn">Lançar e Alertar Apoios</button>
           </form>
         </div>
       </div>
@@ -578,9 +608,24 @@
 
     <!-- TELA: PAINEL DO APOIO (AGENTE DE RUA) -->
     <section id="screen-dashboard-apoio" class="hidden">
-      <div class="card">
-        <h3>Seu Status e Localização</h3>
-        <p style="color: var(--text-dim); font-size: 0.875rem;">Mantenha o GPS do seu celular ativo para cálculo de distâncias.</p>
+      <!-- PAINEL DE ERRO/BLOQUEIO DE GPS -->
+      <div id="gps-blocked-banner" class="gps-blocked-overlay hidden">
+        <h2 style="color: var(--danger); margin-bottom: 0.5rem;">🚨 LOCALIZAÇÃO EM TEMPO REAL OBRIGATÓRIA</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-dim);">
+          Você precisa ativar o GPS do seu dispositivo e permitir o acesso à sua localização para receber alertas de ocorrências e calcular distância e minutos de atendimento.
+        </p>
+        <button class="btn btn-danger" onclick="ativarGPSSistema()">Tentar Ativar Localização Agora</button>
+      </div>
+
+      <!-- BANNER DE ALERTA DE NOVA OCORRÊNCIA -->
+      <div id="alert-nova-ocorrencia" class="alert-banner hidden">
+        <span>🚨 NOVA OCORRÊNCIA DISPONÍVEL NA SUA REGIÃO!</span>
+        <button class="btn btn-secondary" style="background: white; color: black; font-weight: bold;" onclick="pararAlertaSonoro()">Silenciar Alerta</button>
+      </div>
+
+      <div class="card" id="card-status-gps">
+        <h3>Seu Status: <span id="status-gps-texto" style="color: var(--warning);">Aguardando Sinal de GPS...</span></h3>
+        <p style="color: var(--text-dim); font-size: 0.875rem;">Sua posição em tempo real está sendo transmitida para cálculo exato de distâncias.</p>
       </div>
 
       <div id="map"></div>
@@ -594,7 +639,8 @@
       <button class="btn btn-secondary" onclick="voltarDashboardApoio()" style="margin-bottom: 1rem;">← Voltar</button>
       
       <h2 id="exec-titulo">Ocorrência</h2>
-      <p id="exec-endereco" style="color: var(--accent); margin-bottom: 0.5rem;"></p>
+      <p id="exec-endereco" style="color: var(--accent); margin-bottom: 0.25rem;"></p>
+      <p id="exec-distancia-tempo" style="color: var(--warning); font-weight: bold; margin-bottom: 0.5rem;"></p>
       <p id="exec-detalhes" style="color: var(--text-dim); margin-bottom: 1rem;"></p>
 
       <!-- CHAT DIRETO COM O ADMIN -->
@@ -611,16 +657,16 @@
       <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
         <h4>Relatório por Escrito do Atendimento *</h4>
         <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
-          Descreva detalhadamente o que foi verificado, pessoas contatadas, avarias encontradas e ações tomadas no local.
+          Descreva detalhadamente o que foi verificado, pessoas contatadas e ações tomadas.
         </p>
-        <textarea id="relatorio-escrito-apoio" class="form-control" rows="4" placeholder="Ex: Cheguei ao local às 14h20. O imóvel encontrava-se com o portão fechado e sem sinais de arrombamento..."></textarea>
+        <textarea id="relatorio-escrito-apoio" class="form-control" rows="4" placeholder="Ex: Cheguei ao local às 14h20. O imóvel encontrava-se com o portão fechado..."></textarea>
       </div>
 
       <!-- FOTOS (MÍNIMO 5) - EXIBIÇÃO 2 A 2 SOBREPOSTAS -->
       <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
         <h4>Relatório Fotográfico do Local (Mínimo 5 Fotos)</h4>
         <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
-          Tire fotos ajustáveis do local. Elas serão exibidas 2 a 2 (uma ao lado da outra, em filas sobrepostas) e compactadas para a Central.
+          Tire fotos ajustáveis do local. Elas serão exibidas 2 a 2 (uma ao lado da outra) e compactadas para a Central.
         </p>
         
         <input type="file" id="foto-input" accept="image/*" capture="environment" class="form-control" onchange="adicionarFoto(event)">
@@ -652,6 +698,10 @@
     let userMarker = null;
     let userLat = null;
     let userLng = null;
+    let watchGpsId = null;
+    let audioContext = null;
+    let alarmInterval = null;
+    let ultimasOcorrenciasCount = 0;
     let mensagensPorOcorrencia = JSON.parse(localStorage.getItem('dr_chats')) || {};
 
     if (ocorrencias.length === 0) {
@@ -662,7 +712,7 @@
           endereco: 'Av. Paulista, 1000 - Bela Vista, São Paulo - SP',
           lat: -23.5615,
           lng: -46.6559,
-          detalhes: 'Disparo de zona 2 (Empresa ABC). Verificar se há arrombamento.',
+          detalhes: 'Disparo de zona 2 (Empresa ABC). Verificar arrombamento.',
           valor: 80.00,
           status: 'pendente',
           apoioId: null,
@@ -674,7 +724,96 @@
       localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
     }
 
-    /* ==================== INICIALIZAÇÃO E NAVEGAÇÃO ==================== */
+    /* ==================== SISTEMA DE ÁUDIO E ALERTA SONORO ==================== */
+    function tocarAlertaSonoro() {
+      try {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        if (alarmInterval) clearInterval(alarmInterval);
+
+        const emitirBip = () => {
+          if (audioContext.state === 'suspended') {
+            audioContext.resume();
+          }
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(880, audioContext.currentTime); // Nota Lá (880Hz)
+          gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.start();
+          osc.stop(audioContext.currentTime + 0.4);
+        };
+
+        emitirBip();
+        alarmInterval = setInterval(emitirBip, 1000);
+      } catch (e) {
+        console.log("Erro ao reproduzir áudio:", e);
+      }
+    }
+
+    function pararAlertaSonoro() {
+      if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+      }
+      document.getElementById('alert-nova-ocorrencia').classList.add('hidden');
+    }
+
+    /* ==================== GERENCIAMENTO DE GPS OBRIGATÓRIO ==================== */
+    function ativarGPSSistema() {
+      if (!navigator.geolocation) {
+        alert('Seu dispositivo/navegador não suporta geolocalização.');
+        return;
+      }
+
+      document.getElementById('status-gps-texto').innerText = "Conectando ao Satélite GPS...";
+      document.getElementById('status-gps-texto').style.color = "var(--warning)";
+
+      if (watchGpsId) navigator.geolocation.clearWatch(watchGpsId);
+
+      watchGpsId = navigator.geolocation.watchPosition(
+        (position) => {
+          userLat = position.coords.latitude;
+          userLng = position.coords.longitude;
+
+          // Esconde aviso de GPS bloqueado e libera painel
+          document.getElementById('gps-blocked-banner').classList.add('hidden');
+          document.getElementById('status-gps-texto').innerText = "🟢 GPS Ativo e Transmitindo em Tempo Real";
+          document.getElementById('status-gps-texto').style.color = "var(--success)";
+
+          if (map) {
+            const latlng = [userLat, userLng];
+            if (userMarker) {
+              userMarker.setLatLng(latlng);
+            } else {
+              userMarker = L.marker(latlng).addTo(map).bindPopup('Sua Posição Atual (Em Tempo Real)').openPopup();
+            }
+          }
+
+          // Atualiza lista com novas distâncias e tempos calculados
+          if (currentUser && currentUser.type === 'apoio') {
+            renderApoioOcorrencias();
+          }
+        },
+        (error) => {
+          console.error("Erro GPS:", error);
+          document.getElementById('gps-blocked-banner').classList.remove('hidden');
+          document.getElementById('status-gps-texto').innerText = "🔴 GPS Desativado / Permissão Negada";
+          document.getElementById('status-gps-texto').style.color = "var(--danger)";
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 5000,
+          timeout: 10000
+        }
+      );
+    }
+
+    /* ==================== NAVEGAÇÃO E SALVAMENTO ==================== */
     function saveData() {
       localStorage.setItem('dr_apoios', JSON.stringify(apoios));
       localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
@@ -686,10 +825,11 @@
       document.getElementById(screenId).classList.remove('hidden');
 
       if (screenId === 'screen-dashboard-apoio') {
+        ativarGPSSistema();
         setTimeout(() => {
           initMap();
           renderApoioOcorrencias();
-        }, 100);
+        }, 200);
       }
     }
 
@@ -705,6 +845,8 @@
     }
 
     function logout() {
+      if (watchGpsId) navigator.geolocation.clearWatch(watchGpsId);
+      pararAlertaSonoro();
       currentUser = null;
       updateNav();
       showScreen('screen-login-apoio');
@@ -808,7 +950,7 @@
       reader.readAsDataURL(fotoFile);
     }
 
-    /* ==================== PAINEL DO ADMIN ==================== */
+    /* ==================== PAINEL ADMIN E LANÇAMENTO ==================== */
     function switchAdminTab(tabId, event) {
       document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -830,8 +972,8 @@
       const tipo = document.getElementById('oc-tipo').value;
       const valor = parseFloat(document.getElementById('oc-valor').value);
       const endereco = document.getElementById('oc-endereco').value;
-      const lat = parseFloat(document.getElementById('oc-lat').value) || null;
-      const lng = parseFloat(document.getElementById('oc-lng').value) || null;
+      const lat = parseFloat(document.getElementById('oc-lat').value);
+      const lng = parseFloat(document.getElementById('oc-lng').value);
       const detalhes = document.getElementById('oc-detalhes').value;
 
       const novaOc = {
@@ -846,7 +988,7 @@
 
       ocorrencias.push(novaOc);
       saveData();
-      alert('Ocorrência lançada na rede!');
+      alert('Ocorrência lançada! O sinal e o som de alerta serão disparados nos dispositivos dos Apoios.');
       e.target.reset();
     }
 
@@ -887,7 +1029,7 @@
       });
     }
 
-    /* ==================== EDIÇÃO E ADAPTAÇÃO DO RELATÓRIO P/ CLIENTE (ADMIN) ==================== */
+    /* ==================== EDIÇÃO DE RELATÓRIO DO CLIENTE (ADMIN) ==================== */
     let fotosEditAdmin = [];
 
     function abrirEdicaoRelatorioCliente(ocId) {
@@ -1146,36 +1288,17 @@
       window.open(url, '_blank');
     }
 
-    /* ==================== PAINEL DO APOIO (AGENTE DE RUA) ==================== */
+    /* ==================== PAINEL DO APOIO & CÁLCULOS DE DISTÂNCIA/TEMPO ==================== */
     function initMap() {
       if (!map) {
         map = L.map('map').setView([-23.5505, -46.6333], 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
       }
-
       map.invalidateSize();
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-          userLat = position.coords.latitude;
-          userLng = position.coords.longitude;
-          const latlng = [userLat, userLng];
-          map.setView(latlng, 13);
-
-          if (userMarker) {
-            userMarker.setLatLng(latlng);
-          } else {
-            userMarker = L.marker(latlng).addTo(map).bindPopup('Sua Posição Atual').openPopup();
-          }
-
-          renderApoioOcorrencias();
-        }, () => renderApoioOcorrencias(), { enableHighAccuracy: true });
-      } else {
-        renderApoioOcorrencias();
-      }
     }
 
-    function calcularDistancia(lat1, lon1, lat2, lon2) {
+    // Cálculo Haversine de Distância (em KM)
+    function calcularDistanciaKm(lat1, lon1, lat2, lon2) {
       if (!lat1 || !lon1 || !lat2 || !lon2) return null;
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1184,7 +1307,16 @@
                 Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
                 Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return (R * c).toFixed(1);
+      return (R * c);
+    }
+
+    // Estimativa de Tempo de Deslocamento (Velocidade Média Urbana de 35 km/h)
+    function calcularMinutosAproximados(distanciaKm) {
+      if (!distanciaKm) return null;
+      const velocidadeMedia = 35; // km/h
+      const horas = distanciaKm / velocidadeMedia;
+      const minutos = Math.round(horas * 60);
+      return minutos < 1 ? 1 : minutos;
     }
 
     function renderApoioOcorrencias() {
@@ -1194,19 +1326,31 @@
 
       if (!currentUser || currentUser.type !== 'apoio') return;
 
+      // Atualiza marcadores no Mapa
       ocorrencias.forEach(oc => {
         if (oc.lat && oc.lng && (oc.status === 'pendente' || oc.apoioId === currentUser.data.id)) {
           L.marker([oc.lat, oc.lng]).addTo(map)
-            .bindPopup(`<b>${oc.tipo}</b><br>${oc.endereco}<br>Valor: R$ ${oc.valor}`);
+            .bindPopup(`<b>${oc.tipo}</b><br>${oc.endereco}<br>Valor: R$ ${oc.valor.toFixed(2)}`);
         }
       });
 
+      let pendentesCount = 0;
       let contagemExibidos = 0;
 
       ocorrencias.forEach(oc => {
         if (oc.status === 'pendente' || oc.apoioId === currentUser.data.id) {
           contagemExibidos++;
-          const dist = (userLat && oc.lat) ? calcularDistancia(userLat, userLng, oc.lat, oc.lng) : null;
+          if (oc.status === 'pendente') pendentesCount++;
+
+          let kmTexto = "Calculando km...";
+          let minTexto = "Calculando min...";
+
+          if (userLat && userLng && oc.lat && oc.lng) {
+            const distKm = calcularDistanciaKm(userLat, userLng, oc.lat, oc.lng);
+            const minutos = calcularMinutosAproximados(distKm);
+            kmTexto = `${distKm.toFixed(1)} km`;
+            minTexto = `~${minutos} min de deslocamento`;
+          }
 
           const div = document.createElement('div');
           div.className = 'card';
@@ -1224,9 +1368,10 @@
           div.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
               <strong style="color:var(--accent);">${oc.tipo}</strong>
-              ${dist ? `<span style="font-size:0.75rem; background:var(--border); padding:0.2rem 0.4rem; border-radius:0.25rem;">📍 ${dist} km</span>` : ''}
+              <span style="font-size:0.75rem; background:var(--border); padding:0.2rem 0.4rem; border-radius:0.25rem;">📍 ${kmTexto}</span>
             </div>
-            <p style="font-size:0.875rem; margin-bottom:0.5rem;">${oc.endereco}</p>
+            <p style="font-size:0.875rem; margin-bottom:0.25rem;">${oc.endereco}</p>
+            <p style="font-size:0.8rem; color:var(--warning); font-weight:bold; margin-bottom:0.5rem;">⏱️ ${minTexto}</p>
             <p style="font-size:0.875rem; color:var(--text-dim); margin-bottom:1rem;">${oc.detalhes}</p>
             ${botaoAcao}
           `;
@@ -1234,12 +1379,20 @@
         }
       });
 
+      // DISPARO DO ALERTA SONORO SE HOUVER NOVA OCORRÊNCIA PENDENTE
+      if (pendentesCount > ultimasOcorrenciasCount) {
+        document.getElementById('alert-nova-ocorrencia').classList.remove('hidden');
+        tocarAlertaSonoro();
+      }
+      ultimasOcorrenciasCount = pendentesCount;
+
       if (contagemExibidos === 0) {
-        container.innerHTML = '<p style="color: var(--text-dim); grid-column: 1/-1;">Nenhuma ocorrência disponível no momento.</p>';
+        container.innerHTML = '<p style="color: var(--text-dim); grid-column: 1/-1;">Nenhuma ocorrência disponível na sua região.</p>';
       }
     }
 
     function aceitarOcorrencia(id) {
+      pararAlertaSonoro();
       const oc = ocorrencias.find(o => o.id === id);
       if (oc && oc.status === 'pendente') {
         oc.status = 'aceito';
@@ -1251,7 +1404,7 @@
       }
     }
 
-    /* ==================== EXECUÇÃO DE OCORRÊNCIA (APOIO) ==================== */
+    /* ==================== EXECUÇÃO DA OCORRÊNCIA (APOIO) ==================== */
     function abrirExecucaoOcorrencia(id) {
       selectedOcorrenciaId = id;
       const oc = ocorrencias.find(o => o.id === id);
@@ -1261,6 +1414,15 @@
 
       document.getElementById('exec-titulo').innerText = oc.tipo;
       document.getElementById('exec-endereco').innerText = `📍 ${oc.endereco}`;
+      
+      if (userLat && userLng && oc.lat && oc.lng) {
+        const distKm = calcularDistanciaKm(userLat, userLng, oc.lat, oc.lng);
+        const mins = calcularMinutosAproximados(distKm);
+        document.getElementById('exec-distancia-tempo').innerText = `Distância: ${distKm.toFixed(1)} km | Tempo Estimado: ~${mins} minutos`;
+      } else {
+        document.getElementById('exec-distancia-tempo').innerText = `Distância e Tempo: Ative o GPS para calcular`;
+      }
+
       document.getElementById('exec-detalhes').innerText = `Instruções: ${oc.detalhes}`;
       document.getElementById('relatorio-escrito-apoio').value = oc.relatorioEscrito || '';
 
@@ -1278,17 +1440,8 @@
 
       const reader = new FileReader();
       reader.onload = function(evt) {
-        let locString = "Lat/Lng indisponível";
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(pos => {
-            locString = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
-            salvarEExibirFoto(evt.target.result, locString);
-          }, () => {
-            salvarEExibirFoto(evt.target.result, locString);
-          });
-        } else {
-          salvarEExibirFoto(evt.target.result, locString);
-        }
+        let locString = userLat ? `${userLat.toFixed(5)}, ${userLng.toFixed(5)}` : "Lat/Lng indisponível";
+        salvarEExibirFoto(evt.target.result, locString);
       };
       reader.readAsDataURL(file);
     }
@@ -1393,7 +1546,7 @@
       renderChat();
     }
 
-    /* ==================== FINALIZAÇÃO DE OCORRÊNCIA ==================== */
+    /* ==================== FINALIZAÇÃO DA OCORRÊNCIA ==================== */
     function finalizarOcorrenciaApoio() {
       const relatorioTexto = document.getElementById('relatorio-escrito-apoio').value.trim();
 

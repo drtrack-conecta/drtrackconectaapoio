@@ -182,7 +182,7 @@
     .badge-rejeitado { background-color: var(--danger); color: white; }
 
     .chat-box {
-      height: 200px;
+      height: 220px;
       overflow-y: auto;
       border: 1px solid var(--border);
       padding: 0.5rem;
@@ -230,7 +230,7 @@
       display: none !important;
     }
 
-    /* Modal / Tabs */
+    /* Tabs */
     .tab-nav {
       display: flex;
       gap: 0.5rem;
@@ -488,6 +488,22 @@
       </div>
     </section>
 
+    <!-- TELA: CHAT DIRETO DO ADMIN COM O APOIO -->
+    <section id="screen-chat-admin" class="card hidden">
+      <button class="btn btn-secondary" onclick="voltarAdminDashboard()" style="margin-bottom: 1rem;">← Voltar ao Painel Admin</button>
+      
+      <h2 id="admin-chat-titulo">Chat da Ocorrência</h2>
+      <p id="admin-chat-sub" style="color: var(--accent); margin-bottom: 1rem;"></p>
+
+      <div class="card" style="background-color: var(--bg-dark);">
+        <div class="chat-box" id="admin-chat-box"></div>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" class="form-control" id="admin-chat-input" placeholder="Mensagem da Central para o Apoio...">
+          <button class="btn" onclick="enviarMensagemChatAdmin()">Enviar Mensagem</button>
+        </div>
+      </div>
+    </section>
+
     <!-- TELA: PAINEL DO APOIO (AGENTE DE RUA) -->
     <section id="screen-dashboard-apoio" class="hidden">
       <div class="card">
@@ -509,15 +525,26 @@
       <p id="exec-endereco" style="color: var(--accent); margin-bottom: 0.5rem;"></p>
       <p id="exec-detalhes" style="color: var(--text-dim); margin-bottom: 1rem;"></p>
 
+      <!-- CHAT DIRETO COM O ADMIN -->
       <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
-        <h4>Chat Direto com a Central (Base)</h4>
+        <h4>Chat Direto com a Central / Administrador</h4>
         <div class="chat-box" id="exec-chat-box"></div>
         <div style="display: flex; gap: 0.5rem;">
-          <input type="text" class="form-control" id="chat-input" placeholder="Digite uma mensagem...">
+          <input type="text" class="form-control" id="chat-input" placeholder="Digite uma mensagem para a Central...">
           <button class="btn" onclick="enviarMensagemChat()">Enviar</button>
         </div>
       </div>
 
+      <!-- RELATÓRIO ESCRITO DAS AÇÕES -->
+      <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
+        <h4>Relatório por Escrito do Atendimento *</h4>
+        <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
+          Descreva detalhadamente o que foi verificado, pessoas contatadas, avarias encontradas e ações tomadas no local.
+        </p>
+        <textarea id="relatorio-escrito-apoio" class="form-control" rows="4" placeholder="Ex: Cheguei ao local às 14h20. O imóvel encontrava-se com o portão fechado e sem sinais de arrombamento. Realizado contato com o síndico Sr. Carlos..."></textarea>
+      </div>
+
+      <!-- FOTOS (MÍNIMO 5) -->
       <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
         <h4>Relatório Fotográfico do Local (Mínimo 5 Fotos)</h4>
         <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
@@ -552,7 +579,6 @@
     let userLng = null;
     let mensagensPorOcorrencia = JSON.parse(localStorage.getItem('dr_chats')) || {};
 
-    // Dados iniciais de teste se estiver vazio
     if (ocorrencias.length === 0) {
       ocorrencias = [
         {
@@ -563,8 +589,9 @@
           lng: -46.6559,
           detalhes: 'Disparo de zona 2 (Empresa ABC). Verificar se há arrombamento.',
           valor: 80.00,
-          status: 'pendente', // pendente, aceito, concluido
+          status: 'pendente',
           apoioId: null,
+          relatorioEscrito: '',
           data: new Date().toLocaleDateString('pt-BR')
         }
       ];
@@ -610,7 +637,7 @@
     /* ==================== AUTENTICAÇÃO ==================== */
     function loginAdmin() {
       const pass = document.getElementById('admin-pass').value;
-      if (pass === 'admin123') { // Senha padrão para testes
+      if (pass === 'admin123') {
         currentUser = { type: 'admin', data: { nome: 'Central DRTRACK' } };
         updateNav();
         renderAdminDashboard();
@@ -693,7 +720,7 @@
           id: Date.now(),
           nome, cpf, tel, pass, veiculo, pix,
           foto: evt.target.result,
-          status: 'pendente' // pendente, aprovado, rejeitado, suspenso
+          status: 'pendente'
         };
 
         apoios.push(novoApoio);
@@ -736,6 +763,7 @@
         tipo, valor, endereco, lat, lng, detalhes,
         status: 'pendente',
         apoioId: null,
+        relatorioEscrito: '',
         data: new Date().toLocaleDateString('pt-BR')
       };
 
@@ -754,6 +782,17 @@
         const div = document.createElement('div');
         div.className = 'card';
         div.style.backgroundColor = 'var(--bg-dark)';
+
+        let relatorioHTML = '';
+        if (oc.relatorioEscrito) {
+          relatorioHTML = `<p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 0.5rem; background: var(--bg-card); padding: 0.5rem; border-radius: 0.25rem;"><strong>Relatório do Apoio:</strong> ${oc.relatorioEscrito}</p>`;
+        }
+
+        let botaoChat = '';
+        if (oc.apoioId) {
+          botaoChat = `<button class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;" onclick="abrirChatAdmin(${oc.id})">💬 Abrir Chat com Apoio</button>`;
+        }
+
         div.innerHTML = `
           <div style="display:flex; justify-content:space-between;">
             <strong>${oc.tipo}</strong>
@@ -763,9 +802,62 @@
           <p><strong>Valor:</strong> R$ ${oc.valor.toFixed(2)}</p>
           <p style="font-size: 0.875rem;"><strong>Apoio Assumido:</strong> ${apoioAtrib ? apoioAtrib.nome : 'Nenhum'}</p>
           <p style="font-size: 0.875rem; color: var(--text-dim);">Data: ${oc.data}</p>
+          ${relatorioHTML}
+          ${botaoChat}
         `;
         container.appendChild(div);
       });
+    }
+
+    function abrirChatAdmin(ocId) {
+      selectedOcorrenciaId = ocId;
+      const oc = ocorrencias.find(o => o.id === ocId);
+      const apoio = apoios.find(a => a.id === oc.apoioId);
+
+      document.getElementById('admin-chat-titulo').innerText = `Chat: ${oc.tipo}`;
+      document.getElementById('admin-chat-sub').innerText = `Apoio: ${apoio ? apoio.nome : 'Desconhecido'} | Local: ${oc.endereco}`;
+
+      renderChatAdmin();
+      showScreen('screen-chat-admin');
+    }
+
+    function voltarAdminDashboard() {
+      showScreen('screen-dashboard-admin');
+      switchAdminTab('tab-ocorrencias');
+    }
+
+    function renderChatAdmin() {
+      const chatBox = document.getElementById('admin-chat-box');
+      chatBox.innerHTML = '';
+
+      const msgs = mensagensPorOcorrencia[selectedOcorrenciaId] || [];
+      msgs.forEach(m => {
+        const div = document.createElement('div');
+        const isCentral = m.sender.includes('Central');
+        div.className = `chat-msg ${isCentral ? 'sent' : 'received'}`;
+        div.innerHTML = `<strong>${m.sender}:</strong> ${m.texto}`;
+        chatBox.appendChild(div);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function enviarMensagemChatAdmin() {
+      const input = document.getElementById('admin-chat-input');
+      const texto = input.value.trim();
+      if (!texto) return;
+
+      if (!mensagensPorOcorrencia[selectedOcorrenciaId]) {
+        mensagensPorOcorrencia[selectedOcorrenciaId] = [];
+      }
+
+      mensagensPorOcorrencia[selectedOcorrenciaId].push({
+        sender: 'Central DRTRACK',
+        texto: texto
+      });
+
+      saveData();
+      input.value = '';
+      renderChatAdmin();
     }
 
     function renderAdminApoios() {
@@ -878,7 +970,6 @@
 
       map.invalidateSize();
 
-      // Obter Geolocation do celular
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
           userLat = position.coords.latitude;
@@ -905,7 +996,7 @@
 
     function calcularDistancia(lat1, lon1, lat2, lon2) {
       if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-      const R = 6371; // km
+      const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -922,7 +1013,6 @@
 
       if (!currentUser || currentUser.type !== 'apoio') return;
 
-      // Limpa marcadores existentes se houver re-render
       ocorrencias.forEach(oc => {
         if (oc.lat && oc.lng && (oc.status === 'pendente' || oc.apoioId === currentUser.data.id)) {
           L.marker([oc.lat, oc.lng]).addTo(map)
@@ -933,7 +1023,6 @@
       let contagemExibidos = 0;
 
       ocorrencias.forEach(oc => {
-        // Exibir somente se estiver pendente OU se já foi aceita por este Apoio específico
         if (oc.status === 'pendente' || oc.apoioId === currentUser.data.id) {
           contagemExibidos++;
           const dist = (userLat && oc.lat) ? calcularDistancia(userLat, userLng, oc.lat, oc.lng) : null;
@@ -992,6 +1081,7 @@
       document.getElementById('exec-titulo').innerText = oc.tipo;
       document.getElementById('exec-endereco').innerText = `📍 ${oc.endereco}`;
       document.getElementById('exec-detalhes').innerText = `Instruções: ${oc.detalhes}`;
+      document.getElementById('relatorio-escrito-apoio').value = oc.relatorioEscrito || '';
 
       renderChat();
       showScreen('screen-execucao-ocorrencia');
@@ -1001,7 +1091,7 @@
       showScreen('screen-dashboard-apoio');
     }
 
-    // LÓGICA DE FOTOS (MÍNIMO 5)
+    // LÓGICA DE FOTOS
     function adicionarFoto(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -1053,7 +1143,7 @@
       }
     }
 
-    // CHAT INDIVIDUAL
+    // CHAT DO APOIO COM CENTRAL
     function renderChat() {
       const chatBox = document.getElementById('exec-chat-box');
       chatBox.innerHTML = '';
@@ -1061,7 +1151,8 @@
       const msgs = mensagensPorOcorrencia[selectedOcorrenciaId] || [];
       msgs.forEach(m => {
         const div = document.createElement('div');
-        div.className = `chat-msg ${m.sender === currentUser.data.nome ? 'sent' : 'received'}`;
+        const isSelf = m.sender === currentUser.data.nome;
+        div.className = `chat-msg ${isSelf ? 'sent' : 'received'}`;
         div.innerHTML = `<strong>${m.sender}:</strong> ${m.texto}`;
         chatBox.appendChild(div);
       });
@@ -1089,6 +1180,13 @@
 
     /* ==================== FINALIZAÇÃO E ENVIO WHATSAPP ==================== */
     function finalizarOcorrenciaApoio() {
+      const relatorioTexto = document.getElementById('relatorio-escrito-apoio').value.trim();
+
+      if (!relatorioTexto) {
+        alert('Por favor, preencha o relatório por escrito descrevendo o que aconteceu no local antes de finalizar.');
+        return;
+      }
+
       if (fotosOcorrenciaAtual.length < 5) {
         alert(`Você anexou apenas ${fotosOcorrenciaAtual.length} foto(s). É obrigatório registrar no mínimo 5 fotos do local para finalizar!`);
         return;
@@ -1096,6 +1194,7 @@
 
       const oc = ocorrencias.find(o => o.id === selectedOcorrenciaId);
       oc.status = 'concluido';
+      oc.relatorioEscrito = relatorioTexto;
       saveData();
 
       let whatsMsg = `*RELATÓRIO DE CONCLUSÃO DE OCORRÊNCIA*\n`;
@@ -1104,14 +1203,15 @@
       whatsMsg += `*Veículo/Placa:* ${currentUser.data.veiculo}\n`;
       whatsMsg += `*Tipo de Evento:* ${oc.tipo}\n`;
       whatsMsg += `*Local:* ${oc.endereco}\n`;
-      whatsMsg += `*Horário da Conclusão:* ${new Date().toLocaleTimeString('pt-BR')}\n`;
-      whatsMsg += `*Registros Fotográficos Anexados:* ${fotosOcorrenciaAtual.length} imagens coletadas com geolocalização em sistema.\n\n`;
+      whatsMsg += `*Horário da Conclusão:* ${new Date().toLocaleTimeString('pt-BR')}\n\n`;
+      whatsMsg += `*RELATÓRIO DO LOCAL:*\n${relatorioTexto}\n\n`;
+      whatsMsg += `*Registros Fotográficos:* ${fotosOcorrenciaAtual.length} imagens registradas com geolocalização no sistema.\n\n`;
       whatsMsg += `Status: *LOCAL PRESERVADO E VISTORIADO COM SUCESSO.*`;
 
       const numCentral = "5511994944410";
       const urlWhats = `https://wa.me/${numCentral}?text=${encodeURIComponent(whatsMsg)}`;
 
-      alert('Ocorrência concluída internamente! Você será redirecionado para enviar o resumo à Central via WhatsApp.');
+      alert('Ocorrência concluída internamente! Você será redirecionado para enviar o relatório à Central via WhatsApp.');
       window.open(urlWhats, '_blank');
 
       voltarDashboardApoio();

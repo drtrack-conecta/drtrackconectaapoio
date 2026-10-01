@@ -1,1057 +1,1047 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DRTRACK Conecta 🛡️</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
-        :root { 
-            --fundo: #0f172a; --azul: #1e40af; --verde: #16a34a; --amarelo: #eab308; 
-            --vermelho: #dc2626; --texto: #f1f5f9; --cinza: #94a3b8; --azul-claro: #3b82f6;
-        }
-        body { background: linear-gradient(135deg, var(--fundo) 0%, #1e293b 100%); min-height: 100vh; padding: 15px; color: var(--texto); }
-        .container { max-width: 500px; margin: 0 auto; }
-        h1, h2, h3 { text-align: center; margin-bottom: 20px; }
-        h1 { font-size: 22px; }
-        .subtitulo { text-align: center; color: var(--cinza); margin-bottom: 30px; }
-        
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin: 8px 0; transition: 0.2s; }
-        .primario { background: var(--azul); color: white; }
-        .sucesso { background: var(--verde); color: white; }
-        .secundario { background: #334155; color: white; }
-        .perigo { background: var(--vermelho); color: white; }
-        .voltar { background: transparent; color: var(--cinza); text-align: left; padding: 8px; margin: 0; width: auto; }
-        .btn:hover { transform: translateY(-1px); }
-        
-        .form-grupo { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 6px; font-weight: 500; }
-        input, select, textarea { width: 100%; padding: 12px; border: none; border-radius: 8px; background: #1e293b; color: white; font-size: 15px; }
-        textarea { min-height: 90px; resize: vertical; }
-        
-        .tela { display: block; }
-        .oculto { display: none !important; }
-        
-        .barra-superior { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .barra-superior h2 { margin: 0; text-align: left; font-size: 18px; }
-        
-        .resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .resumo-item { background: #1e293b; padding: 15px 10px; border-radius: 10px; text-align: center; }
-        .resumo-valor { font-size: 22px; font-weight: bold; color: var(--verde); }
-        .resumo-texto { font-size: 11px; color: var(--cinza); margin-top: 4px; }
-        
-        .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 10px; }
-        .tab-btn { flex: 1; min-width: 90px; padding: 10px; background: transparent; border: none; color: var(--cinza); border-radius: 6px 6px 0 0; cursor: pointer; font-size: 13px; }
-        .tab-btn.ativa { background: var(--azul); color: white; }
-        
-        .ocorrencia { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid var(--cinza); }
-        .ocorrencia.pendente { border-left-color: var(--amarelo); }
-        .ocorrencia.aceita { border-left-color: var(--azul); }
-        .ocorrencia.concluida { border-left-color: var(--verde); }
-        .ocorrencia.cancelada { border-left-color: var(--vermelho); }
-        
-        @keyframes piscar {
-            from { box-shadow: 0 0 5px var(--amarelo); }
-            to { box-shadow: 0 0 18px var(--amarelo), 0 0 25px var(--amarelo); }
-        }
-        .piscando { animation: piscar 1s infinite alternate; }
-        
-        /* FOTOS — 2 POR LINHA, UMA EMBAIXO DA OUTRA — FORMATO A4 */
-        .fotos-preview {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin: 15px 0;
-        }
-        .foto-item {
-            position: relative;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 2px solid var(--cinza);
-            background: #1e293b;
-        }
-        .foto-item img {
-            width: 100%;
-            height: 140px;
-            object-fit: cover;
-            display: block;
-        }
-        .foto-label {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.8);
-            font-size: 10px;
-            padding: 5px 6px;
-            line-height: 1.4;
-        }
-        
-        .chat-container { height: 280px; overflow-y: auto; background: #1e293b; border-radius: 8px; padding: 15px; margin: 15px 0; }
-        .mensagem { margin-bottom: 12px; padding: 10px 14px; border-radius: 18px; max-width: 80%; line-height: 1.4; font-size: 14px; }
-        .mensagem.admin { background: var(--azul); margin-right: auto; border-bottom-left-radius: 4px; }
-        .mensagem.apoio { background: var(--verde); margin-left: auto; border-bottom-right-radius: 4px; }
-        .mensagem-horario { font-size: 10px; opacity: 0.7; margin-top: 4px; text-align: right; }
-        
-        .aviso-minimo { font-size: 13px; margin-top: 8px; color: var(--amarelo); }
-        .confirmacao { text-align: center; padding: 40px 20px; }
-        .confirmacao-icone { font-size: 60px; margin-bottom: 20px; }
-        .dados-ocorrencia { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
-        #mapa-apoio { height: 240px; border-radius: 10px; margin: 15px 0; }
-        
-        .relatorio-filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px; }
-        .relatorio-filtros input, .relatorio-filtros select { flex: 1; min-width: 130px; }
-        
-        .botoes-principais { margin-top: 30px; }
-        
-        /* FORMATO A4 PARA IMPRESSÃO */
-        @media print {
-            body { background: white !important; color: black !important; padding: 0; }
-            .no-imprimir { display: none !important; }
-            .pagina-a4 {
-                width: 210mm;
-                min-height: 297mm;
-                padding: 20mm;
-                margin: 0 auto;
-                background: white;
-                color: black;
-            }
-            .fotos-preview {
-                display: grid;
-                grid-template-columns: repeat(2, 1fr) !important;
-                gap: 15px !important;
-                page-break-inside: avoid;
-            }
-            .foto-item {
-                border: 1px solid #ccc;
-                page-break-inside: avoid;
-            }
-            .foto-item img {
-                height: auto !important;
-                max-height: 180px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DRTRACK Conecta - Gestão Operacional</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --border: #334155;
+      --success: #16a34a;
+      --warning: #ca8a04;
+      --danger: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: var(--bg-card);
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    nav {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background-color: #b91c1c;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+    }
+
+    .btn-success:hover {
+      background-color: #15803d;
+    }
+
+    main {
+      flex: 1;
+      padding: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-dim);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.625rem;
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      color: var(--text);
+      font-size: 0.875rem;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    #map {
+      height: 350px;
+      width: 100%;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+
+    .badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-pendente { background-color: var(--warning); color: black; }
+    .badge-aceito { background-color: var(--accent); color: white; }
+    .badge-concluido { background-color: var(--success); color: white; }
+
+    .chat-box {
+      height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      background-color: var(--bg-dark);
+      margin-bottom: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .chat-msg {
+      max-width: 80%;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+    }
+
+    .chat-msg.sent {
+      align-self: flex-end;
+      background-color: var(--accent);
+    }
+
+    .chat-msg.received {
+      align-self: flex-start;
+      background-color: var(--border);
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .photo-preview {
+      width: 100%;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 0.25rem;
+      border: 1px solid var(--border);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Modal / Tabs */
+    .tab-nav {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+
+    .tab-btn {
+      padding: 0.5rem 1rem;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--text-dim);
+      font-size: 0.875rem;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      nav {
+        width: 100%;
+        justify-content: space-around;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<!-- TELA INICIAL -->
-<div id="tela-inicial" class="tela">
-    <div class="container">
-        <h1>🛡️ DRTRACK Conecta</h1>
-        <p class="subtitulo">Sistema de Apoio e Monitoramento</p>
-        <div class="botoes-principais">
-            <button class="btn primario" onclick="mostrarTela('login-admin')">⚙️ Painel Administrativo</button>
-            <button class="btn sucesso" onclick="mostrarTela('login-apoio')">🤝 Área do Apoio</button>
-            <button class="btn secundario" onclick="mostrarTela('cadastro-apoio')">📝 Sou Novo — Cadastrar</button>
-        </div>
-    </div>
-</div>
+  <header>
+    <h1><span>🛡️</span> DRTRACK Conecta</h1>
+    <nav id="nav-public">
+      <button class="btn btn-secondary" onclick="showScreen('screen-login-apoio')">Apoio</button>
+      <button class="btn btn-secondary" onclick="showScreen('screen-login-admin')">Admin</button>
+    </nav>
+    <nav id="nav-user" class="hidden">
+      <span id="user-info" style="color: var(--text-dim); font-size: 0.875rem; align-self: center;"></span>
+      <button class="btn btn-danger" onclick="logout()">Sair</button>
+    </nav>
+  </header>
 
-<!-- LOGIN ADMINISTRADOR -->
-<div id="login-admin" class="tela oculto">
-    <div class="container">
-        <button class="btn voltar" onclick="mostrarTela('tela-inicial')">← Voltar</button>
-        <h2>Painel Administrativo</h2>
-        <div class="form-grupo">
-            <label>🔐 Senha de Acesso</label>
-            <input type="password" id="senha-admin" placeholder="Digite a senha...">
-        </div>
-        <button class="btn primario" onclick="validarAdmin()">Entrar</button>
-        <p id="erro-admin" class="aviso-minimo oculto">Senha incorreta!</p>
-    </div>
-</div>
+  <main>
+    <!-- TELA: SELEÇÃO/LOGIN DE APOIO -->
+    <section id="screen-login-apoio" class="card">
+      <h2>Acesso do Apoio</h2>
+      <p style="color: var(--text-dim); margin-bottom: 1rem;">Digite seu telefone cadastrado para entrar ou faça seu cadastro.</p>
+      
+      <div class="form-group">
+        <label>Telefone / WhatsApp</label>
+        <input type="tel" id="apoio-login-tel" class="form-control" placeholder="(11) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="apoio-login-pass" class="form-control" placeholder="****">
+      </div>
 
-<!-- LOGIN APOIO -->
-<div id="login-apoio" class="tela oculto">
-    <div class="container">
-        <button class="btn voltar" onclick="mostrarTela('tela-inicial')">← Voltar</button>
-        <h2>Acesso do Apoio</h2>
-        <div class="form-grupo">
-            <label>📱 Telefone com WhatsApp</label>
-            <input type="tel" id="tel-apoio-login" placeholder="(11) 9XXXX-XXXX">
-        </div>
-        <div class="form-grupo">
-            <label>🔐 Senha</label>
-            <div style="display:flex;gap:8px;">
-                <input type="password" id="senha-apoio-login" placeholder="Sua senha">
-                <button type="button" class="btn secundario" style="width:auto;padding:12px;" onclick="mostrarSenha('senha-apoio-login')">👁️</button>
-            </div>
-        </div>
-        <button class="btn sucesso" onclick="validarApoio()">Entrar</button>
-        <p class="aviso-minimo" style="margin-top:10px;">
-            <a href="#" onclick="mostrarTela('recuperar-senha'); return false;" style="color:var(--azul-claro);">Esqueci minha senha</a>
-        </p>
-        <p id="erro-apoio" class="aviso-minimo oculto">Dados não encontrados ou cadastro pendente de aprovação.</p>
-    </div>
-</div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="btn" onclick="loginApoio()">Entrar</button>
+        <button class="btn btn-secondary" onclick="showScreen('screen-cadastro-apoio')">Cadastrar Novo Apoio</button>
+      </div>
+    </section>
 
-<!-- RECUPERAR SENHA -->
-<div id="recuperar-senha" class="tela oculto">
-    <div class="container">
-        <button class="btn voltar" onclick="mostrarTela('login-apoio')">← Voltar</button>
-        <h2>Recuperar Senha</h2>
-        <p>Informe seu e-mail de cadastro. Enviaremos as instruções.</p>
-        <div class="form-grupo">
-            <label>📧 E-mail</label>
-            <input type="email" id="email-recuperar" placeholder="seu@email.com">
-        </div>
-        <button class="btn primario" onclick="recuperarSenha()">Enviar Instruções</button>
-    </div>
-</div>
-
-<!-- CADASTRO APOIO -->
-<div id="cadastro-apoio" class="tela oculto">
-    <div class="container">
-        <button class="btn voltar" onclick="mostrarTela('tela-inicial')">← Voltar</button>
-        <h2>Cadastro do Apoio</h2>
-        <div class="form-grupo">
+    <!-- TELA: CADASTRO DE APOIO -->
+    <section id="screen-cadastro-apoio" class="card hidden">
+      <h2>Cadastro de Prestador Apoio</h2>
+      <form id="form-cadastro-apoio" onsubmit="cadastrarApoio(event)">
+        <div class="grid">
+          <div class="form-group">
             <label>Nome Completo *</label>
-            <input type="text" id="apoio-nome" placeholder="Nome completo">
-        </div>
-        <div class="form-grupo">
-            <label>Telefone WhatsApp *</label>
-            <input type="tel" id="apoio-tel" placeholder="(11) 9XXXX-XXXX">
-        </div>
-        <div class="form-grupo">
-            <label>E-mail</label>
-            <input type="email" id="apoio-email" placeholder="seu@email.com">
-        </div>
-        <div class="form-grupo">
-            <label>Placa do Veículo</label>
-            <input type="text" id="apoio-placa" placeholder="ABC-1234">
-        </div>
-        <div class="form-grupo">
-            <label>Tipo de Veículo *</label>
-            <select id="apoio-veiculo">
-                <option value="">Selecione...</option>
-                <option value="carro">🚗 Carro</option>
-                <option value="moto">🏍️ Motocicleta</option>
-                <option value="bicicleta">🚲 Bicicleta</option>
-            </select>
-        </div>
-        <div class="form-grupo">
-            <label>Área de Atuação / Bairro *</label>
-            <input type="text" id="apoio-area" placeholder="Ex: Zona Norte, ou digite 'Todas'">
-        </div>
-        <div class="form-grupo">
-            <label>Chave PIX *</label>
-            <input type="text" id="apoio-pix" placeholder="Sua chave PIX">
-        </div>
-        <div class="form-grupo">
+            <input type="text" class="form-control" id="cad-nome" required>
+          </div>
+          <div class="form-group">
+            <label>CPF *</label>
+            <input type="text" class="form-control" id="cad-cpf" required>
+          </div>
+          <div class="form-group">
+            <label>Telefone/WhatsApp *</label>
+            <input type="tel" class="form-control" id="cad-tel" required>
+          </div>
+          <div class="form-group">
             <label>Senha de Acesso *</label>
-            <div style="display:flex;gap:8px;">
-                <input type="password" id="apoio-senha" placeholder="Crie uma senha">
-                <button type="button" class="btn secundario" style="width:auto;padding:12px;" onclick="mostrarSenha('apoio-senha')">👁️</button>
-            </div>
-        </div>
-        <div class="form-grupo">
-            <label>📸 Foto do Rosto *</label>
-            <input type="file" id="apoio-foto-rosto" accept="image/*">
-        </div>
-        <button class="btn sucesso" onclick="salvarCadastroApoio()">Enviar Cadastro</button>
-        <p class="aviso-minimo">* Campos obrigatórios. Após envio, aguarde aprovação do Administrador.</p>
-    </div>
-</div>
-
-<!-- PAINEL ADMINISTRADOR -->
-<div id="painel-admin" class="tela oculto">
-    <div class="container">
-        <div class="barra-superior">
-            <h2>⚙️ Painel Administrativo</h2>
-            <button class="btn secundario" style="width:auto;padding:8px 12px;" onclick="sairSistema()">Sair</button>
-        </div>
-        <div class="resumo">
-            <div class="resumo-item">
-                <div class="resumo-valor" id="qtd-total-apoios">0</div>
-                <div class="resumo-texto">Apoios</div>
-            </div>
-            <div class="resumo-item">
-                <div class="resumo-valor" id="qtd-pendentes-apoios">0</div>
-                <div class="resumo-texto">Pendentes</div>
-            </div>
-            <div class="resumo-item">
-                <div class="resumo-valor" id="qtd-ocorrencias-abertas">0</div>
-                <div class="resumo-texto">Abertas</div>
-            </div>
-        </div>
-        <div class="tabs">
-            <button class="tab-btn ativa" onclick="trocarAbaAdmin('lancar')">📤 Lançar</button>
-            <button class="tab-btn" onclick="trocarAbaAdmin('ocorrencias')">📋 Ocorrências</button>
-            <button class="tab-btn" onclick="trocarAbaAdmin('apoios')">👥 Apoios</button>
-            <button class="tab-btn" onclick="trocarAbaAdmin('relatorios')">📊 Relatórios</button>
+            <input type="password" class="form-control" id="cad-pass" required>
+          </div>
+          <div class="form-group">
+            <label>Modelo do Veículo/Placa *</label>
+            <input type="text" class="form-control" id="cad-veiculo" placeholder="Ex: Gol Prata - ABC1D23" required>
+          </div>
+          <div class="form-group">
+            <label>Chave PIX *</label>
+            <input type="text" class="form-control" id="cad-pix" required>
+          </div>
         </div>
         
-        <!-- ABA LANÇAR -->
-        <div id="aba-lancar" class="conteudo-aba">
-            <h3>Lançar Nova Ocorrência</h3>
-            <div class="form-grupo">
-                <label>Tipo de Serviço *</label>
-                <select id="ocorr-tipo" onchange="mostrarOutroTipo()">
-                    <option value="">Selecione...</option>
-                    <option value="alarme">🔔 Atendimento a Alarme</option>
-                    <option value="rastreamento">📍 Rastreamento</option>
-                    <option value="recuperacao">🚗 Recuperação de Veículo</option>
-                    <option value="outro">📝 Outro...</option>
+        <div class="form-group">
+          <label>Sua Foto / Selfie de Identificação (Obrigatório)</label>
+          <input type="file" class="form-control" accept="image/*" id="cad-foto" required>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+          <button type="submit" class="btn">Solicitar Cadastro</button>
+          <button type="button" class="btn btn-secondary" onclick="showScreen('screen-login-apoio')">Voltar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- TELA: LOGIN ADMIN -->
+    <section id="screen-login-admin" class="card hidden">
+      <h2>Acesso Administrativo (Base/Central)</h2>
+      <div class="form-group">
+        <label>Senha da Central</label>
+        <input type="password" id="admin-pass" class="form-control">
+      </div>
+      <button class="btn" onclick="loginAdmin()">Entrar na Central</button>
+    </section>
+
+    <!-- TELA: PAINEL DO ADMIN -->
+    <section id="screen-dashboard-admin" class="hidden">
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchAdminTab('tab-lancar')">Lançar Ocorrência</button>
+        <button class="tab-btn" onclick="switchAdminTab('tab-ocorrencias')">Acompanhar Ocorrências</button>
+        <button class="tab-btn" onclick="switchAdminTab('tab-apoios')">Apoios Cadastrados</button>
+        <button class="tab-btn" onclick="switchAdminTab('tab-relatorios')">Relatório Quinzenal</button>
+      </div>
+
+      <!-- TAB: LANÇAR OCORRÊNCIA -->
+      <div id="tab-lancar" class="admin-tab">
+        <div class="card">
+          <h3>Nova Ocorrência</h3>
+          <form onsubmit="lancarOcorrencia(event)">
+            <div class="grid">
+              <div class="form-group">
+                <label>Tipo de Evento</label>
+                <select class="form-control" id="oc-tipo" required>
+                  <option value="Aviso de Alarme">Aviso de Alarme</option>
+                  <option value="Invasão Presencial">Invasão Presencial</option>
+                  <option value="Rastreamento de Veículo">Rastreamento de Veículo</option>
+                  <option value="Acompanhamento / Escolta">Acompanhamento / Escolta</option>
+                  <option value="Preservação de Local">Preservação de Local</option>
+                  <option value="Recuperação de Bem">Recuperação de Bem</option>
                 </select>
+              </div>
+              <div class="form-group">
+                <label>Valor Oferecido (R$)</label>
+                <input type="number" step="0.01" class="form-control" id="oc-valor" required>
+              </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Endereço Completo</label>
+                <input type="text" class="form-control" id="oc-endereco" placeholder="Rua, Número, Bairro, Cidade" required>
+              </div>
+              <div class="form-group">
+                <label>Latitude (Opcional p/ Mapa)</label>
+                <input type="text" class="form-control" id="oc-lat" placeholder="-23.5505">
+              </div>
+              <div class="form-group">
+                <label>Longitude (Opcional p/ Mapa)</label>
+                <input type="text" class="form-control" id="oc-lng" placeholder="-46.6333">
+              </div>
             </div>
-            <div class="form-grupo oculto" id="campo-outro-tipo">
-                <label>Especifique</label>
-                <input type="text" id="ocorr-outro-desc" placeholder="Descreva o serviço">
+            <div class="form-group">
+              <label>Detalhes/Instruções da Central</label>
+              <textarea class="form-control" id="oc-detalhes" rows="3"></textarea>
             </div>
-            <div class="form-grupo">
-                <label>Endereço Completo *</label>
-                <input type="text" id="ocorr-endereco" placeholder="Rua, Número, Bairro, Cidade">
-            </div>
-            <div class="form-grupo">
-                <label>Latitude</label>
-                <input type="text" id="ocorr-lat" placeholder="-23.XXXXXX">
-            </div>
-            <div class="form-grupo">
-                <label>Longitude</label>
-                <input type="text" id="ocorr-lng" placeholder="-46.XXXXXX">
-            </div>
-            <div class="form-grupo">
-                <label>Detalhes</label>
-                <textarea id="ocorr-detalhes" placeholder="O que está acontecendo..."></textarea>
-            </div>
-            <div class="form-grupo">
-                <label>Valor R$</label>
-                <input type="number" id="ocorr-valor" step="0.01" placeholder="0,00">
-                <label style="margin-top:8px;display:flex;align-items:center;gap:8px;">
-                    <input type="checkbox" id="ocorr-sem-comissao" checked> Sem comissão
-                </label>
-            </div>
-            <button class="btn primario" onclick="lancarOcorrencia()">🚀 Lançar</button>
+            <button type="submit" class="btn">Lançar no Sistema</button>
+          </form>
         </div>
+      </div>
+
+      <!-- TAB: LISTA DE OCORRÊNCIAS (ADMIN) -->
+      <div id="tab-ocorrencias" class="admin-tab hidden">
+        <div class="card">
+          <h3>Ocorrências Lançadas</h3>
+          <div id="admin-ocorrencias-list" class="grid" style="margin-top: 1rem;"></div>
+        </div>
+      </div>
+
+      <!-- TAB: APROVAR/GERENCIAR APOIOS -->
+      <div id="tab-apoios" class="admin-tab hidden">
+        <div class="card">
+          <h3>Gestão de Prestadores Apoio</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Veículo</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="table-apoios-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: RELATÓRIOS QUINZENAIS -->
+      <div id="tab-relatorios" class="admin-tab hidden">
+        <div class="card">
+          <h3>Prestação de Contas / Fechamento Quinzenal</h3>
+          <div class="grid">
+            <div class="form-group">
+              <label>Selecione o Apoio</label>
+              <select class="form-control" id="rel-apoio-select"></select>
+            </div>
+            <div class="form-group">
+              <label>Data Inicial</label>
+              <input type="date" class="form-control" id="rel-data-inicio">
+            </div>
+            <div class="form-group">
+              <label>Data Final</label>
+              <input type="date" class="form-control" id="rel-data-fim">
+            </div>
+          </div>
+          <button class="btn" onclick="gerarRelatorioQuinzenal()">Gerar Resumo</button>
+          
+          <div id="relatorio-resultado" class="card hidden" style="margin-top: 1rem; background-color: var(--bg-dark);">
+            <h4>Extrato da Quinzena</h4>
+            <div id="relatorio-conteudo" style="white-space: pre-wrap; font-family: monospace; margin: 1rem 0;"></div>
+            <button class="btn btn-success" onclick="enviarRelatorioWhats()">Enviar Extrato via WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA: PAINEL DO APOIO (AGENTE DE RUA) -->
+    <section id="screen-dashboard-apoio" class="hidden">
+      <div class="card">
+        <h3>Seu Status e Localização</h3>
+        <p style="color: var(--text-dim); font-size: 0.875rem;">Mantenha o GPS do seu celular ativo para cálculo de distâncias.</p>
+      </div>
+
+      <div id="map"></div>
+
+      <h3 style="margin-bottom: 0.5rem;">Ocorrências Disponíveis e Em Andamento</h3>
+      <div id="apoio-ocorrencias-list" class="grid"></div>
+    </section>
+
+    <!-- MODAL / PAINEL DE EXECUÇÃO DE OCORRÊNCIA (APOIO) -->
+    <section id="screen-execucao-ocorrencia" class="card hidden">
+      <button class="btn btn-secondary" onclick="voltarDashboardApoio()" style="margin-bottom: 1rem;">← Voltar</button>
+      
+      <h2 id="exec-titulo">Ocorrência</h2>
+      <p id="exec-endereco" style="color: var(--accent); margin-bottom: 0.5rem;"></p>
+      <p id="exec-detalhes" style="color: var(--text-dim); margin-bottom: 1rem;"></p>
+
+      <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
+        <h4>Chat Direto com a Central (Base)</h4>
+        <div class="chat-box" id="exec-chat-box"></div>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" class="form-control" id="chat-input" placeholder="Digite uma mensagem...">
+          <button class="btn" onclick="enviarMensagemChat()">Enviar</button>
+        </div>
+      </div>
+
+      <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
+        <h4>Relatório Fotográfico do Local (Mínimo 5 Fotos)</h4>
+        <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
+          Registre imagens do imóvel, placa, avarias ou ausência delas. A geolocalização será anexada.
+        </p>
         
-        <!-- ABA OCORRÊNCIAS -->
-        <div id="aba-ocorrencias" class="conteudo-aba oculto">
-            <h3>Todas as Ocorrências</h3>
-            <div class="relatorio-filtros">
-                <select id="filtro-status" onchange="filtrarOcorrencias()">
-                    <option value="todas">Todas</option>
-                    <option value="pendente">Pendentes</option>
-                    <option value="aceita">Aceitas</option>
-                    <option value="concluida">Concluídas</option>
-                </select>
-                <input type="date" id="filtro-data" onchange="filtrarOcorrencias()">
-            </div>
-            <div id="lista-ocorrencias"></div>
-        </div>
+        <input type="file" id="foto-input" accept="image/*" capture="environment" class="form-control" onchange="adicionarFoto(event)">
         
-        <!-- ABA APOIOS -->
-        <div id="aba-apoios" class="conteudo-aba oculto">
-            <h3>Gerenciar Apoios</h3>
-            <div id="lista-apoios"></div>
-        </div>
-        
-        <!-- ABA RELATÓRIOS -->
-        <div id="aba-relatorios" class="conteudo-aba oculto">
-            <h3>Relatórios</h3>
-            <div class="relatorio-filtros">
-                <input type="date" id="relatorio-data-inicio" placeholder="De">
-                <input type="date" id="relatorio-data-fim" placeholder="Até">
-                <select id="relatorio-apoio-filtro">
-                    <option value="todos">Todos</option>
-                </select>
-            </div>
-            <button class="btn primario" onclick="gerarRelatorioQuinzenal()">📄 Gerar Relatório</button>
-            <div id="area-relatorios-gerados"></div>
-        </div>
-    </div>
-</div>
+        <div class="photo-grid" id="photo-grid"></div>
+        <p id="photo-counter" style="margin-top: 0.5rem; font-weight: bold; color: var(--warning);">Fotos tiradas: 0 / 5</p>
+      </div>
 
-<!-- PAINEL APOIO -->
-<div id="painel-apoio" class="tela oculto">
-    <div class="container">
-        <div class="barra-superior">
-            <h2>🤝 Área do Apoio</h2>
-            <button class="btn secundario" style="width:auto;padding:8px 12px;" onclick="sairSistema()">Sair</button>
-        </div>
-        <div class="form-grupo">
-            <label>🔊 Alerta</label>
-            <select id="tipo-alerta">
-                <option value="sirene">🚨 Sirene</option>
-                <option value="continuo">🔔 Contínuo</option>
-                <option value="desligado">🔇 Sem som</option>
-            </select>
-        </div>
-        <div class="form-grupo">
-            <label style="display:flex;align-items:center;gap:8px;">
-                <input type="checkbox" id="compartilhar-localizacao" checked> Compartilhar localização
-            </label>
-        </div>
-        <h3 style="margin:20px 0 10px;">Ocorrências Próximas</h3>
-        <div id="mapa-apoio"></div>
-        <div id="lista-ocorrencias-apoio"></div>
-    </div>
-</div>
+      <button id="btn-concluir-oc" class="btn btn-success" style="width: 100%; padding: 1rem;" onclick="finalizarOcorrenciaApoio()">
+        Finalizar e Enviar Relatório via WhatsApp
+      </button>
+    </section>
+  </main>
 
-<!-- TELA DE ATENDIMENTO + RELATÓRIO + CHAT INDIVIDUAL -->
-<div id="tela-atendimento" class="tela oculto">
-    <div class="container">
-        <button class="btn voltar" onclick="voltarParaOcorrencias()">← Voltar</button>
-        <h2>📝 Relatório de Atendimento</h2>
-        
-        <div class="dados-ocorrencia" id="dados-ocorrencia-atual"></div>
-        
-        <!-- CHAT INDIVIDUAL DESTE ATENDIMENTO -->
-        <h3 style="margin:20px 0 10px;">💬 Conversa com Administrador</h3>
-        <div class="chat-container" id="caixa-chat"></div>
-        <div style="display:flex;gap:8px;margin-bottom:20px;">
-            <input type="text" id="mensagem-chat" placeholder="Sua mensagem...">
-            <button class="btn primario" style="width:auto;" onclick="enviarMensagemChat()">Enviar</button>
-        </div>
-        
-        <div class="form-grupo">
-            <label>📷 Fotos do Local (mínimo 5 obrigatórias)</label>
-            <input type="file" id="fotos-atendimento" accept="image/*" multiple capture="environment" onchange="processarFotos()">
-        </div>
-        <div class="fotos-preview" id="preview-fotos"></div>
-        <p class="aviso-minimo" id="aviso-qtd-fotos"></p>
-        
-        <div class="form-grupo">
-            <label>📝 Relato do Ocorrido *</label>
-            <textarea id="relato-apoio" placeholder="Descreva tudo o que encontrou no local..."></textarea>
-        </div>
-        <div class="form-grupo">
-            <label>Responsável no local</label>
-            <input type="text" id="responsavel-local" placeholder="Nome completo">
-        </div>
-        
-        <button class="btn sucesso" onclick="finalizarAtendimento()">✅ Finalizar e Enviar Relatório</button>
-    </div>
-</div>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- CONFIRMAÇÃO -->
-<div id="tela-confirmacao" class="tela oculto">
-    <div class="container confirmacao">
-        <div class="confirmacao-icone">✅</div>
-        <h2>Relatório Enviado!</h2>
-        <p>O relatório foi encaminhado ao Administrador.</p>
-        <button class="btn primario" onclick="mostrarTela('painel-apoio')">Voltar às Ocorrências</button>
-    </div>
-</div>
+  <script>
+    /* ==================== ESTADO DA APLICAÇÃO (LOCALSTORAGE) ==================== */
+    let apoios = JSON.parse(localStorage.getItem('dr_apoios')) || [];
+    let ocorrencias = JSON.parse(localStorage.getItem('dr_ocorrencias')) || [];
+    let currentUser = null; // { type: 'admin'|'apoio', data: {} }
+    let selectedOcorrenciaId = null;
+    let fotosOcorrenciaAtual = [];
+    let map = null;
+    let userMarker = null;
+    let userLat = null;
+    let userLng = null;
+    let mensagensPorOcorrencia = JSON.parse(localStorage.getItem('dr_chats')) || {};
 
-<script>
-// ==========================================
-// BANCO DE DADOS
-// ==========================================
-const DADOS = {
-    senhaAdmin: 'admin123', // ✅ SENHA CONFORME SOLICITADO
-    apoios: [],
-    ocorrencias: [],
-    mensagensPorOcorrencia: {}
-};
-
-let mapa = null;
-let localizacaoAtual = { lat: null, lng: null };
-let ocorrenciaAtual = null;
-let fotosCarregadas = [];
-let apoioLogado = null;
-
-// ==========================================
-// FUNÇÕES GERAIS
-// ==========================================
-function mostrarTela(id) {
-    document.querySelectorAll('.tela').forEach(t => t.classList.add('oculto'));
-    document.getElementById(id).classList.remove('oculto');
-    
-    if (id === 'painel-apoio') {
-        setTimeout(inicializarMapa, 100);
-        atualizarListaOcorrenciasApoio();
+    // Dados iniciais de teste se estiver vazio
+    if (ocorrencias.length === 0) {
+      ocorrencias = [
+        {
+          id: 1,
+          tipo: 'Aviso de Alarme',
+          endereco: 'Av. Paulista, 1000 - Bela Vista, São Paulo - SP',
+          lat: -23.5615,
+          lng: -46.6559,
+          detalhes: 'Disparo de zona 2 (Empresa ABC). Verificar se há arrombamento.',
+          valor: 80.00,
+          status: 'pendente', // pendente, aceito, concluido
+          apoioId: null,
+          data: new Date().toLocaleDateString('pt-BR')
+        }
+      ];
+      localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
     }
-    if (id === 'painel-admin') {
-        atualizarPainelAdmin();
+
+    /* ==================== INICIALIZAÇÃO E NAVEGAÇÃO ==================== */
+    function saveData() {
+      localStorage.setItem('dr_apoios', JSON.stringify(apoios));
+      localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
+      localStorage.setItem('dr_chats', JSON.stringify(mensagensPorOcorrencia));
     }
-}
 
-function mostrarSenha(id) {
-    const el = document.getElementById(id);
-    el.type = el.type === 'password' ? 'text' : 'password';
-}
+    function showScreen(screenId) {
+      document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(screenId).classList.remove('hidden');
 
-function sairSistema() {
-    apoioLogado = null;
-    ocorrenciaAtual = null;
-    fotosCarregadas = [];
-    mostrarTela('tela-inicial');
-}
-
-// ==========================================
-// ADMINISTRADOR
-// ==========================================
-function validarAdmin() {
-    if (document.getElementById('senha-admin').value === DADOS.senhaAdmin) {
-        mostrarTela('painel-admin');
-    } else {
-        document.getElementById('erro-admin').classList.remove('oculto');
+      if (screenId === 'screen-dashboard-apoio') {
+        setTimeout(initMap, 200); // delay para carregar CSS do leaflet
+      }
     }
-}
 
-function trocarAbaAdmin(nome) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('ativa'));
-    event.target.classList.add('ativa');
-    document.querySelectorAll('.conteudo-aba').forEach(c => c.classList.add('oculto'));
-    document.getElementById(`aba-${nome}`).classList.remove('oculto');
-    
-    if (nome === 'apoios') renderizarListaApoios();
-    if (nome === 'ocorrencias') renderizarListaOcorrenciasAdmin();
-    if (nome === 'relatorios') carregarFiltroApoiosRelatorio();
-}
-
-function mostrarOutroTipo() {
-    const visivel = document.getElementById('ocorr-tipo').value === 'outro';
-    document.getElementById('campo-outro-tipo').classList.toggle('oculto', !visivel);
-}
-
-function lancarOcorrencia() {
-    const tipo = document.getElementById('ocorr-tipo').value;
-    if (!tipo) return alert('Selecione o tipo de serviço');
-    
-    const tipoFinal = tipo === 'outro' 
-        ? document.getElementById('ocorr-outro-desc').value || 'Outro'
-        : tipo;
-    const endereco = document.getElementById('ocorr-endereco').value.trim();
-    if (!endereco) return alert('Informe o endereço');
-    
-    const nova = {
-        id: Date.now(),
-        tipo: tipoFinal,
-        endereco: endereco,
-        lat: parseFloat(document.getElementById('ocorr-lat').value) || null,
-        lng: parseFloat(document.getElementById('ocorr-lng').value) || null,
-        detalhes: document.getElementById('ocorr-detalhes').value,
-        valor: parseFloat(document.getElementById('ocorr-valor').value) || 0,
-        semComissao: document.getElementById('ocorr-sem-comissao').checked,
-        status: 'pendente',
-        data: new Date().toLocaleString('pt-BR'),
-        aceitoPor: null,
-        relatorio: null
-    };
-    
-    DADOS.ocorrencias.unshift(nova);
-    DADOS.mensagensPorOcorrencia[nova.id] = [];
-    
-    // Limpar formulário
-    document.getElementById('ocorr-tipo').value = '';
-    document.getElementById('ocorr-outro-desc').value = '';
-    document.getElementById('campo-outro-tipo').classList.add('oculto');
-    document.getElementById('ocorr-endereco').value = '';
-    document.getElementById('ocorr-lat').value = '';
-    document.getElementById('ocorr-lng').value = '';
-    document.getElementById('ocorr-detalhes').value = '';
-    document.getElementById('ocorr-valor').value = '';
-    
-    alert('✅ Lançado! Os apoios receberão o aviso.');
-    atualizarPainelAdmin();
-}
-
-function atualizarPainelAdmin() {
-    document.getElementById('qtd-total-apoios').textContent = DADOS.apoios.length;
-    document.getElementById('qtd-pendentes-apoios').textContent = DADOS.apoios.filter(a => !a.aprovado).length;
-    document.getElementById('qtd-ocorrencias-abertas').textContent = DADOS.ocorrencias.filter(o => o.status !== 'concluida').length;
-}
-
-function renderizarListaApoios() {
-    const container = document.getElementById('lista-apoios');
-    container.innerHTML = DADOS.apoios.length === 0 
-        ? '<p>Nenhum cadastro recebido.</p>'
-        : DADOS.apoios.map(a => `
-            <div class="ocorrencia">
-                <p><strong>${a.nome}</strong></p>
-                <p>📱 ${a.telefone}</p>
-                <p>🚗 ${a.veiculo} | 📍 ${a.area}</p>
-                <p>Status: ${a.aprovado ? '✅ Aprovado' : '⏳ Pendente'}</p>
-                ${!a.aprovado 
-                    ? `<button class="btn sucesso" onclick="aprovarApoio('${a.telefone}')">✅ Aprovar</button>
-                       <button class="btn perigo" onclick="rejeitarApoio('${a.telefone}')">❌ Rejeitar</button>` 
-                    : `<button class="btn secundario" onclick="suspenderApoio('${a.telefone}')">⚠️ Suspender</button>`}
-            </div>`).join('');
-}
-
-function aprovarApoio(tel) {
-    const apoio = DADOS.apoios.find(a => a.telefone === tel);
-    if (apoio) {
-        apoio.aprovado = true;
-        alert(`✅ ${apoio.nome} aprovado!`);
-        renderizarListaApoios();
-        atualizarPainelAdmin();
+    function updateNav() {
+      if (currentUser) {
+        document.getElementById('nav-public').classList.add('hidden');
+        document.getElementById('nav-user').classList.remove('hidden');
+        document.getElementById('user-info').innerText = `${currentUser.type.toUpperCase()}: ${currentUser.data.nome || 'Central'}`;
+      } else {
+        document.getElementById('nav-public').classList.remove('hidden');
+        document.getElementById('nav-user').classList.add('hidden');
+      }
     }
-}
 
-function rejeitarApoio(tel) {
-    if (confirm('Confirma exclusão?')) {
-        DADOS.apoios = DADOS.apoios.filter(a => a.telefone !== tel);
-        renderizarListaApoios();
-        atualizarPainelAdmin();
+    function logout() {
+      currentUser = null;
+      updateNav();
+      showScreen('screen-login-apoio');
     }
-}
 
-function suspenderApoio(tel) {
-    const apoio = DADOS.apoios.find(a => a.telefone === tel);
-    if (apoio) {
-        apoio.aprovado = false;
-        alert(`⚠️ ${apoio.nome} suspenso`);
-        renderizarListaApoios();
+    /* ==================== AUTENTICAÇÃO ==================== */
+    function loginAdmin() {
+      const pass = document.getElementById('admin-pass').value;
+      if (pass === 'admin123') { // Senha padrão para testes
+        currentUser = { type: 'admin', data: { nome: 'Central DRTRACK' } };
+        updateNav();
+        renderAdminDashboard();
+        showScreen('screen-dashboard-admin');
+      } else {
+        alert('Senha do Admin incorreta! (Padrão: admin123)');
+      }
     }
-}
 
-function renderizarListaOcorrenciasAdmin() {
-    const status = document.getElementById('filtro-status').value;
-    const dataFiltro = document.getElementById('filtro-data').value;
-    let lista = [...DADOS.ocorrencias];
-    if (status !== 'todas') lista = lista.filter(o => o.status === status);
-    if (dataFiltro) {
-        const brData = dataFiltro.split('-').reverse().join('/');
-        lista = lista.filter(o => o.data.includes(brData));
-    }
-    
-    document.getElementById('lista-ocorrencias').innerHTML = lista.length === 0 
-        ? '<p>Nenhuma encontrada.</p>'
-        : lista.map(o => `
-            <div class="ocorrencia ${o.status}">
-                <p><strong>${o.tipo}</strong> — ${o.data}</p>
-                <p>📍 ${o.endereco}</p>
-                <p>Status: ${o.status === 'pendente' ? '⏳ Pendente' : 
-                             o.status === 'aceita' ? '🤝 Em atendimento' : '✅ Concluída'}</p>
-                ${o.aceitoPor ? `<p>Atendente: ${o.aceitoPor.nome}</p>` : ''}
-                ${o.relatorio ? `
-                    <button class="btn primario" onclick="verRelatorioAdmin(${o.id})">📄 Ver Relatório</button>
-                    <button class="btn sucesso" onclick="enviarRelatorioWhatsApp(${o.id})">📤 Enviar p/ WhatsApp</button>
-                ` : ''}
-            </div>`).join('');
-}
+    function loginApoio() {
+      const tel = document.getElementById('apoio-login-tel').value.trim();
+      const pass = document.getElementById('apoio-login-pass').value.trim();
 
-function filtrarOcorrencias() { renderizarListaOcorrenciasAdmin(); }
+      const apoio = apoios.find(a => a.tel === tel && a.pass === pass);
 
-function verRelatorioAdmin(id) {
-    const o = DADOS.ocorrencias.find(x => x.id === id);
-    if (!o || !o.relatorio) return;
-    alert(`
-RELATÓRIO — ${o.tipo}
-Data: ${o.data}
-Local: ${o.endereco}
-Atendente: ${o.aceitoPor?.nome || '---'}
-
-Relato:
-${o.relatorio.relato}
-
-Responsável: ${o.relatorio.responsavel}
-Fotos: ${o.relatorio.quantidadeFotos}
-Valor: R$ ${o.valor.toFixed(2)}
-    `);
-}
-
-function enviarRelatorioWhatsApp(id) {
-    const o = DADOS.ocorrencias.find(x => x.id === id);
-    if (!o || !o.relatorio) return alert('Relatório não encontrado');
-    
-    const texto = encodeURIComponent(`
-📄 RELATÓRIO DE ATENDIMENTO — DRTRACK
-📌 Ocorrência: ${o.tipo}
-📅 Data: ${o.data}
-📍 Local: ${o.endereco}
-👤 Atendente: ${o.aceitoPor?.nome || '---'}
-
-📝 Relato:
-${o.relatorio.relato}
-
-Responsável: ${o.relatorio.responsavel}
-📷 Fotos: ${o.relatorio.quantidadeFotos}
-💰 Valor: R$ ${o.valor.toFixed(2)}
-    `);
-    window.open(`https://wa.me/5511994944410?text=${texto}`, '_blank');
-}
-
-function carregarFiltroApoiosRelatorio() {
-    const sel = document.getElementById('relatorio-apoio-filtro');
-    sel.innerHTML = '<option value="todos">Todos</option>' +
-        DADOS.apoios.filter(a => a.aprovado).map(a => 
-            `<option value="${a.telefone}">${a.nome}</option>`
-        ).join('');
-}
-
-function gerarRelatorioQuinzenal() {
-    const inicio = document.getElementById('relatorio-data-inicio').value || 'Início';
-    const fim = document.getElementById('relatorio-data-fim').value || 'Atual';
-    const filtroTel = document.getElementById('relatorio-apoio-filtro').value;
-    
-    let lista = DADOS.ocorrencias.filter(o => o.status === 'concluida');
-    if (filtroTel !== 'todos') {
-        lista = lista.filter(o => o.aceitoPor?.telefone === filtroTel);
-    }
-    const total = lista.reduce((s, o) => s + o.valor, 0);
-    const nomeApoio = filtroTel === 'todos' ? 'Todos' : DADOS.apoios.find(a => a.telefone === filtroTel)?.nome;
-    
-    const rel = `
-RELATÓRIO QUINZENAL/MENSAL — DRTRACK
-Período: ${inicio} a ${fim}
-Apoio: ${nomeApoio}
-
-Atendimentos: ${lista.length}
-Valor Total: R$ ${total.toFixed(2)}
-Comissão: Sem comissão aplicada
-
---- DETALHAMENTO ---
-${lista.map(o => `• ${o.data} | ${o.tipo} | R$ ${o.valor.toFixed(2)}`).join('\n')}
-    `;
-    document.getElementById('area-relatorios-gerados').innerHTML = `
-        <div class="ocorrencia"><pre style="white-space:pre-wrap;">${rel}</pre></div>
-    `;
-}
-
-// ==========================================
-// CADASTRO E LOGIN APOIO
-// ==========================================
-function salvarCadastroApoio() {
-    const nome = document.getElementById('apoio-nome').value.trim();
-    const tel = document.getElementById('apoio-tel').value.trim();
-    const email = document.getElementById('apoio-email').value.trim();
-    const placa = document.getElementById('apoio-placa').value.trim();
-    const veiculo = document.getElementById('apoio-veiculo').value;
-    const area = document.getElementById('apoio-area').value.trim();
-    const pix = document.getElementById('apoio-pix').value.trim();
-    const senha = document.getElementById('apoio-senha').value;
-    
-    if (!nome || !tel || !veiculo || !area || !pix || !senha) {
-        return alert('Preencha todos os campos obrigatórios');
-    }
-    if (DADOS.apoios.some(a => a.telefone === tel)) {
-        return alert('Este telefone já está cadastrado');
-    }
-    
-    DADOS.apoios.push({
-        nome, telefone, email, placa, veiculo, area, pix, senha,
-        aprovado: false, dataCadastro: new Date().toLocaleString('pt-BR'),
-        atendimentos: []
-    });
-    alert('✅ Cadastro enviado! Aguarde aprovação.');
-    mostrarTela('login-apoio');
-}
-
-function recuperarSenha() {
-    alert('📧 Se houver cadastro com este e-mail, instruções serão enviadas.');
-    mostrarTela('login-apoio');
-}
-
-function validarApoio() {
-    const tel = document.getElementById('tel-apoio-login').value.trim();
-    const senha = document.getElementById('senha-apoio-login').value;
-    const apoio = DADOS.apoios.find(a => a.telefone === tel && a.senha === senha);
-    
-    if (!apoio) {
-        document.getElementById('erro-apoio').classList.remove('oculto');
+      if (!apoio) {
+        alert('Telefone ou senha incorretos!');
         return;
+      }
+
+      if (apoio.status === 'pendente') {
+        alert('Seu cadastro ainda está em análise pela Central DRTRACK.');
+        return;
+      }
+
+      if (apoio.status === 'rejeitado') {
+        alert('Seu cadastro foi recusado. Entre em contato com o suporte.');
+        return;
+      }
+
+      currentUser = { type: 'apoio', data: apoio };
+      updateNav();
+      renderApoioDashboard();
+      showScreen('screen-dashboard-apoio');
     }
-    if (!apoio.aprovado) {
-        return alert('⏳ Cadastro pendente de aprovação.');
-    }
-    apoioLogado = apoio;
-    mostrarTela('painel-apoio');
-}
 
-// ==========================================
-// MAPA E OCORRÊNCIAS
-// ==========================================
-function inicializarMapa() {
-    if (mapa) return;
-    mapa = L.map('mapa-apoio').setView([-23.5505, -46.6333], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-    }).addTo(mapa);
-    
-    if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(
-            pos => {
-                localizacaoAtual.lat = pos.coords.latitude;
-                localizacaoAtual.lng = pos.coords.longitude;
-                atualizarMarcadoresMapa();
-            },
-            err => console.log('Geolocalização indisponível')
-        );
-    }
-    atualizarMarcadoresMapa();
-}
+    function cadastrarApoio(e) {
+      e.preventDefault();
+      const nome = document.getElementById('cad-nome').value;
+      const cpf = document.getElementById('cad-cpf').value;
+      const tel = document.getElementById('cad-tel').value;
+      const pass = document.getElementById('cad-pass').value;
+      const veiculo = document.getElementById('cad-veiculo').value;
+      const pix = document.getElementById('cad-pix').value;
+      const fotoFile = document.getElementById('cad-foto').files[0];
 
-function atualizarMarcadoresMapa() {
-    if (!mapa) return;
-    mapa.eachLayer(l => { if (l instanceof L.Marker) mapa.removeLayer(l); });
-    
-    if (localizacaoAtual.lat && localizacaoAtual.lng) {
-        L.marker([localizacaoAtual.lat, localizacaoAtual.lng], {
-            icon: L.divIcon({html: '📍', className: '', iconSize: [30,30]})
-        }).addTo(mapa).bindPopup('Você está aqui');
-    }
-    
-    DADOS.ocorrencias.filter(o => o.status === 'pendente' && o.lat && o.lng).forEach(o => {
-        L.marker([o.lat, o.lng], {
-            icon: L.divIcon({html: '🔴', className: '', iconSize: [30,30]})
-        }).addTo(mapa).bindPopup(`<strong>${o.tipo}</strong><br>${o.endereco}<br><button onclick="aceitarOcorrencia(${o.id})">Aceitar</button>`);
-    });
-}
+      if (!fotoFile) {
+        alert('É obrigatório enviar uma selfie de identificação.');
+        return;
+      }
 
-function atualizarListaOcorrenciasApoio() {
-    const pendentes = DADOS.ocorrencias.filter(o => o.status === 'pendente');
-    document.getElementById('lista-ocorrencias-apoio').innerHTML = pendentes.length === 0 
-        ? '<p>Nenhuma ocorrência aberta no momento.</p>'
-        : pendentes.map(o => {
-            let dist = '';
-            if (localizacaoAtual.lat && o.lat) {
-                const d = calcularDistancia(localizacaoAtual.lat, localizacaoAtual.lng, o.lat, o.lng);
-                dist = ` — ${d.toFixed(1)} km`;
-            }
-            return `
-                <div class="ocorrencia pendente piscando">
-                    <p><strong>${o.tipo}${dist}</strong></p>
-                    <p>📍 ${o.endereco}</p>
-                    <p>📅 ${o.data}</p>
-                    <button class="btn sucesso" onclick="aceitarOcorrencia(${o.id})">✅ Aceitar e Atender</button>
-                </div>`;
-        }).join('');
-}
-
-function calcularDistancia(lat1, lng1, lat2, lng2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function aceitarOcorrencia(id) {
-    const ocorr = DADOS.ocorrencias.find(o => o.id === id);
-    if (!ocorr || ocorr.status !== 'pendente') return alert('Já foi atendida por outro apoio.');
-    
-    ocorr.status = 'aceita';
-    ocorr.aceitoPor = apoioLogado;
-    ocorrenciaAtual = ocorr;
-    fotosCarregadas = [];
-    
-    mostrarTela('tela-atendimento');
-    document.getElementById('dados-ocorrencia-atual').innerHTML = `
-        <p><strong>Tipo:</strong> ${ocorr.tipo}</p>
-        <p><strong>Local:</strong> ${ocorr.endereco}</p>
-        ${ocorr.lat ? `<p><strong>Coordenadas:</strong> ${ocorr.lat}, ${ocorr.lng}</p>` : ''}
-        ${ocorr.detalhes ? `<p><strong>Detalhes:</strong> ${ocorr.detalhes}</p>` : ''}
-    `;
-    
-    carregarChatOcorrencia(id);
-    document.getElementById('preview-fotos').innerHTML = '';
-    document.getElementById('relato-apoio').value = '';
-    document.getElementById('responsavel-local').value = '';
-    document.getElementById('aviso-qtd-fotos').textContent = '';
-}
-
-function voltarParaOcorrencias() {
-    if (confirm('Tem certeza? O atendimento voltará para pendente.')) {
-        if (ocorrenciaAtual) {
-            const o = DADOS.ocorrencias.find(x => x.id === ocorrenciaAtual.id);
-            if (o && !o.relatorio) {
-                o.status = 'pendente';
-                o.aceitoPor = null;
-            }
-        }
-        ocorrenciaAtual = null;
-        fotosCarregadas = [];
-        mostrarTela('painel-apoio');
-    }
-}
-
-// ==========================================
-// CHAT SEPARADO POR OCORRÊNCIA
-// ==========================================
-function carregarChatOcorrencia(idOcorr) {
-    if (!DADOS.mensagensPorOcorrencia[idOcorr]) {
-        DADOS.mensagensPorOcorrencia[idOcorr] = [];
-    }
-    const msgs = DADOS.mensagensPorOcorrencia[idOcorr];
-    const container = document.getElementById('caixa-chat');
-    container.innerHTML = msgs.map(m => `
-        <div class="mensagem ${m.origem}">
-            ${m.texto}
-            <div class="mensagem-horario">${m.horario}</div>
-        </div>`).join('');
-    container.scrollTop = container.scrollHeight;
-}
-
-function enviarMensagemChat() {
-    if (!ocorrenciaAtual) return;
-    const campo = document.getElementById('mensagem-chat');
-    const texto = campo.value.trim();
-    if (!texto) return;
-    
-    DADOS.mensagensPorOcorrencia[ocorrenciaAtual.id].push({
-        texto: texto,
-        origem: 'apoio',
-        horario: new Date().toLocaleTimeString('pt-BR')
-    });
-    campo.value = '';
-    carregarChatOcorrencia(ocorrenciaAtual.id);
-}
-
-// ==========================================
-// FOTOS — VALIDAÇÃO DE 5 OBRIGATÓRIAS + LAYOUT A4
-// ==========================================
-function processarFotos() {
-    fotosCarregadas = Array.from(document.getElementById('fotos-atendimento').files);
-    const preview = document.getElementById('preview-fotos');
-    preview.innerHTML = '';
-    
-    fotosCarregadas.forEach((foto, i) => {
-        const leitor = new FileReader();
-        leitor.onload = e => {
-            const div = document.createElement('div');
-            div.className = 'foto-item';
-            div.innerHTML = `
-                <img src="${e.target.result}" alt="Foto ${i+1}">
-               
-                <div class="foto-label">
-                    📍 Lat: ${localizacaoAtual.lat ? localizacaoAtual.lat.toFixed(6) : '---'}<br>
-                    Lng: ${localizacaoAtual.lng ? localizacaoAtual.lng.toFixed(6) : '---'}
-                </div>`;
-            preview.appendChild(div);
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const novoApoio = {
+          id: Date.now(),
+          nome, cpf, tel, pass, veiculo, pix,
+          foto: evt.target.result,
+          status: 'pendente' // pendente, aprovado, rejeitado
         };
-        leitor.readAsDataURL(foto);
-    });
-    
-    // ✅ VALIDAÇÃO MÍNIMO 5 FOTOS
-    const aviso = document.getElementById('aviso-qtd-fotos');
-    if (fotosCarregadas.length < 5) {
-        aviso.textContent = `⚠️ Obrigatório: mínimo 5 fotos — enviadas: ${fotosCarregadas.length}`;
-        aviso.style.color = 'var(--amarelo)';
-    } else {
-        aviso.textContent = `✅ ${fotosCarregadas.length} fotos carregadas`;
-        aviso.style.color = 'var(--verde)';
-    }
-}
 
-// ==========================================
-// FINALIZAR ATENDIMENTO — VALIDAÇÃO COMPLETA
-// ==========================================
-function finalizarAtendimento() {
-    // ✅ VALIDAÇÃO OBRIGATÓRIA
-    if (fotosCarregadas.length < 5) {
-        return alert(`⚠️ É obrigatório enviar no mínimo 5 fotos.\nVocê enviou: ${fotosCarregadas.length}`);
+        apoios.push(novoApoio);
+        saveData();
+        alert('Solicitação enviada com sucesso! Aguarde a aprovação da Central.');
+        document.getElementById('form-cadastro-apoio').reset();
+        showScreen('screen-login-apoio');
+      };
+      reader.readAsDataURL(fotoFile);
     }
-    
-    const relato = document.getElementById('relato-apoio').value.trim();
-    if (!relato) {
-        return alert('📝 Descreva o que aconteceu no local no campo de relato.');
+
+    /* ==================== PAINEL DO ADMIN ==================== */
+    function switchAdminTab(tabId) {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.remove('hidden');
+      event.target.classList.add('active');
+
+      if (tabId === 'tab-ocorrencias') renderAdminOcorrencias();
+      if (tabId === 'tab-apoios') renderAdminApoios();
+      if (tabId === 'tab-relatorios') setupRelatoriosSelect();
     }
-    
-    const responsavel = document.getElementById('responsavel-local').value.trim() || 'Não informado';
-    
-    // SALVAR RELATÓRIO
-    if (ocorrenciaAtual) {
-        const ocorr = DADOS.ocorrencias.find(o => o.id === ocorrenciaAtual.id);
-        if (ocorr) {
-            ocorr.status = 'concluida';
-            ocorr.relatorio = {
-                relato: relato,
-                responsavel: responsavel,
-                quantidadeFotos: fotosCarregadas.length,
-                dataEnvio: new Date().toLocaleString('pt-BR')
-            };
-            
-            // REGISTRAR NO HISTÓRICO DO APOIO
-            if (apoioLogado) {
-                if (!apoioLogado.atendimentos) apoioLogado.atendimentos = [];
-                apoioLogado.atendimentos.push({
-                    id: ocorr.id,
-                    tipo: ocorr.tipo,
-                    data: ocorr.data,
-                    valor: ocorr.valor
-                });
-            }
+
+    function renderAdminDashboard() {
+      switchAdminTab('tab-lancar');
+    }
+
+    function lancarOcorrencia(e) {
+      e.preventDefault();
+      const tipo = document.getElementById('oc-tipo').value;
+      const valor = parseFloat(document.getElementById('oc-valor').value);
+      const endereco = document.getElementById('oc-endereco').value;
+      const lat = parseFloat(document.getElementById('oc-lat').value) || null;
+      const lng = parseFloat(document.getElementById('oc-lng').value) || null;
+      const detalhes = document.getElementById('oc-detalhes').value;
+
+      const novaOc = {
+        id: Date.now(),
+        tipo, valor, endereco, lat, lng, detalhes,
+        status: 'pendente',
+        apoioId: null,
+        data: new Date().toLocaleDateString('pt-BR')
+      };
+
+      ocorrencias.push(novaOc);
+      saveData();
+      alert('Ocorrência lançada na rede!');
+      e.target.reset();
+    }
+
+    function renderAdminOcorrencias() {
+      const container = document.getElementById('admin-ocorrencias-list');
+      container.innerHTML = '';
+
+      ocorrencias.forEach(oc => {
+        const apoioAtrib = apoios.find(a => a.id === oc.apoioId);
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.backgroundColor = 'var(--bg-dark)';
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between;">
+            <strong>${oc.tipo}</strong>
+            <span class="badge badge-${oc.status}">${oc.status}</span>
+          </div>
+          <p style="font-size: 0.875rem; color: var(--text-dim); margin: 0.5rem 0;">${oc.endereco}</p>
+          <p><strong>Valor:</strong> R$ ${oc.valor.toFixed(2)}</p>
+          <p style="font-size: 0.875rem;"><strong>Apoio Assumido:</strong> ${apoioAtrib ? apoioAtrib.nome : 'Nenhum'}</p>
+          <p style="font-size: 0.875rem; color: var(--text-dim);">Data: ${oc.data}</p>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderAdminApoios() {
+      const tbody = document.getElementById('table-apoios-body');
+      tbody.innerHTML = '';
+
+      apoios.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><img src="${a.foto}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;"></td>
+          <td>${a.nome}</td>
+          <td>${a.tel}</td>
+          <td>${a.veiculo}</td>
+          <td><span class="badge badge-${a.status === 'aprovado' ? 'concluido' : 'pendente'}">${a.status}</span></td>
+          <td>
+            ${a.status === 'pendente' ? `
+              <button class="btn btn-success" onclick="alterarStatusApoio(${a.id}, 'aprovado')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Aprovar</button>
+              <button class="btn btn-danger" onclick="alterarStatusApoio(${a.id}, 'rejeitado')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Rejeitar</button>
+            ` : ''}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function alterarStatusApoio(id, status) {
+      const a = apoios.find(item => item.id === id);
+      if (a) {
+        a.status = status;
+        saveData();
+        renderAdminApoios();
+      }
+    }
+
+    /* ==================== RELATÓRIOS QUINZENAIS (ADMIN) ==================== */
+    function setupRelatoriosSelect() {
+      const select = document.getElementById('rel-apoio-select');
+      select.innerHTML = '<option value="">Selecione...</option>';
+      apoios.filter(a => a.status === 'aprovado').forEach(a => {
+        select.innerHTML += `<option value="${a.id}">${a.nome} - PIX: ${a.pix}</option>`;
+      });
+    }
+
+    let relatorioTextoGlobal = "";
+
+    function gerarRelatorioQuinzenal() {
+      const apoioId = parseInt(document.getElementById('rel-apoio-select').value);
+      if (!apoioId) {
+        alert('Selecione um apoio!');
+        return;
+      }
+
+      const apoio = apoios.find(a => a.id === apoioId);
+      const concluidas = ocorrencias.filter(o => o.apoioId === apoioId && o.status === 'concluido');
+
+      let total = 0;
+      concluidas.forEach(o => total += o.valor);
+
+      relatorioTextoGlobal = `*EXTRATO DE PRESTAÇÃO DE CONTAS - DRTRACK*\n`;
+      relatorioTextoGlobal += `*Prestador:* ${apoio.nome}\n`;
+      relatorioTextoGlobal += `*Chave PIX:* ${apoio.pix}\n`;
+      relatorioTextoGlobal += `*Período:* Fechamento Quinzenal\n`;
+      relatorioTextoGlobal += `----------------------------------------\n`;
+      relatorioTextoGlobal += `*Ocorrências Atendidas:* (${concluidas.length})\n`;
+      
+      concluidas.forEach(o => {
+        relatorioTextoGlobal += `• ${o.data} | ${o.tipo} | R$ ${o.valor.toFixed(2)}\n`;
+      });
+
+      relatorioTextoGlobal += `----------------------------------------\n`;
+      relatorioTextoGlobal += `*VALOR TOTAL A RECEBER:* R$ ${total.toFixed(2)}`;
+
+      document.getElementById('relatorio-conteudo').innerText = relatorioTextoGlobal;
+      document.getElementById('relatorio-resultado').classList.remove('hidden');
+    }
+
+    function enviarRelatorioWhats() {
+      const apoioId = parseInt(document.getElementById('rel-apoio-select').value);
+      const apoio = apoios.find(a => a.id === apoioId);
+      if (!apoio) return;
+
+      const num = apoio.tel.replace(/\D/g, '');
+      const url = `https://wa.me/55${num}?text=${encodeURIComponent(relatorioTextoGlobal)}`;
+      window.open(url, '_blank');
+    }
+
+    /* ==================== PAINEL DO APOIO (AGENTE DE RUA) ==================== */
+    function initMap() {
+      if (!map) {
+        map = L.map('map').setView([-23.5505, -46.6333], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19
+        }).addTo(map);
+      }
+
+      // Obter Geolocation do celular
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          userLat = position.coords.latitude;
+          userLng = position.coords.longitude;
+
+          const latlng = [userLat, userLng];
+          map.setView(latlng, 13);
+
+          if (userMarker) {
+            userMarker.setLatLng(latlng);
+          } else {
+            userMarker = L.marker(latlng).addTo(map).bindPopup('Sua Posição Atual').openPopup();
+          }
+
+          renderApoioOcorrencias();
+        }, err => {
+          console.warn("GPS Indisponível/Negado.");
+          renderApoioOcorrencias();
+        });
+      } else {
+        renderApoioOcorrencias();
+      }
+    }
+
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+      const R = 6371; // km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return (R * c).toFixed(1);
+    }
+
+    function renderApoioOcorrencias() {
+      const container = document.getElementById('apoio-ocorrencias-list');
+      container.innerHTML = '';
+
+      // Plot no mapa
+      ocorrencias.forEach(oc => {
+        if (oc.lat && oc.lng && (oc.status === 'pendente' || oc.apoioId === currentUser.data.id)) {
+          L.marker([oc.lat, oc.lng]).addTo(map)
+            .bindPopup(`<b>${oc.tipo}</b><br>${oc.endereco}<br>Valor: R$ ${oc.valor}`);
         }
+      });
+
+      ocorrencias.forEach(oc => {
+        // Exibir somente se estiver pendente OU se já foi aceita por este Apoio específico
+        if (oc.status === 'pendente' || oc.apoioId === currentUser.data.id) {
+          const dist = (userLat && oc.lat) ? calcularDistancia(userLat, userLng, oc.lat, oc.lng) : null;
+
+          const div = document.createElement('div');
+          div.className = 'card';
+          div.style.backgroundColor = 'var(--bg-card)';
+          
+          let botaoAcao = '';
+          if (oc.status === 'pendente') {
+            botaoAcao = `<button class="btn" style="width:100%;" onclick="aceitarOcorrencia(${oc.id})">Aceitar e Atender (R$ ${oc.valor.toFixed(2)})</button>`;
+          } else if (oc.status === 'aceito' && oc.apoioId === currentUser.data.id) {
+            botaoAcao = `<button class="btn btn-success" style="width:100%;" onclick="abrirExecucaoOcorrencia(${oc.id})">Continuar Atendimento</button>`;
+          } else if (oc.status === 'concluido') {
+            botaoAcao = `<span class="badge badge-concluido">Concluída</span>`;
+          }
+
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+              <strong style="color:var(--accent);">${oc.tipo}</strong>
+              ${dist ? `<span style="font-size:0.75rem; background:var(--border); padding:0.2rem 0.4rem; border-radius:0.25rem;">📍 ${dist} km</span>` : ''}
+            </div>
+            <p style="font-size:0.875rem; margin-bottom:0.5rem;">${oc.endereco}</p>
+            <p style="font-size:0.875rem; color:var(--text-dim); margin-bottom:1rem;">${oc.detalhes}</p>
+            ${botaoAcao}
+          `;
+          container.appendChild(div);
+        }
+      });
     }
-    
-    // MENSAGEM PARA WHATSAPP
-    const mensagem = encodeURIComponent(`
-📄 RELATÓRIO DE ATENDIMENTO — DRTRACK CONECTA
-═══════════════════════════════════════════
 
-👤 Apoio: ${apoioLogado?.nome || '---'}
-📱 Telefone: ${apoioLogado?.telefone || '---'}
-🚗 Veículo: ${apoioLogado?.veiculo || '---'}
-📍 Área: ${apoioLogado?.area || '---'}
-
-📌 Ocorrência: ${ocorrenciaAtual?.tipo || '---'}
-📅 Data: ${ocorrenciaAtual?.data || '---'}
-📍 Local: ${ocorrenciaAtual?.endereco || '---'}
-🌐 Coordenadas: ${localizacaoAtual.lat ? `${localizacaoAtual.lat.toFixed(6)}, ${localizacaoAtual.lng.toFixed(6)}` : '---'}
-
-📝 RELATO:
-${relato}
-
-👤 Responsável no local: ${responsavel}
-📷 Fotos enviadas: ${fotosCarregadas.length} (mínimo 5 cumprido ✅)
-
-💰 Valor: R$ ${(ocorrenciaAtual?.valor || 0).toFixed(2)}
-📋 Comissão: Sem comissão
-═══════════════════════════════════════════
-    `);
-    
-    // ENVIAR WHATSAPP
-    window.open(`https://wa.me/5511994944410?text=${mensagem}`, '_blank');
-    
-    // LIMPAR E CONFIRMAR
-    fotosCarregadas = [];
-    ocorrenciaAtual = null;
-    mostrarTela('tela-confirmacao');
-}
-
-// ==========================================
-// DADOS DE TESTE
-// ==========================================
-function carregarDadosExemplo() {
-    if (DADOS.apoios.length === 0) {
-        DADOS.apoios.push({
-            nome: 'Apoio de Teste',
-            telefone: '11999999999',
-            email: 'teste@drtrack.com.br',
-            placa: 'ABC-1234',
-            veiculo: 'carro',
-            area: 'Zona Norte',
-            pix: 'teste@pix',
-            senha: '123456',
-            aprovado: true,
-            dataCadastro: new Date().toLocaleString('pt-BR'),
-            atendimentos: []
-        });
+    function aceitarOcorrencia(id) {
+      const oc = ocorrencias.find(o => o.id === id);
+      if (oc && oc.status === 'pendente') {
+        oc.status = 'aceito';
+        oc.apoioId = currentUser.data.id;
+        saveData();
+        alert('Ocorrência aceita! Proceda para o local com segurança.');
+        renderApoioOcorrencias();
+        abrirExecucaoOcorrencia(id);
+      }
     }
-    
-    if (DADOS.ocorrencias.length === 0) {
-        const idExemplo = Date.now();
-        DADOS.ocorrencias.push({
-            id: idExemplo,
-            tipo: '🔔 Atendimento a Alarme',
-            endereco: 'Av. Paulista, 1000 — São Paulo/SP',
-            lat: -23.5616,
-            lng: -46.6559,
-            detalhes: 'Alarme disparado, verificar presencialmente.',
-            valor: 50.00,
-            semComissao: true,
-            status: 'pendente',
-            data: new Date().toLocaleString('pt-BR'),
-            aceitoPor: null,
-            relatorio: null
-        });
-        DADOS.mensagensPorOcorrencia[idExemplo] = [];
+
+    /* ==================== TELA DE EXECUÇÃO / FOTOS / CHAT ==================== */
+    function abrirExecucaoOcorrencia(id) {
+      selectedOcorrenciaId = id;
+      fotosOcorrenciaAtual = [];
+      document.getElementById('photo-grid').innerHTML = '';
+      updatePhotoCounter();
+
+      const oc = ocorrencias.find(o => o.id === id);
+      document.getElementById('exec-titulo').innerText = oc.tipo;
+      document.getElementById('exec-endereco').innerText = `📍 ${oc.endereco}`;
+      document.getElementById('exec-detalhes').innerText = `Instruções: ${oc.detalhes}`;
+
+      renderChat();
+      showScreen('screen-execucao-ocorrencia');
     }
-}
 
-// ==========================================
-// INICIALIZAÇÃO
-// ==========================================
-document.addEventListener('DOMContentLoaded', carregarDadosExemplo);
-</script>
+    function voltarDashboardApoio() {
+      showScreen('screen-dashboard-apoio');
+    }
 
+    // LÓGICA DE FOTOS (MÍNIMO 5)
+    function adicionarFoto(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        // Tentar capturar geolocalização exata do momento do upload
+        let locString = "Lat/Lng indisponível";
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(pos => {
+            locString = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`;
+            salvarEExibirFoto(evt.target.result, locString);
+          }, () => {
+            salvarEExibirFoto(evt.target.result, locString);
+          });
+        } else {
+          salvarEExibirFoto(evt.target.result, locString);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function salvarEExibirFoto(base64, coords) {
+      const objFoto = {
+        dataUrl: base64,
+        hora: new Date().toLocaleTimeString('pt-BR'),
+        coords: coords
+      };
+
+      fotosOcorrenciaAtual.push(objFoto);
+
+      const grid = document.getElementById('photo-grid');
+      const img = document.createElement('img');
+      img.src = base64;
+      img.className = 'photo-preview';
+      grid.appendChild(img);
+
+      updatePhotoCounter();
+    }
+
+    function updatePhotoCounter() {
+      const counter = document.getElementById('photo-counter');
+      const count = fotosOcorrenciaAtual.length;
+      counter.innerText = `Fotos tiradas: ${count} / 5 (Mínimo)`;
+      
+      if (count >= 5) {
+        counter.style.color = 'var(--success)';
+      } else {
+        counter.style.color = 'var(--warning)';
+      }
+    }
+
+    // CHAT INDIVIDUAL
+    function renderChat() {
+      const chatBox = document.getElementById('exec-chat-box');
+      chatBox.innerHTML = '';
+
+      const msgs = mensagensPorOcorrencia[selectedOcorrenciaId] || [];
+      msgs.forEach(m => {
+        const div = document.createElement('div');
+        div.className = `chat-msg ${m.sender === currentUser.data.nome ? 'sent' : 'received'}`;
+        div.innerHTML = `<strong>${m.sender}:</strong> ${m.texto}`;
+        chatBox.appendChild(div);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function enviarMensagemChat() {
+      const input = document.getElementById('chat-input');
+      const texto = input.value.trim();
+      if (!texto) return;
+
+      if (!mensagensPorOcorrencia[selectedOcorrenciaId]) {
+        mensagensPorOcorrencia[selectedOcorrenciaId] = [];
+      }
+
+      mensagensPorOcorrencia[selectedOcorrenciaId].push({
+        sender: currentUser.data.nome,
+        texto: texto
+      });
+
+      saveData();
+      input.value = '';
+      renderChat();
+    }
+
+    /* ==================== FINALIZAÇÃO E ENVIO WHATSAPP ==================== */
+    function finalizarOcorrenciaApoio() {
+      if (fotosOcorrenciaAtual.length < 5) {
+        alert(`Você anexou apenas ${fotosOcorrenciaAtual.length} foto(s). É obrigatório registrar no mínimo 5 fotos do local para finalizar!`);
+        return;
+      }
+
+      const oc = ocorrencias.find(o => o.id === selectedOcorrenciaId);
+      oc.status = 'concluido';
+      saveData();
+
+      // Montar mensagem detalhada de fechamento para o WhatsApp da Central
+      let whatsMsg = `*RELATÓRIO DE CONCLUSÃO DE OCORRÊNCIA*\n`;
+      whatsMsg += `*DRTRACK CONECTA*\n\n`;
+      whatsMsg += `*Agente Apoio:* ${currentUser.data.nome}\n`;
+      whatsMsg += `*Veículo/Placa:* ${currentUser.data.veiculo}\n`;
+      whatsMsg += `*Tipo de Evento:* ${oc.tipo}\n`;
+      whatsMsg += `*Local:* ${oc.endereco}\n`;
+      whatsMsg += `*Horário da Conclusão:* ${new Date().toLocaleTimeString('pt-BR')}\n`;
+      whatsMsg += `*Registros Fotográficos Anexados:* ${fotosOcorrenciaAtual.length} imagens coletadas com geolocalização em sistema.\n\n`;
+      whatsMsg += `Status: *LOCAL PRESERVADO E VISTORIADO COM SUCESSO.*`;
+
+      const numCentral = "5511994944410"; // Número fixo da central fornecido
+      const urlWhats = `https://wa.me/${numCentral}?text=${encodeURIComponent(whatsMsg)}`;
+
+      alert('Ocorrência concluída internamente! Você será redirecionado para enviar o resumo à Central via WhatsApp.');
+      window.open(urlWhats, '_blank');
+
+      voltarDashboardApoio();
+    }
+
+  </script>
 </body>
 </html>

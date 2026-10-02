@@ -31,7 +31,6 @@
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
 
-    /* Prevenção de oscilação da barra de rolagem */
     html {
       overflow-y: scroll;
     }
@@ -161,7 +160,6 @@
       border-color: var(--accent);
     }
 
-    /* ESTILOS AUTOCOMPLETE */
     .autocomplete-suggestions {
       position: absolute;
       top: 100%;
@@ -200,7 +198,6 @@
       gap: 1rem;
     }
 
-    /* Trava de dimensão do mapa para não causar tremores no scroll */
     #map, #admin-preview-map {
       height: 350px;
       min-height: 350px;
@@ -491,7 +488,7 @@
         <button class="tab-btn" onclick="switchAdminTab('tab-relatorios', event)">Relatório Quinzenal</button>
       </div>
 
-      <!-- TAB: LANÇAR OCORRÊNCIA COM GEOCODIFICAÇÃO E AUTOCOMPLETE -->
+      <!-- TAB: LANÇAR OCORRÊNCIA -->
       <div id="tab-lancar" class="admin-tab">
         <div class="card">
           <h3>Nova Ocorrência</h3>
@@ -764,6 +761,18 @@
       ];
       localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
     }
+
+    // SINCRONIZAÇÃO EM TEMPO REAL ENTRE ABAS/TELAS
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'dr_ocorrencias') {
+        ocorrencias = JSON.parse(e.newValue) || [];
+        if (currentUser && currentUser.type === 'apoio') {
+          renderApoioOcorrencias();
+        } else if (currentUser && currentUser.type === 'admin') {
+          renderAdminOcorrencias();
+        }
+      }
+    });
 
     /* ==================== SISTEMA DE GEOCODIFICAÇÃO E AUTOCOMPLETE ==================== */
     document.addEventListener('DOMContentLoaded', () => {
@@ -1146,7 +1155,7 @@
       const lng = parseFloat(document.getElementById('oc-lng').value);
       const detalhes = document.getElementById('oc-detalhes').value;
 
-      if (!lat || !lng) {
+      if (isNaN(lat) || isNaN(lng)) {
         alert('Selecione um endereço válido na lista de sugestões para obter a Latitude e Longitude.');
         return;
       }
@@ -1163,6 +1172,12 @@
 
       ocorrencias.push(novaOc);
       saveData();
+
+      // Notifica as interfaces ativas imediatamente
+      if (currentUser && currentUser.type === 'apoio') {
+        renderApoioOcorrencias();
+      }
+
       alert('Ocorrência lançada com sucesso com geocodificação automática!');
       e.target.reset();
       document.getElementById('oc-lat').value = '';
@@ -1188,7 +1203,7 @@
         if (oc.apoioId) {
           botoesAcao += `<button class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;" onclick="abrirChatAdmin(${oc.id})">💬 Abrir Chat com Apoio</button>`;
         }
-        botoesAcao += `<button class="btn btn-warning" style="width: 100%; margin-top: 0.5rem;" onclick="abrirEdicaoRelatorioCliente(${oc.id})">✏️️ Editar / Gerar Relatório p/ Cliente</button>`;
+        botoesAcao += `<button class="btn btn-warning" style="width: 100%; margin-top: 0.5rem;" onclick="abrirEdicaoRelatorioCliente(${oc.id})">✏ Editar / Gerar Relatório p/ Cliente</button>`;
 
         div.innerHTML = `
           <div style="display:flex; justify-content:space-between;">
@@ -1490,10 +1505,17 @@
 
     async function renderApoioOcorrencias() {
       const container = document.getElementById('apoio-ocorrencias-list');
+      if (!container) return;
       container.innerHTML = '';
+
       if (mapMarkersGroup) mapMarkersGroup.clearLayers();
 
-      const ocsAtivas = ocorrencias.filter(o => o.status === 'pendente' || (o.apoioId === currentUser.data.id && o.status === 'aceito'));
+      // Recarrega do armazenamento para ter certeza de que dados novos entraram
+      ocorrencias = JSON.parse(localStorage.getItem('dr_ocorrencias')) || [];
+
+      const ocsAtivas = ocorrencias.filter(o => 
+        o.status === 'pendente' || (currentUser && o.apoioId === currentUser.data.id && o.status === 'aceito')
+      );
 
       if (ocsAtivas.length > ultimasOcorrenciasCount && ultimasOcorrenciasCount !== 0) {
         document.getElementById('alert-nova-ocorrencia').classList.remove('hidden');
@@ -1501,18 +1523,27 @@
       }
       ultimasOcorrenciasCount = ocsAtivas.length;
 
+      if (ocsAtivas.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-dim); text-align: center; grid-column: 1 / -1;">Nenhuma ocorrência disponível no momento.</p>';
+        return;
+      }
+
       for (const oc of ocsAtivas) {
         let distInfoText = "Calculando rota de deslocamento...";
-        if (userLat && userLng) {
-          const calc = await obterDistanciaETempoReal(userLat, userLng, oc.lat, oc.lng);
+        
+        const latNum = parseFloat(oc.lat);
+        const lngNum = parseFloat(oc.lng);
+
+        if (userLat && userLng && !isNaN(latNum) && !isNaN(lngNum)) {
+          const calc = await obterDistanciaETempoReal(userLat, userLng, latNum, lngNum);
           if (calc) {
             distInfoText = `🚘 <strong>${calc.distKm} km</strong> do seu local (~<strong>${calc.minutos} min</strong>)`;
           }
         }
 
-        if (mapMarkersGroup) {
-          const marker = L.marker([oc.lat, oc.lng]).addTo(mapMarkersGroup);
-          marker.bindPopup(`<b>${oc.tipo}</b><br>${oc.endereco}<br>Valor: R$ ${oc.valor.toFixed(2)}`);
+        if (mapMarkersGroup && !isNaN(latNum) && !isNaN(lngNum)) {
+          const marker = L.marker([latNum, lngNum]).addTo(mapMarkersGroup);
+          marker.bindPopup(`<b>${oc.tipo}</b><br>${oc.endereco}<br>Valor: R$ ${Number(oc.valor).toFixed(2)}`);
         }
 
         const div = document.createElement('div');
@@ -1521,8 +1552,8 @@
 
         let botaoAcao = '';
         if (oc.status === 'pendente') {
-          botaoAcao = `<button class="btn btn-success" style="width: 100%; margin-top: 0.5rem;" onclick="aceitarOcorrencia(${oc.id})">Aceitar Ocorrência (R$ ${oc.valor.toFixed(2)})</button>`;
-        } else if (oc.status === 'aceito' && oc.apoioId === currentUser.data.id) {
+          botaoAcao = `<button class="btn btn-success" style="width: 100%; margin-top: 0.5rem;" onclick="aceitarOcorrencia(${oc.id})">Aceitar Ocorrência (R$ ${Number(oc.valor).toFixed(2)})</button>`;
+        } else if (oc.status === 'aceito' && currentUser && oc.apoioId === currentUser.data.id) {
           botaoAcao = `<button class="btn btn-warning" style="width: 100%; margin-top: 0.5rem;" onclick="abrirExecucaoOcorrencia(${oc.id})">Em Andamento - Abrir Atendimento</button>`;
         }
 
@@ -1570,7 +1601,7 @@
       renderFotosGridApoio();
 
       if (userLat && userLng) {
-        const calc = await obterDistanciaETempoReal(userLat, userLng, oc.lat, oc.lng);
+        const calc = await obterDistanciaETempoReal(userLat, userLng, parseFloat(oc.lat), parseFloat(oc.lng));
         if (calc) {
           document.getElementById('exec-distancia-tempo').innerHTML = `🚘 Distância aproximada: ${calc.distKm} km (${calc.minutos} min até o local)`;
         }
@@ -1591,7 +1622,7 @@
       const msgs = mensagensPorOcorrencia[selectedOcorrenciaId] || [];
       msgs.forEach(m => {
         const div = document.createElement('div');
-        const isMe = m.sender === currentUser.data.nome;
+        const isMe = currentUser && m.sender === currentUser.data.nome;
         div.className = `chat-msg ${isMe ? 'sent' : 'received'}`;
         div.innerHTML = `<strong>${m.sender}:</strong> ${m.texto}`;
         chatBox.appendChild(div);

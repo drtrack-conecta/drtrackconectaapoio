@@ -738,9 +738,10 @@
     let watchGpsId = null;
     let audioContext = null;
     let alarmInterval = null;
-    let ultimasOcorrenciasCount = 0;
+    let ultimasOcorrenciasHash = "";
     let mensagensPorOcorrencia = JSON.parse(localStorage.getItem('dr_chats')) || {};
     let debounceTimer = null;
+    let isRenderingApoio = false;
 
     if (ocorrencias.length === 0) {
       ocorrencias = [
@@ -762,14 +763,20 @@
       localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
     }
 
-    // SINCRONIZAÇÃO EM TEMPO REAL ENTRE ABAS/TELAS
+    // SINCRONIZAÇÃO INTELIGENTE SEM FLICKER/OSCILAÇÃO
     window.addEventListener('storage', (e) => {
       if (e.key === 'dr_ocorrencias') {
-        ocorrencias = JSON.parse(e.newValue) || [];
-        if (currentUser && currentUser.type === 'apoio') {
-          renderApoioOcorrencias();
-        } else if (currentUser && currentUser.type === 'admin') {
-          renderAdminOcorrencias();
+        const novasOcorrencias = JSON.parse(e.newValue) || [];
+        const novoHash = JSON.stringify(novasOcorrencias.map(o => ({id: o.id, status: o.status, apoioId: o.apoioId})));
+        
+        if (novoHash !== ultimasOcorrenciasHash) {
+          ocorrencias = novasOcorrencias;
+          ultimasOcorrenciasHash = novoHash;
+          if (currentUser && currentUser.type === 'apoio') {
+            renderApoioOcorrencias();
+          } else if (currentUser && currentUser.type === 'admin') {
+            renderAdminOcorrencias();
+          }
         }
       }
     });
@@ -966,10 +973,6 @@
               userMarker = L.marker(latlng).addTo(map).bindPopup('Sua Posição Atual').openPopup();
             }
           }
-
-          if (currentUser && currentUser.type === 'apoio') {
-            atualizarDistanciasInterface();
-          }
         },
         (error) => {
           console.error("Erro GPS:", error);
@@ -979,8 +982,8 @@
         },
         {
           enableHighAccuracy: true,
-          maximumAge: 5000,
-          timeout: 10000
+          maximumAge: 10000,
+          timeout: 15000
         }
       );
     }
@@ -1173,7 +1176,6 @@
       ocorrencias.push(novaOc);
       saveData();
 
-      // Notifica as interfaces ativas imediatamente
       if (currentUser && currentUser.type === 'apoio') {
         renderApoioOcorrencias();
       }
@@ -1504,32 +1506,40 @@
     }
 
     async function renderApoioOcorrencias() {
+      if (isRenderingApoio) return;
+      isRenderingApoio = true;
+
       const container = document.getElementById('apoio-ocorrencias-list');
-      if (!container) return;
-      container.innerHTML = '';
+      if (!container) {
+        isRenderingApoio = false;
+        return;
+      }
 
-      if (mapMarkersGroup) mapMarkersGroup.clearLayers();
-
-      // Recarrega do armazenamento para ter certeza de que dados novos entraram
       ocorrencias = JSON.parse(localStorage.getItem('dr_ocorrencias')) || [];
 
       const ocsAtivas = ocorrencias.filter(o => 
         o.status === 'pendente' || (currentUser && o.apoioId === currentUser.data.id && o.status === 'aceito')
       );
 
-      if (ocsAtivas.length > ultimasOcorrenciasCount && ultimasOcorrenciasCount !== 0) {
-        document.getElementById('alert-nova-ocorrencia').classList.remove('hidden');
-        tocarAlertaSonoro();
+      const novoHash = JSON.stringify(ocsAtivas.map(o => ({id: o.id, status: o.status})));
+      if (novoHash === ultimasOcorrenciasHash && container.children.length > 0) {
+        isRenderingApoio = false;
+        return;
       }
-      ultimasOcorrenciasCount = ocsAtivas.length;
+      
+      ultimasOcorrenciasHash = novoHash;
+      container.innerHTML = '';
+
+      if (mapMarkersGroup) mapMarkersGroup.clearLayers();
 
       if (ocsAtivas.length === 0) {
         container.innerHTML = '<p style="color: var(--text-dim); text-align: center; grid-column: 1 / -1;">Nenhuma ocorrência disponível no momento.</p>';
+        isRenderingApoio = false;
         return;
       }
 
       for (const oc of ocsAtivas) {
-        let distInfoText = "Calculando rota de deslocamento...";
+        let distInfoText = "Cálculo de rota ao selecionar...";
         
         const latNum = parseFloat(oc.lat);
         const lngNum = parseFloat(oc.lng);
@@ -1569,11 +1579,8 @@
         `;
         container.appendChild(div);
       }
-    }
 
-    async function atualizarDistanciasInterface() {
-      if (document.getElementById('screen-dashboard-apoio').classList.contains('hidden')) return;
-      renderApoioOcorrencias();
+      isRenderingApoio = false;
     }
 
     function aceitarOcorrencia(id) {

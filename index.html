@@ -1293,7 +1293,7 @@
       window.open(url, '_blank');
     }
 
-    function baixarFotosRelatorioClienteZIP() {
+    async function baixarFotosRelatorioClienteZIP() {
       const selecionadas = fotosEditAdmin.filter(f => f.incluirCliente);
       if (selecionadas.length === 0) {
         alert('Nenhuma foto marcada para inclusão!');
@@ -1308,12 +1308,1359 @@
         folder.file(`Foto_Cliente_${index + 1}.jpg`, base64Data, {base64: true});
       });
 
-      zip.generateAsync({type:"blob"}).then(function(content) {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(content);
-        a.download = `Fotos_Relatorio_Cliente_${selectedOcorrenciaId}.zip`;
-        a.click();
+      const fileName = `Fotos_Relatorio_Cliente_${selectedOcorrenciaId}.zip`;
+      const blob = await zip.generateAsync({type:"blob"});
+
+      // Tenta usar File System Access API para permitir escolher a pasta (Área de Trabalho, Fotos, etc.)
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [{
+              description: 'Arquivo ZIP',
+              accept: {'application/zip': ['.zip']},
+            }],
+          });
+          constAplicações web executadas via navegador não possuem acesso direto ao sistema de arquivos para salvar dados em pastas arbitrárias sem a intervenção do usuário. Por motivos de segurança, o navegador sempre direciona os arquivos gerados para a pasta padrão de downloads do dispositivo.
+
+A File System Access API permite que o navegador solicite ao usuário onde salvar o arquivo. O código abaixo implementa essa API na função do botão amarelo para permitir a escolha da pasta ou a salvaguarda direta. Para navegadores sem suporte a esse recurso, o sistema utiliza o comportamento padrão de download de arquivo ZIP via JSZip.
+
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DRTRACK Conecta - Gestão Operacional</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.css](https://unpkg.com/leaflet@1.9.4/dist/leaflet.css)" />
+  <!-- JSZip para compactação de fotos -->
+  <script src="[https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js](https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js)"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --accent: #0284c7;
+      --accent-hover: #0369a1;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --border: #334155;
+      --success: #16a34a;
+      --warning: #ca8a04;
+      --danger: #dc2626;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    html {
+      overflow-y: scroll;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: var(--bg-card);
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    nav {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--border);
+      color: var(--text);
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background-color: #b91c1c;
+    }
+
+    .btn-warning {
+      background-color: var(--warning);
+      color: black;
+    }
+
+    .btn-warning:hover {
+      background-color: #a16207;
+      color: white;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+    }
+
+    .btn-success:hover {
+      background-color: #15803d;
+    }
+
+    main {
+      flex: 1;
+      padding: 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-dim);
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 0.625rem;
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      color: var(--text);
+      font-size: 0.875rem;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .autocomplete-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 0.375rem 0.375rem;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+
+    .autocomplete-suggestion {
+      padding: 0.75rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .autocomplete-suggestion:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-suggestion:hover {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    #map, #admin-preview-map {
+      height: 350px;
+      min-height: 350px;
+      width: 100%;
+      border-radius: 0.5rem;
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+      contain: layout;
+    }
+
+    .badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-pendente { background-color: var(--warning); color: black; }
+    .badge-aceito { background-color: var(--accent); color: white; }
+    .badge-concluido { background-color: var(--success); color: white; }
+    .badge-suspenso { background-color: #f97316; color: white; }
+    .badge-rejeitado { background-color: var(--danger); color: white; }
+
+    .chat-box {
+      height: 220px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      background-color: var(--bg-dark);
+      margin-bottom: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .chat-msg {
+      max-width: 80%;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+    }
+
+    .chat-msg.sent {
+      align-self: flex-end;
+      background-color: var(--accent);
+    }
+
+    .chat-msg.received {
+      align-self: flex-start;
+      background-color: var(--border);
+    }
+
+    .photo-grid-2x2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .photo-card {
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 0.375rem;
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .photo-preview {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-radius: 0.25rem;
+      border: 1px solid var(--border);
+    }
+
+    .photo-info {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 0.25rem;
+      text-align: center;
+      width: 100%;
+    }
+
+    .photo-select-checkbox {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .gps-blocked-overlay {
+      background-color: rgba(15, 23, 42, 0.95);
+      border: 2px solid var(--danger);
+      padding: 2rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .alert-banner {
+      background-color: var(--danger);
+      color: white;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+
+    .tab-nav {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 0.5rem 1rem;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--text-dim);
+      font-size: 0.875rem;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.25rem;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      nav {
+        width: 100%;
+        justify-content: space-around;
+      }
+      .photo-grid-2x2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1><span>🛡️</span> DRTRACK Conecta</h1>
+    <nav id="nav-public">
+      <button class="btn btn-secondary" onclick="showScreen('screen-login-apoio')">Apoio</button>
+      <button class="btn btn-secondary" onclick="showScreen('screen-login-admin')">Admin</button>
+    </nav>
+    <nav id="nav-user" class="hidden">
+      <span id="user-info" style="color: var(--text-dim); font-size: 0.875rem; align-self: center;"></span>
+      <button class="btn btn-danger" onclick="logout()">Sair</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- TELA: LOGIN DE APOIO -->
+    <section id="screen-login-apoio" class="card">
+      <h2>Acesso do Apoio</h2>
+      <p style="color: var(--text-dim); margin-bottom: 1rem;">Digite seu telefone para acessar. O GPS deve estar ativo no login.</p>
+      
+      <div class="form-group">
+        <label>Telefone / WhatsApp</label>
+        <input type="tel" id="apoio-login-tel" class="form-control" placeholder="(11) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="apoio-login-pass" class="form-control" placeholder="****">
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+        <button class="btn" onclick="loginApoio()">Entrar e Ativar GPS</button>
+        <button class="btn btn-secondary" onclick="showScreen('screen-cadastro-apoio')">Cadastrar Novo Apoio</button>
+      </div>
+
+      <a href="#" onclick="recuperarSenhaApoio(event)" style="color: var(--accent); font-size: 0.875rem; text-decoration: none;">Esqueceu a senha? Enviar por WhatsApp</a>
+    </section>
+
+    <!-- TELA: CADASTRO DE APOIO -->
+    <section id="screen-cadastro-apoio" class="card hidden">
+      <h2>Cadastro de Prestador Apoio</h2>
+      <form id="form-cadastro-apoio" onsubmit="cadastrarApoio(event)">
+        <div class="grid">
+          <div class="form-group">
+            <label>Nome Completo *</label>
+            <input type="text" class="form-control" id="cad-nome" required>
+          </div>
+          <div class="form-group">
+            <label>CPF *</label>
+            <input type="text" class="form-control" id="cad-cpf" required>
+          </div>
+          <div class="form-group">
+            <label>Telefone/WhatsApp *</label>
+            <input type="tel" class="form-control" id="cad-tel" required>
+          </div>
+          <div class="form-group">
+            <label>Senha de Acesso *</label>
+            <input type="password" class="form-control" id="cad-pass" required>
+          </div>
+          <div class="form-group">
+            <label>Modelo do Veículo/Placa *</label>
+            <input type="text" class="form-control" id="cad-veiculo" placeholder="Ex: Gol Prata - ABC1D23" required>
+          </div>
+          <div class="form-group">
+            <label>Chave PIX *</label>
+            <input type="text" class="form-control" id="cad-pix" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Sua Foto / Selfie de Identificação (Obrigatório)</label>
+          <input type="file" class="form-control" accept="image/*" id="cad-foto" required>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+          <button type="submit" class="btn">Solicitar Cadastro</button>
+          <button type="button" class="btn btn-secondary" onclick="showScreen('screen-login-apoio')">Voltar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- TELA: LOGIN ADMIN -->
+    <section id="screen-login-admin" class="card hidden">
+      <h2>Acesso Administrativo (Base/Central)</h2>
+      <div class="form-group">
+        <label>Senha da Central</label>
+        <input type="password" id="admin-pass" class="form-control">
+      </div>
+      <button class="btn" onclick="loginAdmin()">Entrar na Central</button>
+    </section>
+
+    <!-- TELA: PAINEL DO ADMIN -->
+    <section id="screen-dashboard-admin" class="hidden">
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchAdminTab('tab-lancar', event)">Lançar Ocorrência</button>
+        <button class="tab-btn" onclick="switchAdminTab('tab-ocorrencias', event)">Acompanhar Ocorrências</button>
+        <button class="tab-btn" onclick="switchAdminTab('tab-apoios', event)">Apoios Cadastrados</button>
+        <button class="tab-btn" onclick="switchAdminTab('tab-relatorios', event)">Relatório Quinzenal</button>
+      </div>
+
+      <!-- TAB: LANÇAR OCORRÊNCIA -->
+      <div id="tab-lancar" class="admin-tab">
+        <div class="card">
+          <h3>Nova Ocorrência</h3>
+          <form onsubmit="lancarOcorrencia(event)">
+            <div class="grid">
+              <div class="form-group">
+                <label>Tipo de Evento</label>
+                <select class="form-control" id="oc-tipo" required>
+                  <option value="Aviso de Alarme">Aviso de Alarme</option>
+                  <option value="Invasão Presencial">Invasão Presencial</option>
+                  <option value="Rastreamento de Veículo">Rastreamento de Veículo</option>
+                  <option value="Acompanhamento / Escolta">Acompanhamento / Escolta</option>
+                  <option value="Preservação de Local">Preservação de Local</option>
+                  <option value="Recuperação de Bem">Recuperação de Bem</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Valor Oferecido (R$)</label>
+                <input type="number" step="0.01" class="form-control" id="oc-valor" required>
+              </div>
+              <div class="form-group" style="grid-column: span 2;">
+                <label>Endereço Completo (Digite para buscar sugestões)</label>
+                <input type="text" class="form-control" id="oc-endereco" placeholder="Digite o endereço..." autocomplete="off" required>
+                <div id="oc-endereco-suggestions" class="autocomplete-suggestions hidden"></div>
+              </div>
+              <div class="form-group">
+                <label>Latitude (Preenchida Automaticamente)</label>
+                <input type="text" class="form-control" id="oc-lat" placeholder="-23.5505" required readonly style="background-color: #1e293b;">
+              </div>
+              <div class="form-group">
+                <label>Longitude (Preenchida Automaticamente)</label>
+                <input type="text" class="form-control" id="oc-lng" placeholder="-46.6333" required readonly style="background-color: #1e293b;">
+              </div>
+            </div>
+
+            <div id="admin-preview-map"></div>
+
+            <div class="form-group">
+              <label>Detalhes/Instruções da Central</label>
+              <textarea class="form-control" id="oc-detalhes" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn">Lançar e Alertar Apoios</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB: LISTA DE OCORRÊNCIAS (ADMIN) -->
+      <div id="tab-ocorrencias" class="admin-tab hidden">
+        <div class="card">
+          <h3>Ocorrências Lançadas</h3>
+          <div id="admin-ocorrencias-list" class="grid" style="margin-top: 1rem;"></div>
+        </div>
+      </div>
+
+      <!-- TAB: APROVAR/GERENCIAR APOIOS -->
+      <div id="tab-apoios" class="admin-tab hidden">
+        <div class="card" style="overflow-x: auto;">
+          <h3>Gestão de Prestadores Apoio</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Foto</th>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Veículo</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="table-apoios-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: RELATÓRIOS QUINZENAIS -->
+      <div id="tab-relatorios" class="admin-tab hidden">
+        <div class="card">
+          <h3>Prestação de Contas / Fechamento Quinzenal</h3>
+          <div class="grid">
+            <div class="form-group">
+              <label>Selecione o Apoio</label>
+              <select class="form-control" id="rel-apoio-select"></select>
+            </div>
+            <div class="form-group">
+              <label>Data Inicial</label>
+              <input type="date" class="form-control" id="rel-data-inicio">
+            </div>
+            <div class="form-group">
+              <label>Data Final</label>
+              <input type="date" class="form-control" id="rel-data-fim">
+            </div>
+          </div>
+          <button class="btn" onclick="gerarRelatorioQuinzenal()">Gerar Resumo</button>
+          
+          <div id="relatorio-resultado" class="card hidden" style="margin-top: 1rem; background-color: var(--bg-dark);">
+            <h4>Extrato da Quinzena</h4>
+            <div id="relatorio-conteudo" style="white-space: pre-wrap; font-family: monospace; margin: 1rem 0;"></div>
+            <button class="btn btn-success" onclick="enviarRelatorioWhats()">Enviar Extrato via WhatsApp</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA: EDIÇÃO E MONTAGEM DO RELATÓRIO DO CLIENTE (ADMIN) -->
+    <section id="screen-admin-editar-relatorio" class="card hidden">
+      <button class="btn btn-secondary" onclick="voltarAdminDashboard()" style="margin-bottom: 1rem;">← Voltar ao Painel Admin</button>
+
+      <h2>Personalizar Relatório do Atendimento para o Cliente</h2>
+      <p style="color: var(--text-dim); margin-bottom: 1rem;">Altere os textos, escolha quais fotos enviadas pelo apoio deseja manter e anexe novas fotos se necessário.</p>
+
+      <div class="form-group">
+        <label>Telefone do Cliente (Com DDD)</label>
+        <input type="tel" id="admin-cliente-tel" class="form-control" placeholder="11988887777">
+      </div>
+
+      <div class="form-group">
+        <label>Texto do Relatório Final do Cliente</label>
+        <textarea id="admin-relatorio-texto-edit" class="form-control" rows="8"></textarea>
+      </div>
+
+      <div class="card" style="background-color: var(--bg-dark);">
+        <h4>Fotos da Ocorrência (Exibição 2 a 2)</h4>
+        <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 0.5rem;">
+          Marque as caixas das fotos que deseja incluir no pacote para o cliente.
+        </p>
+
+        <div id="admin-photo-grid" class="photo-grid-2x2"></div>
+
+        <div style="margin-top: 1rem;">
+          <label style="font-size: 0.875rem; color: var(--text-dim);">Adicionar Fotos Adicionais do Administrador:</label>
+          <input type="file" id="admin-foto-extra" accept="image/*" class="form-control" multiple style="margin-top:0.25rem;" onchange="adicionarFotoAdmin(event)">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+        <button class="btn btn-success" onclick="enviarRelatorioClienteWhatsApp()">Enviar Texto do Relatório para Cliente (WhatsApp)</button>
+        <button class="btn btn-warning" onclick="baixarFotosRelatorioClienteZIP()">Baixar Pacote das Fotos Selecionadas (ZIP)</button>
+      </div>
+    </section>
+
+    <!-- TELA: CHAT DIRETO DO ADMIN COM O APOIO -->
+    <section id="screen-chat-admin" class="card hidden">
+      <button class="btn btn-secondary" onclick="voltarAdminDashboard()" style="margin-bottom: 1rem;">← Voltar ao Painel Admin</button>
+      
+      <h2 id="admin-chat-titulo">Chat da Ocorrência</h2>
+      <p id="admin-chat-sub" style="color: var(--accent); margin-bottom: 1rem;"></p>
+
+      <div class="card" style="background-color: var(--bg-dark);">
+        <div class="chat-box" id="admin-chat-box"></div>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" class="form-control" id="admin-chat-input" placeholder="Mensagem da Central para o Apoio...">
+          <button class="btn" onclick="enviarMensagemChatAdmin()">Enviar Mensagem</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA: PAINEL DO APOIO (AGENTE DE RUA) -->
+    <section id="screen-dashboard-apoio" class="hidden">
+      <div id="gps-blocked-banner" class="gps-blocked-overlay hidden">
+        <h2 style="color: var(--danger); margin-bottom: 0.5rem;">🚨 LOCALIZAÇÃO EM TEMPO REAL OBRIGATÓRIA</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-dim);">
+          Você precisa ativar o GPS do seu dispositivo e permitir o acesso à sua localização para receber alertas de ocorrências e calcular distância e minutos de atendimento.
+        </p>
+        <button class="btn btn-danger" onclick="ativarGPSSistema()">Tentar Ativar Localização Agora</button>
+      </div>
+
+      <div id="alert-nova-ocorrencia" class="alert-banner hidden">
+        <span>🚨 NOVA OCORRÊNCIA DISPONÍVEL NA SUA REGIÃO!</span>
+        <button class="btn btn-secondary" style="background: white; color: black; font-weight: bold;" onclick="pararAlertaSonoro()">Silenciar Alerta</button>
+      </div>
+
+      <div class="card" id="card-status-gps">
+        <h3>Seu Status: <span id="status-gps-texto" style="color: var(--warning);">Aguardando Sinal de GPS...</span></h3>
+        <p style="color: var(--text-dim); font-size: 0.875rem;">Sua posição em tempo real está sendo transmitida para cálculo exato de distâncias.</p>
+      </div>
+
+      <div id="map"></div>
+
+      <h3 style="margin-bottom: 0.5rem;">Ocorrências Disponíveis e Em Andamento</h3>
+      <div id="apoio-ocorrencias-list" class="grid"></div>
+    </section>
+
+    <!-- MODAL / PAINEL DE EXECUÇÃO DE OCORRÊNCIA (APOIO) -->
+    <section id="screen-execucao-ocorrencia" class="card hidden">
+      <button class="btn btn-secondary" onclick="voltarDashboardApoio()" style="margin-bottom: 1rem;">← Voltar</button>
+      
+      <h2 id="exec-titulo">Ocorrência</h2>
+      <p id="exec-endereco" style="color: var(--accent); margin-bottom: 0.25rem;"></p>
+      <p id="exec-distancia-tempo" style="color: var(--warning); font-weight: bold; margin-bottom: 0.5rem;"></p>
+      <p id="exec-detalhes" style="color: var(--text-dim); margin-bottom: 1rem;"></p>
+
+      <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
+        <h4>Chat Direto com a Central / Administrador</h4>
+        <div class="chat-box" id="exec-chat-box"></div>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" class="form-control" id="chat-input" placeholder="Digite uma mensagem para a Central...">
+          <button class="btn" onclick="enviarMensagemChat()">Enviar</button>
+        </div>
+      </div>
+
+      <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
+        <h4>Relatório por Escrito do Atendimento *</h4>
+        <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
+          Descreva detalhadamente o que foi verificado, pessoas contatadas e ações tomadas.
+        </p>
+        <textarea id="relatorio-escrito-apoio" class="form-control" rows="4" placeholder="Ex: Cheguei ao local às 14h20. O imóvel encontrava-se com o portão fechado..."></textarea>
+      </div>
+
+      <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
+        <h4>Relatório Fotográfico do Local (Mínimo 5 Fotos)</h4>
+        <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
+          Tire fotos ajustáveis do local. Elas serão exibidas 2 a 2 (uma ao lado da outra) e compactadas para a Central.
+        </p>
+        
+        <input type="file" id="foto-input" accept="image/*" capture="environment" class="form-control" onchange="adicionarFoto(event)">
+        
+        <div class="photo-grid-2x2" id="photo-grid"></div>
+        <p id="photo-counter" style="margin-top: 0.75rem; font-weight: bold; color: var(--warning);">Fotos tiradas: 0 / 5</p>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+        <button class="btn btn-warning" onclick="baixarAnexoFotosZIP()">📦 Gerar Pacote de Fotos em Anexo (ZIP)</button>
+        <button id="btn-concluir-oc" class="btn btn-success" style="padding: 1rem;" onclick="finalizarOcorrenciaApoio()">
+          Finalizar e Enviar Relatório via WhatsApp
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Leaflet JS -->
+  <script src="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.js](https://unpkg.com/leaflet@1.9.4/dist/leaflet.js)"></script>
+
+  <script>
+    /* ==================== ESTADO DA APLICAÇÃO (LOCALSTORAGE) ==================== */
+    let apoios = JSON.parse(localStorage.getItem('dr_apoios')) || [];
+    let ocorrencias = JSON.parse(localStorage.getItem('dr_ocorrencias')) || [];
+    let currentUser = null; 
+    let selectedOcorrenciaId = null;
+    let fotosOcorrenciaAtual = [];
+    let map = null;
+    let mapMarkersGroup = null;
+    let adminPreviewMap = null;
+    let adminPreviewMarker = null;
+    let userMarker = null;
+    let userLat = null;
+    let userLng = null;
+    let watchGpsId = null;
+    let audioContext = null;
+    let alarmInterval = null;
+    let ultimasOcorrenciasCount = 0;
+    let mensagensPorOcorrencia = JSON.parse(localStorage.getItem('dr_chats')) || {};
+    let debounceTimer = null;
+
+    if (ocorrencias.length === 0) {
+      ocorrencias = [
+        {
+          id: 1,
+          tipo: 'Aviso de Alarme',
+          endereco: 'Av. Paulista, 1000 - Bela Vista, São Paulo - SP',
+          lat: -23.5615,
+          lng: -46.6559,
+          detalhes: 'Disparo de zona 2 (Empresa ABC). Verificar arrombamento.',
+          valor: 80.00,
+          status: 'pendente',
+          apoioId: null,
+          relatorioEscrito: '',
+          fotos: [],
+          data: new Date().toLocaleDateString('pt-BR')
+        }
+      ];
+      localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
+    }
+
+    /* ==================== SISTEMA DE GEOCODIFICAÇÃO E AUTOCOMPLETE ==================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      const addrInput = document.getElementById('oc-endereco');
+      if (addrInput) {
+        addrInput.addEventListener('input', (e) => {
+          clearTimeout(debounceTimer);
+          const query = e.target.value.trim();
+          if (query.length < 3) {
+            document.getElementById('oc-endereco-suggestions').classList.add('hidden');
+            return;
+          }
+
+          debounceTimer = setTimeout(() => {
+            buscarSugestoesEndereco(query);
+          }, 400);
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!addrInput.contains(e.target)) {
+            document.getElementById('oc-endereco-suggestions').classList.add('hidden');
+          }
+        });
+      }
+    });
+
+    async function buscarSugestoesEndereco(query) {
+      try {
+        const url = `[https://nominatim.openstreetmap.org/search?format=json&q=$](https://nominatim.openstreetmap.org/search?format=json&q=$){encodeURIComponent(query)}&limit=5&countrycodes=br`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+
+        const box = document.getElementById('oc-endereco-suggestions');
+        box.innerHTML = '';
+
+        if (!data || data.length === 0) {
+          box.classList.add('hidden');
+          return;
+        }
+
+        data.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'autocomplete-suggestion';
+          div.innerText = item.display_name;
+          div.onclick = () => selecionarEndereco(item.display_name, item.lat, item.lon);
+          box.appendChild(div);
+        });
+
+        box.classList.remove('hidden');
+      } catch (err) {
+        console.error("Erro na geocodificação:", err);
+      }
+    }
+
+    function selecionarEndereco(displayName, lat, lng) {
+      document.getElementById('oc-endereco').value = displayName;
+      document.getElementById('oc-lat').value = parseFloat(lat).toFixed(6);
+      document.getElementById('oc-lng').value = parseFloat(lng).toFixed(6);
+      document.getElementById('oc-endereco-suggestions').classList.add('hidden');
+
+      atualizarMapaPreviewAdmin(parseFloat(lat), parseFloat(lng));
+    }
+
+    function initAdminPreviewMap() {
+      if (!adminPreviewMap) {
+        const defaultLat = -23.5505;
+        const defaultLng = -46.6333;
+        adminPreviewMap = L.map('admin-preview-map').setView([defaultLat, defaultLng], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(adminPreviewMap);
+      } else {
+        adminPreviewMap.invalidateSize();
+      }
+    }
+
+    function atualizarMapaPreviewAdmin(lat, lng) {
+      initAdminPreviewMap();
+      const latlng = [lat, lng];
+      adminPreviewMap.setView(latlng, 15);
+
+      if (adminPreviewMarker) {
+        adminPreviewMarker.setLatLng(latlng);
+      } else {
+        adminPreviewMarker = L.marker(latlng).addTo(adminPreviewMap);
+      }
+      adminPreviewMarker.bindPopup("<b>Local da Ocorrência</b>").openPopup();
+    }
+
+    /* ==================== CÁLCULO DE DISTÂNCIA E TEMPO POR ESTRADAS ==================== */
+    async function obterDistanciaETempoReal(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+
+      try {
+        const url = `[https://router.project-osrm.org/route/v1/driving/$](https://router.project-osrm.org/route/v1/driving/$){lon1},${lat1};${lon2},${lat2}?overview=false`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+
+        if (data && data.routes && data.routes.length > 0) {
+          const route = data.routes[0];
+          const distKm = route.distance / 1000;
+          const minutos = Math.round(route.duration / 60);
+          return {
+            distKm: distKm.toFixed(1),
+            minutos: minutos < 1 ? 1 : minutos
+          };
+        }
+      } catch (err) {
+        console.warn("Falha no OSRM, utilizando cálculo Haversine de reserva.", err);
+      }
+
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distKm = R * c;
+      const mins = Math.round((distKm / 35) * 60);
+
+      return {
+        distKm: distKm.toFixed(1),
+        minutos: mins < 1 ? 1 : mins
+      };
+    }
+
+    /* ==================== SISTEMA DE ÁUDIO E ALERTA SONORO ==================== */
+    function tocarAlertaSonoro() {
+      try {
+        if (!audioContext) {
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        if (alarmInterval) clearInterval(alarmInterval);
+
+        const emitirBip = () => {
+          if (audioContext.state === 'suspended') {
+            audioContext.resume();
+          }
+          const osc = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(880, audioContext.currentTime);
+          gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+          osc.connect(gain);
+          gain.connect(audioContext.destination);
+          osc.start();
+          osc.stop(audioContext.currentTime + 0.4);
+        };
+
+        emitirBip();
+        alarmInterval = setInterval(emitirBip, 1000);
+      } catch (e) {
+        console.log("Erro ao reproduzir áudio:", e);
+      }
+    }
+
+    function pararAlertaSonoro() {
+      if (alarmInterval) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+      }
+      document.getElementById('alert-nova-ocorrencia').classList.add('hidden');
+    }
+
+    /* ==================== GERENCIAMENTO DE GPS OBRIGATÓRIO ==================== */
+    function ativarGPSSistema() {
+      if (!navigator.geolocation) {
+        alert('Seu dispositivo/navegador não suporta geolocalização.');
+        return;
+      }
+
+      document.getElementById('status-gps-texto').innerText = "Conectando ao Satélite GPS...";
+      document.getElementById('status-gps-texto').style.color = "var(--warning)";
+
+      if (watchGpsId) navigator.geolocation.clearWatch(watchGpsId);
+
+      watchGpsId = navigator.geolocation.watchPosition(
+        (position) => {
+          userLat = position.coords.latitude;
+          userLng = position.coords.longitude;
+
+          document.getElementById('gps-blocked-banner').classList.add('hidden');
+          document.getElementById('status-gps-texto').innerText = "🟢 GPS Ativo e Transmitindo em Tempo Real";
+          document.getElementById('status-gps-texto').style.color = "var(--success)";
+
+          if (map) {
+            const latlng = [userLat, userLng];
+            if (userMarker) {
+              userMarker.setLatLng(latlng);
+            } else {
+              userMarker = L.marker(latlng).addTo(map).bindPopup('Sua Posição Atual').openPopup();
+            }
+          }
+
+          if (currentUser && currentUser.type === 'apoio') {
+            atualizarDistanciasInterface();
+          }
+        },
+        (error) => {
+          console.error("Erro GPS:", error);
+          document.getElementById('gps-blocked-banner').classList.remove('hidden');
+          document.getElementById('status-gps-texto').innerText = "🔴 GPS Desativado / Permissão Negada";
+          document.getElementById('status-gps-texto').style.color = "var(--danger)";
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 5000,
+          timeout: 10000
+        }
+      );
+    }
+
+    /* ==================== NAVEGAÇÃO E SALVAMENTO ==================== */
+    function saveData() {
+      localStorage.setItem('dr_apoios', JSON.stringify(apoios));
+      localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
+      localStorage.setItem('dr_chats', JSON.stringify(mensagensPorOcorrencia));
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+      document.getElementById(screenId).classList.remove('hidden');
+
+      if (screenId === 'screen-dashboard-apoio') {
+        ativarGPSSistema();
+        setTimeout(() => {
+          initMap();
+          renderApoioOcorrencias();
+        }, 100);
+      }
+
+      if (screenId === 'screen-dashboard-admin') {
+        setTimeout(() => {
+          initAdminPreviewMap();
+        }, 100);
+      }
+    }
+
+    function updateNav() {
+      if (currentUser) {
+        document.getElementById('nav-public').classList.add('hidden');
+        document.getElementById('nav-user').classList.remove('hidden');
+        document.getElementById('user-info').innerText = `${currentUser.type.toUpperCase()}: ${currentUser.data.nome || 'Central'}`;
+      } else {
+        document.getElementById('nav-public').classList.remove('hidden');
+        document.getElementById('nav-user').classList.add('hidden');
+      }
+    }
+
+    function logout() {
+      if (watchGpsId) navigator.geolocation.clearWatch(watchGpsId);
+      pararAlertaSonoro();
+      currentUser = null;
+      updateNav();
+      showScreen('screen-login-apoio');
+    }
+
+    /* ==================== AUTENTICAÇÃO ==================== */
+    function loginAdmin() {
+      const pass = document.getElementById('admin-pass').value;
+      if (pass === 'admin123') {
+        currentUser = { type: 'admin', data: { nome: 'Central DRTRACK' } };
+        updateNav();
+        renderAdminDashboard();
+        showScreen('screen-dashboard-admin');
+      } else {
+        alert('Senha do Admin incorreta! (Padrão: admin123)');
+      }
+    }
+
+    function loginApoio() {
+      const telInput = document.getElementById('apoio-login-tel').value.trim();
+      const passInput = document.getElementById('apoio-login-pass').value.trim();
+      const cleanTel = telInput.replace(/\D/g, '');
+
+      const apoio = apoios.find(a => a.tel.replace(/\D/g, '') === cleanTel && a.pass === passInput);
+
+      if (!apoio) {
+        alert('Telefone ou senha incorretos!');
+        return;
+      }
+
+      if (apoio.status === 'pendente') {
+        alert('Seu cadastro ainda está em análise pela Central DRTRACK.');
+        return;
+      }
+
+      if (apoio.status === 'rejeitado') {
+        alert('Seu cadastro foi recusado pela Central.');
+        return;
+      }
+
+      if (apoio.status === 'suspenso') {
+        alert('Seu cadastro está temporariamente suspenso.');
+        return;
+      }
+
+      currentUser = { type: 'apoio', data: apoio };
+      updateNav();
+      showScreen('screen-dashboard-apoio');
+    }
+
+    function recuperarSenhaApoio(e) {
+      if (e) e.preventDefault();
+      const telInput = prompt('Digite seu telefone/WhatsApp cadastrado com DDD:');
+      if (!telInput) return;
+
+      const cleanTel = telInput.replace(/\D/g, '');
+      const apoio = apoios.find(a => a.tel.replace(/\D/g, '') === cleanTel);
+
+      if (!apoio) {
+        alert('Nenhum prestador encontrado com este número de telefone.');
+        return;
+      }
+
+      const mensagem = `Olá ${apoio.nome}, sua senha de acesso no DRTRACK Conecta é: *${apoio.pass}*`;
+      const urlWhats = `[https://wa.me/55$](https://wa.me/55$){cleanTel}?text=${encodeURIComponent(mensagem)}`;
+      
+      alert('Localizamos seu cadastro! Você será redirecionado para o WhatsApp com a sua senha.');
+      window.open(urlWhats, '_blank');
+    }
+
+    function cadastrarApoio(e) {
+      e.preventDefault();
+      const nome = document.getElementById('cad-nome').value;
+      const cpf = document.getElementById('cad-cpf').value;
+      const tel = document.getElementById('cad-tel').value;
+      const pass = document.getElementById('cad-pass').value;
+      const veiculo = document.getElementById('cad-veiculo').value;
+      const pix = document.getElementById('cad-pix').value;
+      const fotoFile = document.getElementById('cad-foto').files[0];
+
+      if (!fotoFile) {
+        alert('É obrigatório enviar uma selfie de identificação.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const novoApoio = {
+          id: Date.now(),
+          nome, cpf, tel, pass, veiculo, pix,
+          foto: evt.target.result,
+          status: 'pendente'
+        };
+
+        apoios.push(novoApoio);
+        saveData();
+        alert('Solicitação enviada com sucesso! Aguarde a aprovação da Central.');
+        document.getElementById('form-cadastro-apoio').reset();
+        showScreen('screen-login-apoio');
+      };
+      reader.readAsDataURL(fotoFile);
+    }
+
+    /* ==================== PAINEL ADMIN E LANÇAMENTO ==================== */
+    function switchAdminTab(tabId, event) {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.remove('hidden');
+      if (event) event.target.classList.add('active');
+
+      if (tabId === 'tab-lancar') setTimeout(initAdminPreviewMap, 100);
+      if (tabId === 'tab-ocorrencias') renderAdminOcorrencias();
+      if (tabId === 'tab-apoios') renderAdminApoios();
+      if (tabId === 'tab-relatorios') setupRelatoriosSelect();
+    }
+
+    function renderAdminDashboard() {
+      switchAdminTab('tab-lancar');
+    }
+
+    function lancarOcorrencia(e) {
+      e.preventDefault();
+      const tipo = document.getElementById('oc-tipo').value;
+      const valor = parseFloat(document.getElementById('oc-valor').value);
+      const endereco = document.getElementById('oc-endereco').value;
+      const lat = parseFloat(document.getElementById('oc-lat').value);
+      const lng = parseFloat(document.getElementById('oc-lng').value);
+      const detalhes = document.getElementById('oc-detalhes').value;
+
+      if (!lat || !lng) {
+        alert('Selecione um endereço válido na lista de sugestões para obter a Latitude e Longitude.');
+        return;
+      }
+
+      const novaOc = {
+        id: Date.now(),
+        tipo, valor, endereco, lat, lng, detalhes,
+        status: 'pendente',
+        apoioId: null,
+        relatorioEscrito: '',
+        fotos: [],
+        data: new Date().toLocaleDateString('pt-BR')
+      };
+
+      ocorrencias.push(novaOc);
+      saveData();
+      alert('Ocorrência lançada com sucesso com geocodificação automática!');
+      e.target.reset();
+      document.getElementById('oc-lat').value = '';
+      document.getElementById('oc-lng').value = '';
+    }
+
+    function renderAdminOcorrencias() {
+      const container = document.getElementById('admin-ocorrencias-list');
+      container.innerHTML = '';
+
+      ocorrencias.forEach(oc => {
+        const apoioAtrib = apoios.find(a => a.id === oc.apoioId);
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.backgroundColor = 'var(--bg-dark)';
+
+        let relatorioHTML = '';
+        if (oc.relatorioEscrito) {
+          relatorioHTML = `<p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 0.5rem; background: var(--bg-card); padding: 0.5rem; border-radius: 0.25rem;"><strong>Relatório do Apoio:</strong> ${oc.relatorioEscrito}</p>`;
+        }
+
+        let botoesAcao = '';
+        if (oc.apoioId) {
+          botoesAcao += `<button class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;" onclick="abrirChatAdmin(${oc.id})">💬 Abrir Chat com Apoio</button>`;
+        }
+        botoesAcao += `<button class="btn btn-warning" style="width: 100%; margin-top: 0.5rem;" onclick="abrirEdicaoRelatorioCliente(${oc.id})">✏️ Editar / Gerar Relatório p/ Cliente</button>`;
+
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between;">
+            <strong>${oc.tipo}</strong>
+            <span class="badge badge-${oc.status}">${oc.status}</span>
+          </div>
+          <p style="font-size: 0.875rem; color: var(--text-dim); margin: 0.5rem 0;">${oc.endereco}</p>
+          <p style="font-size: 0.75rem; color: var(--accent);">Lat: ${oc.lat} | Lng: ${oc.lng}</p>
+          <p><strong>Valor:</strong> R$ ${oc.valor.toFixed(2)}</p>
+          <p style="font-size: 0.875rem;"><strong>Apoio Assumido:</strong> ${apoioAtrib ? apoioAtrib.nome : 'Nenhum'}</p>
+          <p style="font-size: 0.875rem; color: var(--text-dim);">Data: ${oc.data} | Fotos: ${oc.fotos ? oc.fotos.length : 0}</p>
+          ${relatorioHTML}
+          ${botoesAcao}
+        `;
+        container.appendChild(div);
       });
+    }
+
+    /* ==================== EDIÇÃO DE RELATÓRIO DO CLIENTE (ADMIN) ==================== */
+    let fotosEditAdmin = [];
+
+    function abrirEdicaoRelatorioCliente(ocId) {
+      selectedOcorrenciaId = ocId;
+      const oc = ocorrencias.find(o => o.id === ocId);
+      const apoio = apoios.find(a => a.id === oc.apoioId);
+
+      fotosEditAdmin = oc.fotos ? JSON.parse(JSON.stringify(oc.fotos)) : [];
+      fotosEditAdmin.forEach(f => { if(f.incluirCliente === undefined) f.incluirCliente = true; });
+
+      let textoPadrao = `*RELATÓRIO DE ATENDIMENTO DE OCORRÊNCIA*\n`;
+      textoPadrao += `*DRTRACK SEGURANÇA E MONITORAMENTO*\n\n`;
+      textoPadrao += `*Evento:* ${oc.tipo}\n`;
+      textoPadrao += `*Endereço:* ${oc.endereco}\n`;
+      textoPadrao += `*Data:* ${oc.data}\n`;
+      if (apoio) textoPadrao += `*Agente Responsável:* ${apoio.nome}\n`;
+      textoPadrao += `\n*PARECER TÉCNICO / VERIFICAÇÃO DO LOCAL:*\n${oc.relatorioEscrito || 'Sem observações gravadas.'}\n\n`;
+      textoPadrao += `Status Final: *LOCAL VISTORIADO E PRESERVADO.*`;
+
+      document.getElementById('admin-relatorio-texto-edit').value = textoPadrao;
+      renderFotosAdminGrid();
+      showScreen('screen-admin-editar-relatorio');
+    }
+
+    function renderFotosAdminGrid() {
+      const grid = document.getElementById('admin-photo-grid');
+      grid.innerHTML = '';
+
+      if (fotosEditAdmin.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-dim); grid-column:span 2;">Nenhuma foto anexada a esta ocorrência.</p>';
+        return;
+      }
+
+      fotosEditAdmin.forEach((foto, idx) => {
+        const div = document.createElement('div');
+        div.className = 'photo-card';
+        div.innerHTML = `
+          <input type="checkbox" class="photo-select-checkbox" ${foto.incluirCliente ? 'checked' : ''} onchange="toggleFotoCliente(${idx}, this.checked)">
+          <img src="${foto.dataUrl}" class="photo-preview">
+          <div class="photo-info">${foto.hora || ''} | ${foto.coords || ''}</div>
+        `;
+        grid.appendChild(div);
+      });
+    }
+
+    function toggleFotoCliente(idx, checked) {
+      fotosEditAdmin[idx].incluirCliente = checked;
+    }
+
+    function adicionarFotoAdmin(e) {
+      const files = e.target.files;
+      if (!files.length) return;
+
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          fotosEditAdmin.push({
+            dataUrl: evt.target.result,
+            hora: new Date().toLocaleTimeString('pt-BR'),
+            coords: 'Adicionada pelo Admin',
+            incluirCliente: true
+          });
+          renderFotosAdminGrid();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function enviarRelatorioClienteWhatsApp() {
+      const tel = document.getElementById('admin-cliente-tel').value.replace(/\D/g, '');
+      const texto = document.getElementById('admin-relatorio-texto-edit').value;
+
+      if (!texto) {
+        alert('O texto do relatório não pode estar vazio.');
+        return;
+      }
+
+      const fotosSelecionadas = fotosEditAdmin.filter(f => f.incluirCliente).length;
+      let url = `[https://wa.me/$](https://wa.me/$){tel ? '55' + tel : ''}?text=${encodeURIComponent(texto + `\n\n(Total de ${fotosSelecionadas} fotos anexadas no pacote de vistoria)`)}`;
+      
+      alert(`Redirecionando para envio do relatório ao cliente. Lembre-se de baixar o pacote ZIP das ${fotosSelecionadas} fotos selecionadas para enviar junto!`);
+      window.open(url, '_blank');
+    }
+
+    async function baixarFotosRelatorioClienteZIP() {
+      const selecionadas = fotosEditAdmin.filter(f => f.incluirCliente);
+      if (selecionadas.length === 0) {
+        alert('Nenhuma foto marcada para inclusão!');
+        return;
+      }
+
+      const zip = new JSZip();
+      const folder = zip.folder("Fotos_Relatorio_Cliente");
+
+      selecionadas.forEach((f, index) => {
+        const base64Data = f.dataUrl.split(',')[1];
+        folder.file(`Foto_Cliente_${index + 1}.jpg`, base64Data, {base64: true});
+      });
+
+      const content = await zip.generateAsync({type:"blob"});
+      const fileName = `Fotos_Relatorio_Cliente_${selectedOcorrenciaId}.zip`;
+
+      // Tenta usar a API File System Access para permitir escolher a pasta (Área de Trabalho, Fotos, etc.)
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [{
+              description: 'Arquivo ZIP',
+              accept: {'application/zip': ['.zip']}
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(content);
+          await writable.close();
+          alert('Pacote de fotos salvo com sucesso no diretório selecionado!');
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return; // Usuário cancelou a seleção
+          console.warn("API de salvamento direto falhou. Utilizando método tradicional.", err);
+        }
+      }
+
+      // Download padrão para navegadores sem suporte ao showSaveFilePicker
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(content);
+      a.download = fileName;
+      a.click();
     }
 
     /* ==================== CHAT ADMIN ==================== */
@@ -1463,7 +2810,7 @@
       if (!apoio) return;
 
       const num = apoio.tel.replace(/\D/g, '');
-      const url = `https://wa.me/55${num}?text=${encodeURIComponent(relatorioTextoGlobal)}`;
+      const url = `[https://wa.me/55$](https://wa.me/55$){num}?text=${encodeURIComponent(relatorioTextoGlobal)}`;
       window.open(url, '_blank');
     }
 
@@ -1555,7 +2902,7 @@
             const rota = await obterDistanciaETempoReal(userLat, userLng, oc.lat, oc.lng);
             if (rota) {
               if (badgeKm) badgeKm.innerText = `📍 ${rota.distKm} km`;
-              if (badgeTempo) badgeTempo.innerText = `⏱️ ~${rota.minutos} min de deslocamento`;
+              if (badgeTempo) badgeTempo.innerText = `⏱️️ ~${rota.minutos} min de deslocamento`;
             }
           } else {
             if (badgeKm) badgeKm.innerText = `📍 Indisponível`;
@@ -1665,7 +3012,7 @@
       counter.style.color = count >= 5 ? 'var(--success)' : 'var(--warning)';
     }
 
-    function baixarAnexoFotosZIP() {
+    async function baixarAnexoFotosZIP() {
       if (fotosOcorrenciaAtual.length === 0) {
         alert('Nenhuma foto tirada até o momento.');
         return;
@@ -1679,12 +3026,35 @@
         folder.file(`Foto_Local_${index + 1}.jpg`, base64Data, {base64: true});
       });
 
-      zip.generateAsync({type:"blob"}).then(function(content) {
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(content);
-        a.download = `Anexos_Fotos_Ocorrencia_${selectedOcorrenciaId}.zip`;
-        a.click();
-      });
+      const content = await zip.generateAsync({type:"blob"});
+      const fileName = `Anexos_Fotos_Ocorrencia_${selectedOcorrenciaId}.zip`;
+
+      // Tenta acionar a caixa de diálogo para escolha de pasta (Área de Trabalho / Fotos)
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: fileName,
+            types: [{
+              description: 'Arquivo ZIP',
+              accept: {'application/zip': ['.zip']}
+            }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(content);
+          await writable.close();
+          alert('Pacote de fotos salvo na pasta selecionada!');
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+          console.warn("Navegador não concluiu salvamento via picker, caindo para download padrão.", err);
+        }
+      }
+
+      // Download padrão para navegadores sem suporte
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(content);
+      a.download = fileName;
+      a.click();
     }
 
     /* ==================== CHAT APOIO ==================== */
@@ -1754,7 +3124,7 @@
       whatsMsg += `Status: *LOCAL PRESERVADO E VISTORIADO COM SUCESSO.*`;
 
       const numCentral = "5511994944410";
-      const urlWhats = `https://wa.me/${numCentral}?text=${encodeURIComponent(whatsMsg)}`;
+      const urlWhats = `[https://wa.me/$](https://wa.me/$){numCentral}?text=${encodeURIComponent(whatsMsg)}`;
 
       alert('Ocorrência concluída! Você será direcionado para o WhatsApp para enviar o texto para a Central. Baixe também o arquivo das fotos em ZIP se for enviá-las anexadas.');
       window.open(urlWhats, '_blank');

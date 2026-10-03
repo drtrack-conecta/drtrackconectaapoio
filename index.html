@@ -804,7 +804,6 @@
     let ultimasOcorrenciasHash = "";
     let mensagensPorOcorrencia = JSON.parse(localStorage.getItem('dr_chats')) || {};
     let debounceTimer = null;
-    let isRenderingApoio = false;
 
     if (ocorrencias.length === 0) {
       ocorrencias = [
@@ -841,21 +840,23 @@
       }
     });
 
-    // Polling contínuo (a cada 2.5s) para atualizar a tela do Admin em tempo real
+    // Polling contínuo (a cada 3s) para atualizar apenas se houver alterações reais
     setInterval(() => {
       const stored = JSON.parse(localStorage.getItem('dr_ocorrencias')) || [];
       const novoHash = JSON.stringify(stored.map(o => ({id: o.id, status: o.status, rel: o.relatorioEscrito, fotos: (o.fotos ? o.fotos.length : 0)})));
       
       if (novoHash !== ultimasOcorrenciasHash) {
         ocorrencias = stored;
-        ultimasOcorrenciasHash = novoHash;
         sincronizarTelasAtivas();
       }
-    }, 2500);
+    }, 3000);
 
     function sincronizarTelasAtivas() {
       if (currentUser && currentUser.type === 'apoio') {
-        renderApoioOcorrencias();
+        const dashboardApoioVisivel = !document.getElementById('screen-dashboard-apoio').classList.contains('hidden');
+        if (dashboardApoioVisivel) {
+          renderApoioOcorrencias();
+        }
       } else if (currentUser && currentUser.type === 'admin') {
         const tabOcorrenciasVisivel = !document.getElementById('tab-ocorrencias').classList.contains('hidden');
         if (tabOcorrenciasVisivel) {
@@ -1086,7 +1087,7 @@
         ativarGPSSistema();
         setTimeout(() => {
           initMap();
-          renderApoioOcorrencias();
+          renderApoioOcorrencias(true);
         }, 100);
       }
 
@@ -1260,7 +1261,7 @@
       saveData();
 
       if (currentUser && currentUser.type === 'apoio') {
-        renderApoioOcorrencias();
+        renderApoioOcorrencias(true);
       }
 
       alert('Ocorrência lançada com sucesso com geocodificação automática!');
@@ -1650,15 +1651,10 @@
       }
     }
 
-    async function renderApoioOcorrencias() {
-      if (isRenderingApoio) return;
-      isRenderingApoio = true;
-
+    // Função de renderização estabilizada para evitar a tela piscando
+    function renderApoioOcorrencias(forceRender = false) {
       const container = document.getElementById('apoio-ocorrencias-list');
-      if (!container) {
-        isRenderingApoio = false;
-        return;
-      }
+      if (!container) return;
 
       ocorrencias = JSON.parse(localStorage.getItem('dr_ocorrencias')) || [];
 
@@ -1666,9 +1662,11 @@
         o.status === 'pendente' || (currentUser && o.apoioId === currentUser.data.id && o.status === 'aceito')
       );
 
-      const novoHash = JSON.stringify(ocsAtivas.map(o => ({id: o.id, status: o.status})));
-      if (novoHash === ultimasOcorrenciasHash && container.children.length > 0) {
-        isRenderingApoio = false;
+      const novoHash = JSON.stringify(ocsAtivas.map(o => ({id: o.id, status: o.status, valor: o.valor})));
+      
+      // Evita piscar se não houver mudanças reais de lista ou status
+      if (!forceRender && novoHash === ultimasOcorrenciasHash && container.children.length > 0) {
+        atualizarDistanciasApoio();
         return;
       }
       
@@ -1679,22 +1677,12 @@
 
       if (ocsAtivas.length === 0) {
         container.innerHTML = '<p style="color: var(--text-dim); text-align: center; grid-column: 1 / -1;">Nenhuma ocorrência disponível no momento.</p>';
-        isRenderingApoio = false;
         return;
       }
 
-      for (const oc of ocsAtivas) {
-        let distInfoText = "Cálculo de rota ao selecionar...";
-        
+      ocsAtivas.forEach(oc => {
         const latNum = parseFloat(oc.lat);
         const lngNum = parseFloat(oc.lng);
-
-        if (userLat && userLng && !isNaN(latNum) && !isNaN(lngNum)) {
-          const calc = await obterDistanciaETempoReal(userLat, userLng, latNum, lngNum);
-          if (calc) {
-            distInfoText = `🚘 <strong>${calc.distKm} km</strong> do seu local (~<strong>${calc.minutos} min</strong>)`;
-          }
-        }
 
         if (mapMarkersGroup && !isNaN(latNum) && !isNaN(lngNum)) {
           const marker = L.marker([latNum, lngNum]).addTo(mapMarkersGroup);
@@ -1718,14 +1706,38 @@
             <span class="badge badge-${oc.status}">${oc.status}</span>
           </div>
           <p style="font-size: 0.875rem; color: var(--text-dim); margin: 0.5rem 0;">${oc.endereco}</p>
-          <p style="font-size: 0.85rem; color: var(--warning); margin-bottom: 0.5rem;">${distInfoText}</p>
+          <p id="dist-info-${oc.id}" style="font-size: 0.85rem; color: var(--warning); margin-bottom: 0.5rem;">Calculando distância...</p>
           <p style="font-size: 0.875rem;"><strong>Instruções:</strong> ${oc.detalhes || 'Sem observações.'}</p>
           ${botaoAcao}
         `;
         container.appendChild(div);
-      }
+      });
 
-      isRenderingApoio = false;
+      atualizarDistanciasApoio();
+    }
+
+    // Atualiza as distâncias de forma assíncrona sem repintar o container inteiro
+    async function atualizarDistanciasApoio() {
+      const ocsAtivas = ocorrencias.filter(o => 
+        o.status === 'pendente' || (currentUser && o.apoioId === currentUser.data.id && o.status === 'aceito')
+      );
+
+      for (const oc of ocsAtivas) {
+        const el = document.getElementById(`dist-info-${oc.id}`);
+        if (!el) continue;
+
+        const latNum = parseFloat(oc.lat);
+        const lngNum = parseFloat(oc.lng);
+
+        if (userLat && userLng && !isNaN(latNum) && !isNaN(lngNum)) {
+          const calc = await obterDistanciaETempoReal(userLat, userLng, latNum, lngNum);
+          if (calc && el) {
+            el.innerHTML = `🚘 <strong>${calc.distKm} km</strong> do seu local (~<strong>${calc.minutos} min</strong>)`;
+          }
+        } else if (el) {
+          el.innerText = "Aguardando sinal de GPS...";
+        }
+      }
     }
 
     function aceitarOcorrencia(id) {

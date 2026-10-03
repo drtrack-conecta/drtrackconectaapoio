@@ -80,6 +80,13 @@
       background-color: var(--accent-hover);
     }
 
+    .btn:disabled {
+      background-color: var(--border);
+      color: var(--text-dim);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
     .btn-secondary {
       background-color: transparent;
       border: 1px solid var(--border);
@@ -349,6 +356,30 @@
     .tab-btn.active {
       color: var(--accent);
       border-bottom-color: var(--accent);
+      font-weight: bold;
+    }
+
+    .sub-filter-nav {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .sub-filter-btn {
+      padding: 0.4rem 0.8rem;
+      background-color: var(--bg-dark);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .sub-filter-btn.active {
+      background-color: var(--accent);
+      color: white;
+      border-color: var(--accent);
     }
 
     table {
@@ -535,10 +566,19 @@
         </div>
       </div>
 
-      <!-- TAB: LISTA DE OCORRÊNCIAS (ADMIN) -->
+      <!-- TAB: LISTA DE OCORRÊNCIAS (ADMIN) COM CATEGORIAS E EXCLUSÃO -->
       <div id="tab-ocorrencias" class="admin-tab hidden">
         <div class="card">
           <h3>Ocorrências Lançadas</h3>
+          
+          <!-- FILTROS DE STATUS -->
+          <div class="sub-filter-nav">
+            <button class="sub-filter-btn active" onclick="filtrarStatusAdmin('pendente', this)">Aguardando Atendimento</button>
+            <button class="sub-filter-btn" onclick="filtrarStatusAdmin('aceito', this)">Em Atendimento</button>
+            <button class="sub-filter-btn" onclick="filtrarStatusAdmin('concluido', this)">Ocorrências Atendidas</button>
+            <button class="sub-filter-btn" onclick="filtrarStatusAdmin('todos', this)">Todas</button>
+          </div>
+
           <div id="admin-ocorrencias-list" class="grid" style="margin-top: 1rem;"></div>
         </div>
       </div>
@@ -710,8 +750,10 @@
       </div>
 
       <div style="display: flex; gap: 0.5rem; flex-direction: column;">
-        <button class="btn btn-warning" onclick="baixarAnexoFotosZIP()">📦 Gerar Pacote de Fotos em Anexo (ZIP)</button>
-        <button id="btn-concluir-oc" class="btn btn-success" style="padding: 1rem;" onclick="finalizarOcorrenciaApoio()">
+        <button id="btn-gerar-pacote-apoio" class="btn btn-warning" onclick="baixarAnexoFotosZIP()">📦 Gerar Pacote de Fotos em Anexo (ZIP) - Obrigatório</button>
+        <p id="msg-obrigatorio-pacote" style="color: var(--warning); font-size: 0.8rem; text-align: center;">* É obrigatório gerar o pacote de fotos antes de finalizar a ocorrência.</p>
+        
+        <button id="btn-concluir-oc" class="btn btn-success" style="padding: 1rem;" onclick="finalizarOcorrenciaApoio()" disabled>
           Finalizar e Enviar Relatório via WhatsApp
         </button>
       </div>
@@ -728,6 +770,9 @@
     let currentUser = null; 
     let selectedOcorrenciaId = null;
     let fotosOcorrenciaAtual = [];
+    let pacoteFotosGeradoApoio = false; // Controle da obrigatoriedade do pacote
+    let currentAdminStatusFilter = 'pendente'; // Filtro de status padrão do admin
+
     let map = null;
     let mapMarkersGroup = null;
     let adminPreviewMap = null;
@@ -1186,11 +1231,28 @@
       document.getElementById('oc-lng').value = '';
     }
 
+    function filtrarStatusAdmin(status, btn) {
+      currentAdminStatusFilter = status;
+      document.querySelectorAll('.sub-filter-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderAdminOcorrencias();
+    }
+
     function renderAdminOcorrencias() {
       const container = document.getElementById('admin-ocorrencias-list');
       container.innerHTML = '';
 
-      ocorrencias.forEach(oc => {
+      let listaFiltrada = ocorrencias;
+      if (currentAdminStatusFilter !== 'todos') {
+        listaFiltrada = ocorrencias.filter(o => o.status === currentAdminStatusFilter);
+      }
+
+      if (listaFiltrada.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-dim); text-align: center; grid-column: 1 / -1;">Nenhuma ocorrência encontrada nesta categoria.</p>';
+        return;
+      }
+
+      listaFiltrada.forEach(oc => {
         const apoioAtrib = apoios.find(a => a.id === oc.apoioId);
         const div = document.createElement('div');
         div.className = 'card';
@@ -1201,16 +1263,22 @@
           relatorioHTML = `<p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 0.5rem; background: var(--bg-card); padding: 0.5rem; border-radius: 0.25rem;"><strong>Relatório do Apoio:</strong> ${oc.relatorioEscrito}</p>`;
         }
 
+        let labelStatus = oc.status;
+        if (oc.status === 'pendente') labelStatus = 'Aguardando Atendimento';
+        if (oc.status === 'aceito') labelStatus = 'Em Atendimento';
+        if (oc.status === 'concluido') labelStatus = 'Atendida';
+
         let botoesAcao = '';
         if (oc.apoioId) {
           botoesAcao += `<button class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;" onclick="abrirChatAdmin(${oc.id})">💬 Abrir Chat com Apoio</button>`;
         }
         botoesAcao += `<button class="btn btn-warning" style="width: 100%; margin-top: 0.5rem;" onclick="abrirEdicaoRelatorioCliente(${oc.id})">✏ Editar / Gerar Relatório p/ Cliente</button>`;
+        botoesAcao += `<button class="btn btn-danger" style="width: 100%; margin-top: 0.5rem;" onclick="excluirOcorrencia(${oc.id})">🗑 Excluir Ocorrência</button>`;
 
         div.innerHTML = `
-          <div style="display:flex; justify-content:space-between;">
+          <div style="display:flex; justify-content:space-between; align-items: flex-start; gap: 0.5rem;">
             <strong>${oc.tipo}</strong>
-            <span class="badge badge-${oc.status}">${oc.status}</span>
+            <span class="badge badge-${oc.status}">${labelStatus}</span>
           </div>
           <p style="font-size: 0.875rem; color: var(--text-dim); margin: 0.5rem 0;">${oc.endereco}</p>
           <p style="font-size: 0.75rem; color: var(--accent);">Lat: ${oc.lat} | Lng: ${oc.lng}</p>
@@ -1222,6 +1290,16 @@
         `;
         container.appendChild(div);
       });
+    }
+
+    function excluirOcorrencia(id) {
+      if (confirm(`Tem certeza de que deseja EXCLUIR permanentemente a ocorrência ID #${id}? Esta ação não poderá ser desfeita.`)) {
+        ocorrencias = ocorrencias.filter(o => o.id !== id);
+        delete mensagensPorOcorrencia[id];
+        saveData();
+        renderAdminOcorrencias();
+        alert('Ocorrência excluída com sucesso.');
+      }
     }
 
     /* ==================== EDIÇÃO DE RELATÓRIO DO CLIENTE (ADMIN) ==================== */
@@ -1605,6 +1683,12 @@
       document.getElementById('relatorio-escrito-apoio').value = oc.relatorioEscrito || '';
       
       fotosOcorrenciaAtual = oc.fotos || [];
+      pacoteFotosGeradoApoio = false; // Reseta obrigatoriedade do pacote ao abrir
+
+      const btnConcluir = document.getElementById('btn-concluir-oc');
+      btnConcluir.disabled = true;
+      document.getElementById('msg-obrigatorio-pacote').classList.remove('hidden');
+
       renderFotosGridApoio();
 
       if (userLat && userLng) {
@@ -1673,6 +1757,11 @@
           incluirCliente: true
         });
 
+        // Se adicinou novas fotos após gerar o pacote, força a re-geração do pacote
+        pacoteFotosGeradoApoio = false;
+        document.getElementById('btn-concluir-oc').disabled = true;
+        document.getElementById('msg-obrigatorio-pacote').classList.remove('hidden');
+
         renderFotosGridApoio();
         
         const oc = ocorrencias.find(o => o.id === selectedOcorrenciaId);
@@ -1709,7 +1798,7 @@
 
     async function baixarAnexoFotosZIP() {
       if (fotosOcorrenciaAtual.length === 0) {
-        alert('Não há fotos gravadas para compactar.');
+        alert('Não há fotos gravadas para compactar. Tire ao menos 1 foto.');
         return;
       }
 
@@ -1724,6 +1813,8 @@
       const content = await zip.generateAsync({type:"blob"});
       const fileName = `Pacote_Fotos_Ocorrencia_${selectedOcorrenciaId}.zip`;
 
+      let downloadConcluido = false;
+
       if ('showSaveFilePicker' in window) {
         try {
           const handle = await window.showSaveFilePicker({
@@ -1736,21 +1827,33 @@
           const writable = await handle.createWritable();
           await writable.write(content);
           await writable.close();
-          alert('Pacote baixado e salvo com sucesso!');
-          return;
+          downloadConcluido = true;
         } catch (err) {
           if (err.name === 'AbortError') return;
           console.warn("API de salvamento direto falhou. Utilizando download padrão.", err);
         }
       }
 
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(content);
-      a.download = fileName;
-      a.click();
+      if (!downloadConcluido) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(content);
+        a.download = fileName;
+        a.click();
+      }
+
+      // Ativa e libera a conclusão do atendimento
+      pacoteFotosGeradoApoio = true;
+      document.getElementById('btn-concluir-oc').disabled = false;
+      document.getElementById('msg-obrigatorio-pacote').classList.add('hidden');
+      alert('✓ Pacote de fotos (ZIP) gerado e baixado com sucesso! Agora você pode finalizar o atendimento.');
     }
 
     function finalizarOcorrenciaApoio() {
+      if (!pacoteFotosGeradoApoio) {
+        alert('É obrigatório gerar o Pacote de Fotos em Anexo (ZIP) antes de finalizar a ocorrência.');
+        return;
+      }
+
       const relTexto = document.getElementById('relatorio-escrito-apoio').value.trim();
 
       if (!relTexto) {

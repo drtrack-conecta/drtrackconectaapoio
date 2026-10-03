@@ -179,15 +179,23 @@
         <textarea id="relatorio-texto" class="form-control" rows="3" placeholder="Descreva os fatos constatados no local..."></textarea>
       </div>
 
-      <!-- Envio obrigatório de fotos via WhatsApp -->
+      <!-- Envio de Fotos via Upload e WhatsApp -->
       <div class="card" style="background: var(--bg); margin-top: 1rem;">
         <h4>Registros Fotográficos (Mínimo de 5 fotos) *</h4>
         <p style="font-size: 0.8rem; color: var(--dim); margin-bottom: 0.5rem;">
-          Tire e envie as 5 fotos diretamente para a Central via WhatsApp.
+          Anexe as fotos diretamente no sistema ou envie-as via WhatsApp.
         </p>
-        <div class="grid">
+        
+        <div class="form-group">
+          <label>Selecionar / Tirar Fotos (Múltiplas)</label>
+          <input type="file" id="foto-input" class="form-control" accept="image/*" multiple onchange="handleFotosUpload(event)">
+        </div>
+
+        <div id="photo-preview-container" class="photo-grid"></div>
+
+        <div class="grid" style="margin-top: 1rem;">
           <div class="form-group">
-            <label>Telefone Adicional (Opcional)</label>
+            <label>Telefone Adicional WhatsApp (Opcional)</label>
             <input type="tel" id="zap-adicional" class="form-control" placeholder="11900000000">
           </div>
         </div>
@@ -220,6 +228,7 @@
     let map = null, markersGroup = null;
     let timerBip = null;
     let audioContext = null;
+    let fotosTemp = [];
 
     function saveData() {
       localStorage.setItem('dr_apoios', JSON.stringify(apoios));
@@ -323,6 +332,13 @@
       ocContainer.innerHTML = '';
       ocorrencias.forEach(oc => {
         const apoioNome = apoios.find(a => a.id === oc.apoioId)?.nome || 'Não atribuído';
+        let fotosHtml = '';
+        if (oc.fotos && oc.fotos.length > 0) {
+          fotosHtml = '<div class="photo-grid" style="margin-top: 0.5rem;">' +
+            oc.fotos.map(f => `<img src="${f}" class="photo-preview">`).join('') +
+            '</div>';
+        }
+
         ocContainer.innerHTML += `
           <div class="card" style="background: var(--bg)">
             <div style="display:flex; justify-content:space-between;">
@@ -333,6 +349,7 @@
             <p><strong>R$ ${oc.valor.toFixed(2)}</strong> | <small>Atendimento: ${apoioNome}</small></p>
             
             ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--card); padding:0.5rem; border-radius:0.25rem;"><strong>Relatório Atual:</strong><br>${oc.relatorio}</div>` : ''}
+            ${fotosHtml}
             
             <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
               <button class="btn btn-warning" style="padding:0.4rem;" onclick="prepararEdicaoAdmin(${oc.id})">Editar Dados / Relatório</button>
@@ -377,7 +394,8 @@
           lat: parseFloat(document.getElementById('oc-lat').value),
           lng: parseFloat(document.getElementById('oc-lng').value),
           status: 'pendente',
-          relatorio: document.getElementById('oc-relatorio-admin').value.trim()
+          relatorio: document.getElementById('oc-relatorio-admin').value.trim(),
+          fotos: []
         });
       }
 
@@ -446,7 +464,6 @@
       initMap();
       renderApoio();
       
-      // Checagem a cada 3s para alerta sonoro contínuo
       setInterval(checarNovasOcorrencias, 3000);
     }
 
@@ -557,7 +574,7 @@
       renderApoio();
     }
 
-    // --- EXECUÇÃO PELO APOIO ---
+    // --- EXECUÇÃO PELO APOIO E GESTÃO DE FOTOS ---
     function abrirExecucao(id) {
       selectedOcId = id;
       const oc = ocorrencias.find(o => o.id === id);
@@ -565,9 +582,44 @@
       document.getElementById('exec-endereco').innerText = oc.endereco;
       document.getElementById('relatorio-texto').value = oc.relatorio || '';
       document.getElementById('check-fotos-confirmadas').checked = false;
+      document.getElementById('foto-input').value = '';
+      
+      fotosTemp = oc.fotos || [];
+      renderFotosPreview();
       validarStatusExecucao();
       renderChat();
       showScreen('screen-execucao');
+    }
+
+    function handleFotosUpload(event) {
+      const files = Array.from(event.target.files);
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          fotosTemp.push(e.target.result);
+          renderFotosPreview();
+          validarStatusExecucao();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removerFoto(index) {
+      fotosTemp.splice(index, 1);
+      renderFotosPreview();
+      validarStatusExecucao();
+    }
+
+    function renderFotosPreview() {
+      const container = document.getElementById('photo-preview-container');
+      container.innerHTML = '';
+      fotosTemp.forEach((f, index) => {
+        container.innerHTML += `
+          <div class="photo-wrapper">
+            <img src="${f}" class="photo-preview">
+            <button type="button" class="photo-del" onclick="removerFoto(${index})">✕</button>
+          </div>`;
+      });
     }
 
     function renderChat() {
@@ -603,7 +655,9 @@
     function validarStatusExecucao() {
       const rel = document.getElementById('relatorio-texto').value.trim();
       const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
-      document.getElementById('btn-finalizar').disabled = !(rel && checkFotos);
+      const temCincoFotosAnexadas = fotosTemp.length >= 5;
+
+      document.getElementById('btn-finalizar').disabled = !(rel && (checkFotos || temCincoFotosAnexadas));
     }
 
     document.getElementById('relatorio-texto')?.addEventListener('input', validarStatusExecucao);
@@ -614,6 +668,7 @@
 
       oc.status = 'enviada';
       oc.relatorio = rel;
+      oc.fotos = fotosTemp;
       saveData();
 
       alert('Ocorrência enviada com sucesso para a Central!');

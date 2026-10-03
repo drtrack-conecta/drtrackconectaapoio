@@ -26,13 +26,17 @@
     .btn { background: var(--accent); color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 600; width: 100%; text-align: center; }
     .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--dim); }
     .btn-success { background: var(--success); }
+    .btn-warning { background: var(--warning); color: #000; }
     .btn-danger { background: var(--danger); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .badge { padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
     .badge-pendente { background: var(--warning); color: #000; }
     .badge-aceito { background: var(--accent); }
+    .badge-enviada { background: #8b5cf6; }
     .badge-concluido { background: var(--success); }
     .badge-aprovado { background: var(--success); }
+    .badge-suspenso { background: var(--warning); color: #000; }
+    .badge-rejeitado { background: var(--danger); }
     .badge-aguardando { background: var(--warning); color: #000; }
     #map { height: 260px; width: 100%; border-radius: 0.5rem; border: 1px solid var(--border); margin-bottom: 1rem; }
     .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem; margin-top: 0.5rem; }
@@ -94,16 +98,17 @@
 
     <!-- TELA: PAINEL ADMIN -->
     <section id="screen-admin" class="hidden">
-      <!-- Aprovação de Cadastros -->
+      <!-- Aprovação / Suspensão / Rejeição de Cadastros -->
       <div class="card">
-        <h3>Aprovação de Prestadores de Apoio</h3>
+        <h3>Gestão de Prestadores de Apoio</h3>
         <div id="admin-apoios-list" style="margin-top: 0.75rem;"></div>
       </div>
 
-      <!-- Lançamento de Ocorrência -->
+      <!-- Lançamento / Edição de Ocorrência pelo Admin -->
       <div class="card">
-        <h3>Lançar Nova Ocorrência</h3>
-        <form onsubmit="lancarOcorrencia(event)" style="margin-top: 0.75rem;">
+        <h3 id="form-oc-titulo">Lançar Nova Ocorrência</h3>
+        <form onsubmit="salvarOcorrenciaAdmin(event)" style="margin-top: 0.75rem;">
+          <input type="hidden" id="edit-oc-id">
           <div class="grid">
             <div class="form-group">
               <label>Tipo de Evento</label>
@@ -117,14 +122,19 @@
             <div class="form-group" style="grid-column: 1 / -1;"><label>Endereço Completo</label><input type="text" class="form-control" id="oc-endereco" required></div>
             <div class="form-group"><label>Latitude</label><input type="text" class="form-control" id="oc-lat" placeholder="-23.5505" required></div>
             <div class="form-group"><label>Longitude</label><input type="text" class="form-control" id="oc-lng" placeholder="-46.6333" required></div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label>Relatório do Atendimento (Apoio / Admin)</label>
+              <textarea id="oc-relatorio-admin" class="form-control" rows="3" placeholder="Insira ou edite os detalhes do relatório final..."></textarea>
+            </div>
           </div>
-          <button type="submit" class="btn" style="margin-top: 0.5rem;">Publicar Ocorrência</button>
+          <button type="submit" class="btn" style="margin-top: 0.5rem;">Salvar / Publicar Ocorrência</button>
+          <button type="button" class="btn btn-secondary hidden" id="btn-cancelar-edit" style="margin-top: 0.5rem;" onclick="cancelarEdicaoAdmin()">Cancelar Edição</button>
         </form>
       </div>
 
-      <!-- Gestão de Ocorrências -->
+      <!-- Gestão de Ocorrências e Relatórios Recebidos -->
       <div class="card">
-        <h3>Painel Geral de Ocorrências</h3>
+        <h3>Ocorrências e Relatórios Recebidos</h3>
         <div id="admin-ocorrencias-list" class="grid" style="margin-top: 1rem;"></div>
       </div>
     </section>
@@ -139,12 +149,12 @@
       </div>
 
       <div id="apoio-offline-msg" class="alert-banner">
-        ⚠️️ Você precisa ficar <strong>ONLINE</strong> para visualizar e receber os alertas sonoros de novas ocorrências.
+        ⚠ Você precisa ficar <strong>ONLINE</strong> para visualizar e receber os alertas sonoros de novas ocorrências.
       </div>
 
       <div id="apoio-content" class="hidden">
         <div id="map"></div>
-        <h3>Ocorrências Próximas Disponíveis</h3>
+        <h3>Ocorrências Disponíveis / Atendimentos</h3>
         <div id="apoio-ocorrencias-list" class="grid" style="margin-top: 0.75rem;"></div>
       </div>
     </section>
@@ -169,14 +179,30 @@
         <textarea id="relatorio-texto" class="form-control" rows="3" placeholder="Descreva os fatos constatados no local..."></textarea>
       </div>
 
+      <!-- Envio obrigatório de fotos via WhatsApp -->
       <div class="card" style="background: var(--bg); margin-top: 1rem;">
-        <h4>Registros Fotográficos (Obrigatório: <span id="foto-contador" style="color: var(--warning);">0 / 5</span>)</h4>
-        <input type="file" accept="image/*" capture="environment" class="form-control" onchange="adicionarFoto(event)">
-        <div class="photo-grid" id="photo-grid"></div>
+        <h4>Registros Fotográficos (Mínimo de 5 fotos) *</h4>
+        <p style="font-size: 0.8rem; color: var(--dim); margin-bottom: 0.5rem;">
+          Tire e envie as 5 fotos diretamente para a Central via WhatsApp.
+        </p>
+        <div class="grid">
+          <div class="form-group">
+            <label>Telefone Adicional (Opcional)</label>
+            <input type="tel" id="zap-adicional" class="form-control" placeholder="11900000000">
+          </div>
+        </div>
+        <button class="btn btn-warning" style="margin-top: 0.5rem;" onclick="enviarFotosWhatsApp()">
+          📸 Abrir WhatsApp para Enviar Fotos
+        </button>
+        <div style="margin-top:0.75rem;">
+          <label style="font-size: 0.85rem; cursor: pointer;">
+            <input type="checkbox" id="check-fotos-confirmadas" onchange="validarStatusExecucao()"> Confirmo que enviei 5 fotos ou mais via WhatsApp
+          </label>
+        </div>
       </div>
 
       <button id="btn-finalizar" class="btn btn-success" style="margin-top: 1rem; padding: 0.8rem;" disabled onclick="finalizarAtendimento()">
-        Enviar Relatório e Concluir no WhatsApp
+        Enviar Ocorrência à Central Admin
       </button>
     </section>
   </main>
@@ -186,18 +212,20 @@
     let apoios = JSON.parse(localStorage.getItem('dr_apoios')) || [];
     let ocorrencias = JSON.parse(localStorage.getItem('dr_ocorrencias')) || [];
     let chats = JSON.parse(localStorage.getItem('dr_chats')) || {};
+    let recusadas = JSON.parse(localStorage.getItem('dr_recusadas')) || [];
     
     let currentUser = null;
     let selectedOcId = null;
     let isOnline = false;
     let map = null, markersGroup = null;
-    let lastOcorrenciasCount = 0;
+    let timerBip = null;
     let audioContext = null;
 
     function saveData() {
       localStorage.setItem('dr_apoios', JSON.stringify(apoios));
       localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
       localStorage.setItem('dr_chats', JSON.stringify(chats));
+      localStorage.setItem('dr_recusadas', JSON.stringify(recusadas));
     }
 
     function showScreen(id) {
@@ -231,9 +259,10 @@
 
       const apoio = apoios.find(a => a.tel.replace(/\D/g, '') === u.replace(/\D/g, '') && a.pass === p);
       if (apoio) {
-        if (apoio.status !== 'aprovado') {
-          return alert('Seu cadastro ainda está aguardando aprovação da Central Admin.');
-        }
+        if (apoio.status === 'aguardando') return alert('Seu cadastro está aguardando aprovação da Central.');
+        if (apoio.status === 'suspenso') return alert('Seu cadastro está SUSPENSO provisoriamente pela Central.');
+        if (apoio.status === 'rejeitado') return alert('Seu cadastro foi REJEITADO pela Central.');
+
         currentUser = { type: 'apoio', ...apoio };
         updateNav();
         showScreen('screen-apoio');
@@ -246,6 +275,7 @@
     function logout() {
       currentUser = null;
       isOnline = false;
+      pararAlertaSonoro();
       updateNav();
       showScreen('screen-login');
     }
@@ -262,13 +292,13 @@
         status: 'aguardando'
       });
       saveData();
-      alert('Cadastro enviado com sucesso! Aguarde a aprovação da Central.');
+      alert('Cadastro enviado com sucesso! Aguarde a liberação da Central.');
       showScreen('screen-login');
     }
 
-    // FUNÇÕES DO ADMINISTRADOR
+    // --- FUNÇÕES DO ADMINISTRADOR ---
     function renderAdmin() {
-      // Render Apoios
+      // 1. Renderizar Apoios com Opções de Aprovação, Suspensão e Rejeição
       const apoioContainer = document.getElementById('admin-apoios-list');
       apoioContainer.innerHTML = '';
       if (apoios.length === 0) apoioContainer.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhum apoio cadastrado.</p>';
@@ -277,32 +307,40 @@
         apoioContainer.innerHTML += `
           <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:0.6rem; border-radius:0.375rem; margin-bottom:0.5rem;">
             <div>
-              <strong>${a.nome}</strong> (${a.veiculo})<br>
+              <strong>${a.nome}</strong> (${a.veiculo}) <span class="badge badge-${a.status}">${a.status}</span><br>
               <small style="color:var(--dim);">Tel: ${a.tel} | PIX: ${a.pix}</small>
             </div>
-            <div>
-              ${a.status === 'aguardando' ? `
-                <button class="btn btn-success" style="width:auto; padding:0.3rem 0.6rem; font-size:0.75rem;" onclick="alterarStatusApoio(${a.id}, 'aprovado')">Aprovar</button>
-                <button class="btn btn-danger" style="width:auto; padding:0.3rem 0.6rem; font-size:0.75rem;" onclick="alterarStatusApoio(${a.id}, 'rejeitado')">Rejeitar</button>
-              ` : `<span class="badge badge-${a.status}">${a.status}</span>`}
+            <div style="display:flex; gap:0.25rem;">
+              <button class="btn btn-success" style="width:auto; padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="alterarStatusApoio(${a.id}, 'aprovado')">Aprovar</button>
+              <button class="btn btn-warning" style="width:auto; padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="alterarStatusApoio(${a.id}, 'suspenso')">Suspender</button>
+              <button class="btn btn-danger" style="width:auto; padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="alterarStatusApoio(${a.id}, 'rejeitado')">Rejeitar</button>
             </div>
           </div>`;
       });
 
-      // Render Ocorrências
+      // 2. Renderizar Ocorrências com Capacidade de Editar e Enviar Relatórios
       const ocContainer = document.getElementById('admin-ocorrencias-list');
       ocContainer.innerHTML = '';
       ocorrencias.forEach(oc => {
+        const apoioNome = apoios.find(a => a.id === oc.apoioId)?.nome || 'Não atribuído';
         ocContainer.innerHTML += `
           <div class="card" style="background: var(--bg)">
             <div style="display:flex; justify-content:space-between;">
               <strong>${oc.tipo}</strong>
               <span class="badge badge-${oc.status}">${oc.status}</span>
             </div>
-            <p style="font-size:0.85rem; color:var(--dim); margin:0.5rem 0;">${oc.endereco}</p>
-            <p><strong>R$ ${oc.valor.toFixed(2)}</strong></p>
-            ${oc.relatorio ? `<p style="font-size:0.8rem; margin-top:0.5rem; background:var(--card); padding:0.4rem;"><strong>Relatório:</strong> ${oc.relatorio}</p>` : ''}
-            <button class="btn btn-danger" style="margin-top:0.5rem;" onclick="excluirOc(${oc.id})">Excluir</button>
+            <p style="font-size:0.85rem; color:var(--dim); margin:0.4rem 0;">${oc.endereco}</p>
+            <p><strong>R$ ${oc.valor.toFixed(2)}</strong> | <small>Atendimento: ${apoioNome}</small></p>
+            
+            ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--card); padding:0.5rem; border-radius:0.25rem;"><strong>Relatório Atual:</strong><br>${oc.relatorio}</div>` : ''}
+            
+            <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+              <button class="btn btn-warning" style="padding:0.4rem;" onclick="prepararEdicaoAdmin(${oc.id})">Editar Dados / Relatório</button>
+              ${oc.status === 'enviada' || oc.status === 'concluido' ? `
+                <button class="btn btn-success" style="padding:0.4rem;" onclick="enviarRelatorioCliente(${oc.id})">Enviar ao Cliente</button>
+              ` : ''}
+              <button class="btn btn-danger" style="padding:0.4rem; width:auto;" onclick="excluirOc(${oc.id})">Excluir</button>
+            </div>
           </div>`;
       });
     }
@@ -316,23 +354,77 @@
       }
     }
 
-    function lancarOcorrencia(e) {
+    function salvarOcorrenciaAdmin(e) {
       e.preventDefault();
-      ocorrencias.push({
-        id: Date.now(),
-        tipo: document.getElementById('oc-tipo').value,
-        valor: parseFloat(document.getElementById('oc-valor').value),
-        endereco: document.getElementById('oc-endereco').value,
-        lat: parseFloat(document.getElementById('oc-lat').value),
-        lng: parseFloat(document.getElementById('oc-lng').value),
-        status: 'pendente',
-        relatorio: '',
-        fotos: []
-      });
+      const editId = document.getElementById('edit-oc-id').value;
+
+      if (editId) {
+        const oc = ocorrencias.find(o => o.id === parseInt(editId));
+        if (oc) {
+          oc.tipo = document.getElementById('oc-tipo').value;
+          oc.valor = parseFloat(document.getElementById('oc-valor').value);
+          oc.endereco = document.getElementById('oc-endereco').value;
+          oc.lat = parseFloat(document.getElementById('oc-lat').value);
+          oc.lng = parseFloat(document.getElementById('oc-lng').value);
+          oc.relatorio = document.getElementById('oc-relatorio-admin').value.trim();
+        }
+      } else {
+        ocorrencias.push({
+          id: Date.now(),
+          tipo: document.getElementById('oc-tipo').value,
+          valor: parseFloat(document.getElementById('oc-valor').value),
+          endereco: document.getElementById('oc-endereco').value,
+          lat: parseFloat(document.getElementById('oc-lat').value),
+          lng: parseFloat(document.getElementById('oc-lng').value),
+          status: 'pendente',
+          relatorio: document.getElementById('oc-relatorio-admin').value.trim()
+        });
+      }
+
       saveData();
-      e.target.reset();
+      cancelarEdicaoAdmin();
       renderAdmin();
-      alert('Ocorrência lançada e enviada aos apoios online!');
+      alert('Ocorrência salva com sucesso!');
+    }
+
+    function prepararEdicaoAdmin(id) {
+      const oc = ocorrencias.find(o => o.id === id);
+      if (!oc) return;
+      document.getElementById('edit-oc-id').value = oc.id;
+      document.getElementById('oc-tipo').value = oc.tipo;
+      document.getElementById('oc-valor').value = oc.valor;
+      document.getElementById('oc-endereco').value = oc.endereco;
+      document.getElementById('oc-lat').value = oc.lat;
+      document.getElementById('oc-lng').value = oc.lng;
+      document.getElementById('oc-relatorio-admin').value = oc.relatorio || '';
+      
+      document.getElementById('form-oc-titulo').innerText = 'Editar Ocorrência';
+      document.getElementById('btn-cancelar-edit').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicaoAdmin() {
+      document.getElementById('edit-oc-id').value = '';
+      document.getElementById('oc-tipo').value = 'Aviso de Alarme';
+      document.getElementById('oc-valor').value = '';
+      document.getElementById('oc-endereco').value = '';
+      document.getElementById('oc-lat').value = '';
+      document.getElementById('oc-lng').value = '';
+      document.getElementById('oc-relatorio-admin').value = '';
+      document.getElementById('form-oc-titulo').innerText = 'Lançar Nova Ocorrência';
+      document.getElementById('btn-cancelar-edit').classList.add('hidden');
+    }
+
+    function enviarRelatorioCliente(id) {
+      const oc = ocorrencias.find(o => o.id === id);
+      if (!oc) return;
+
+      oc.status = 'concluido';
+      saveData();
+      renderAdmin();
+
+      const textoCliente = `*RELATÓRIO OPERACIONAL - DRTRACK*\n\n*Tipo de Evento:* ${oc.tipo}\n*Local:* ${oc.endereco}\n*Status:* Finalizado\n\n*Resumo do Atendimento:* ${oc.relatorio || 'Atendimento presencial concluído sem anormalidades.'}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(textoCliente)}`, '_blank');
     }
 
     function excluirOc(id) {
@@ -341,7 +433,7 @@
       renderAdmin();
     }
 
-    // SISTEMA DE ALERTA SONORO E PRESENÇA (APOIO)
+    // --- ALERTA SONORO CONTÍNUO E PRESENÇA (APOIO) ---
     function ativarModoOnline() {
       isOnline = true;
       document.getElementById('gps-status').innerText = '🟢 Online';
@@ -349,37 +441,50 @@
       document.getElementById('apoio-offline-msg').classList.add('hidden');
       document.getElementById('apoio-content').classList.remove('hidden');
 
-      // Inicializa áudio do navegador
       if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
       initMap();
       renderApoio();
       
-      // Inicia o monitoramento de novas ocorrências a cada 4s
-      setInterval(checarNovasOcorrencias, 4000);
+      // Checagem a cada 3s para alerta sonoro contínuo
+      setInterval(checarNovasOcorrencias, 3000);
     }
 
-    function tocarAlertaSonoro() {
-      if (!audioContext) return;
-      const osc = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 880; // Tom alto de bip
-      gain.gain.value = 0.3;
-      osc.connect(gain);
-      gain.connect(audioContext.destination);
-      osc.start();
-      osc.stop(audioContext.currentTime + 0.6);
+    function iniciarAlertaSonoroContinuo() {
+      if (timerBip || !audioContext) return;
+      timerBip = setInterval(() => {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 900;
+        gain.gain.value = 0.3;
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        osc.start();
+        osc.stop(audioContext.currentTime + 0.4);
+      }, 1000);
+    }
+
+    function pararAlertaSonoro() {
+      if (timerBip) {
+        clearInterval(timerBip);
+        timerBip = null;
+      }
     }
 
     function checarNovasOcorrencias() {
       if (!isOnline || currentUser?.type !== 'apoio') return;
-      const pendentes = ocorrencias.filter(o => o.status === 'pendente');
-      if (pendentes.length > lastOcorrenciasCount) {
-        tocarAlertaSonoro();
-        renderApoio();
+      
+      const pendentesDisponiveis = ocorrencias.filter(o => 
+        o.status === 'pendente' && !recusadas.includes(`${currentUser.id}_${o.id}`)
+      );
+
+      if (pendentesDisponiveis.length > 0) {
+        iniciarAlertaSonoroContinuo();
+      } else {
+        pararAlertaSonoro();
       }
-      lastOcorrenciasCount = pendentes.length;
+      renderApoio();
     }
 
     function initMap() {
@@ -396,18 +501,30 @@
       container.innerHTML = '';
       if (markersGroup) markersGroup.clearLayers();
 
-      const ativas = ocorrencias.filter(o => o.status === 'pendente' || o.apoioId === currentUser.id);
-      
+      const ativas = ocorrencias.filter(o => 
+        (o.status === 'pendente' && !recusadas.includes(`${currentUser.id}_${o.id}`)) || 
+        o.apoioId === currentUser.id
+      );
+
       if (ativas.length === 0) {
-        container.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhuma ocorrência disponível no momento.</p>';
+        container.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhuma ocorrência pendente no momento.</p>';
       }
 
       ativas.forEach(oc => {
         if (markersGroup) L.marker([oc.lat, oc.lng]).addTo(markersGroup).bindPopup(oc.tipo);
 
-        let btn = oc.status === 'pendente' 
-          ? `<button class="btn btn-success" style="margin-top:0.5rem;" onclick="aceitarOc(${oc.id})">Aceitar Ocorrência</button>`
-          : `<button class="btn" style="margin-top:0.5rem;" onclick="abrirExecucao(${oc.id})">Abrir Atendimento</button>`;
+        let acoes = '';
+        if (oc.status === 'pendente') {
+          acoes = `
+            <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+              <button class="btn btn-success" onclick="aceitarOc(${oc.id})">Aceitar</button>
+              <button class="btn btn-danger" onclick="recusarOc(${oc.id})">Recusar</button>
+            </div>`;
+        } else if (oc.status === 'aceito') {
+          acoes = `<button class="btn" style="margin-top:0.5rem;" onclick="abrirExecucao(${oc.id})">Abrir Atendimento</button>`;
+        } else {
+          acoes = `<p style="font-size:0.8rem; color:var(--dim); margin-top:0.5rem;">Aguardando validação da Central</p>`;
+        }
 
         container.innerHTML += `
           <div class="card" style="background: var(--bg)">
@@ -417,12 +534,13 @@
             </div>
             <p style="font-size:0.85rem; color:var(--dim); margin:0.5rem 0;">${oc.endereco}</p>
             <p><strong>R$ ${oc.valor.toFixed(2)}</strong></p>
-            ${btn}
+            ${acoes}
           </div>`;
       });
     }
 
     function aceitarOc(id) {
+      pararAlertaSonoro();
       const oc = ocorrencias.find(o => o.id === id);
       if (oc) {
         oc.status = 'aceito';
@@ -432,15 +550,23 @@
       }
     }
 
-    // TELA DE EXECUÇÃO
+    function recusarOc(id) {
+      recusadas.push(`${currentUser.id}_${id}`);
+      saveData();
+      checarNovasOcorrencias();
+      renderApoio();
+    }
+
+    // --- EXECUÇÃO PELO APOIO ---
     function abrirExecucao(id) {
       selectedOcId = id;
       const oc = ocorrencias.find(o => o.id === id);
       document.getElementById('exec-titulo').innerText = oc.tipo;
       document.getElementById('exec-endereco').innerText = oc.endereco;
       document.getElementById('relatorio-texto').value = oc.relatorio || '';
+      document.getElementById('check-fotos-confirmadas').checked = false;
+      validarStatusExecucao();
       renderChat();
-      renderFotos();
       showScreen('screen-execucao');
     }
 
@@ -463,65 +589,34 @@
       renderChat();
     }
 
-    function adicionarFoto(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const oc = ocorrencias.find(o => o.id === selectedOcId);
-        if (!oc.fotos) oc.fotos = [];
-        oc.fotos.push(evt.target.result);
-        saveData();
-        renderFotos();
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function removerFoto(index) {
+    function enviarFotosWhatsApp() {
       const oc = ocorrencias.find(o => o.id === selectedOcId);
-      if (oc && oc.fotos) {
-        oc.fotos.splice(index, 1);
-        saveData();
-        renderFotos();
-      }
+      const numeroAdicional = document.getElementById('zap-adicional').value.replace(/\D/g, '');
+      const numeroPadrao = '5511994944410';
+      const numeroDestino = numeroAdicional ? `55${numeroAdicional}` : numeroPadrao;
+
+      const textoWhatsApp = `*ENVIO DE FOTOS DO ATENDIMENTO*\n*Prestador:* ${currentUser.nome}\n*Evento:* ${oc.tipo}\n*Endereço:* ${oc.endereco}\n\n_Estou enviando abaixo as 5 fotos do atendimento._`;
+      
+      window.open(`https://wa.me/${numeroDestino}?text=${encodeURIComponent(textoWhatsApp)}`, '_blank');
     }
 
-    function renderFotos() {
-      const grid = document.getElementById('photo-grid');
-      grid.innerHTML = '';
-      const oc = ocorrencias.find(o => o.id === selectedOcId);
-      const totalFotos = (oc.fotos || []).length;
-
-      // Atualiza o contador de fotos
-      const contador = document.getElementById('foto-contador');
-      contador.innerText = `${totalFotos} / 5`;
-      contador.style.color = totalFotos >= 5 ? 'var(--success)' : 'var(--warning)';
-
-      // Bloqueia/Libera o botão de finalizar
-      document.getElementById('btn-finalizar').disabled = totalFotos < 5;
-
-      (oc.fotos || []).forEach((f, idx) => {
-        grid.innerHTML += `
-          <div class="photo-wrapper">
-            <img src="${f}" class="photo-preview">
-            <button class="photo-del" onclick="removerFoto(${idx})">✕</button>
-          </div>`;
-      });
+    function validarStatusExecucao() {
+      const rel = document.getElementById('relatorio-texto').value.trim();
+      const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
+      document.getElementById('btn-finalizar').disabled = !(rel && checkFotos);
     }
+
+    document.getElementById('relatorio-texto')?.addEventListener('input', validarStatusExecucao);
 
     function finalizarAtendimento() {
       const rel = document.getElementById('relatorio-texto').value.trim();
-      if (!rel) return alert('Preencha o relatório por escrito.');
-
       const oc = ocorrencias.find(o => o.id === selectedOcId);
-      if ((oc.fotos || []).length < 5) return alert('É obrigatório anexar no mínimo 5 fotos do local.');
 
-      oc.status = 'concluido';
+      oc.status = 'enviada';
       oc.relatorio = rel;
       saveData();
 
-      const msg = `*RELATÓRIO DE FINALIZAÇÃO DE OCORRÊNCIA*\n*Prestador:* ${currentUser.nome}\n*Evento:* ${oc.tipo}\n*Endereço:* ${oc.endereco}\n*Fotos Anexadas:* ${oc.fotos.length}\n\n*Relatório:* ${rel}`;
-      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      alert('Ocorrência enviada com sucesso para a Central!');
       showScreen('screen-apoio');
       renderApoio();
     }

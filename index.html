@@ -23,11 +23,12 @@
     .form-group { margin-bottom: 0.85rem; }
     .form-group label { display: block; font-size: 0.8rem; color: var(--dim); margin-bottom: 0.25rem; }
     .form-control { width: 100%; padding: 0.6rem; background: var(--bg); border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text); }
-    .btn { background: var(--accent); color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 600; width: 100%; text-align: center; }
+    .btn { background: var(--accent); color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 600; width: 100%; text-align: center; text-decoration: none; display: inline-block; }
     .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--dim); }
     .btn-success { background: var(--success); }
     .btn-warning { background: var(--warning); color: #000; }
     .btn-danger { background: var(--danger); }
+    .btn-link { background: #0284c7; color: #fff; border: 1px solid var(--accent); font-size: 0.85rem; padding: 0.4rem 0.8rem; margin-top: 0.3rem; margin-bottom: 0.5rem; text-align: center; border-radius: 0.375rem; display: inline-block; text-decoration: none; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .badge { padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
     .badge-pendente { background: var(--warning); color: #000; }
@@ -120,8 +121,13 @@
             </div>
             <div class="form-group"><label>Valor (R$)</label><input type="number" step="0.01" class="form-control" id="oc-valor" required></div>
             <div class="form-group" style="grid-column: 1 / -1;"><label>Endereço Completo</label><input type="text" class="form-control" id="oc-endereco" required></div>
-            <div class="form-group"><label>Latitude</label><input type="text" class="form-control" id="oc-lat" placeholder="-23.5505" required></div>
-            <div class="form-group"><label>Longitude</label><input type="text" class="form-control" id="oc-lng" placeholder="-46.6333" required></div>
+            
+            <!-- CAMPO ATUALIZADO: LINK DA LOCALIZAÇÃO EM SUBST. À LAT/LNG -->
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label>🔗 Link da Localização / Mapa (Google Maps, Waze, etc.) *</label>
+              <input type="url" class="form-control" id="oc-link-mapa" placeholder="https://maps.google.com/?q=..." required>
+            </div>
+
             <div class="form-group" style="grid-column: 1 / -1;">
               <label>Relatório do Atendimento (Apoio / Admin)</label>
               <textarea id="oc-relatorio-admin" class="form-control" rows="3" placeholder="Insira ou edite os detalhes do relatório final..."></textarea>
@@ -163,7 +169,8 @@
     <section id="screen-execucao" class="card hidden">
       <button class="btn btn-secondary" style="margin-bottom: 1rem;" onclick="showScreen('screen-apoio')">← Voltar</button>
       <h2 id="exec-titulo">Atendimento</h2>
-      <p id="exec-endereco" style="color: var(--accent); margin-bottom: 1rem;"></p>
+      <p id="exec-endereco" style="color: var(--accent); margin-bottom: 0.25rem;"></p>
+      <div id="exec-link-container" style="margin-bottom: 1rem;"></div>
 
       <div class="card" style="background: var(--bg);">
         <h4>Chat Direto com a Central</h4>
@@ -307,7 +314,6 @@
 
     // --- FUNÇÕES DO ADMINISTRADOR ---
     function renderAdmin() {
-      // 1. Renderizar Apoios com Opções de Aprovação, Suspensão e Rejeição
       const apoioContainer = document.getElementById('admin-apoios-list');
       apoioContainer.innerHTML = '';
       if (apoios.length === 0) apoioContainer.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhum apoio cadastrado.</p>';
@@ -327,7 +333,6 @@
           </div>`;
       });
 
-      // 2. Renderizar Ocorrências com Capacidade de Editar e Enviar Relatórios
       const ocContainer = document.getElementById('admin-ocorrencias-list');
       ocContainer.innerHTML = '';
       ocorrencias.forEach(oc => {
@@ -345,8 +350,9 @@
               <strong>${oc.tipo}</strong>
               <span class="badge badge-${oc.status}">${oc.status}</span>
             </div>
-            <p style="font-size:0.85rem; color:var(--dim); margin:0.4rem 0;">${oc.endereco}</p>
-            <p><strong>R$ ${oc.valor.toFixed(2)}</strong> | <small>Atendimento: ${apoioNome}</small></p>
+            <p style="font-size:0.85rem; color:var(--dim); margin:0.4rem 0 0.2rem 0;">${oc.endereco}</p>
+            ${oc.linkMapa ? `<a href="${oc.linkMapa}" target="_blank" class="btn-link">🔗 Link do Local</a>` : ''}
+            <p style="margin-top:0.4rem;"><strong>R$ ${oc.valor.toFixed(2)}</strong> | <small>Atendimento: ${apoioNome}</small></p>
             
             ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--card); padding:0.5rem; border-radius:0.25rem;"><strong>Relatório Atual:</strong><br>${oc.relatorio}</div>` : ''}
             ${fotosHtml}
@@ -381,8 +387,7 @@
           oc.tipo = document.getElementById('oc-tipo').value;
           oc.valor = parseFloat(document.getElementById('oc-valor').value);
           oc.endereco = document.getElementById('oc-endereco').value;
-          oc.lat = parseFloat(document.getElementById('oc-lat').value);
-          oc.lng = parseFloat(document.getElementById('oc-lng').value);
+          oc.linkMapa = document.getElementById('oc-link-mapa').value;
           oc.relatorio = document.getElementById('oc-relatorio-admin').value.trim();
         }
       } else {
@@ -391,8 +396,7 @@
           tipo: document.getElementById('oc-tipo').value,
           valor: parseFloat(document.getElementById('oc-valor').value),
           endereco: document.getElementById('oc-endereco').value,
-          lat: parseFloat(document.getElementById('oc-lat').value),
-          lng: parseFloat(document.getElementById('oc-lng').value),
+          linkMapa: document.getElementById('oc-link-mapa').value,
           status: 'pendente',
           relatorio: document.getElementById('oc-relatorio-admin').value.trim(),
           fotos: []
@@ -412,8 +416,7 @@
       document.getElementById('oc-tipo').value = oc.tipo;
       document.getElementById('oc-valor').value = oc.valor;
       document.getElementById('oc-endereco').value = oc.endereco;
-      document.getElementById('oc-lat').value = oc.lat;
-      document.getElementById('oc-lng').value = oc.lng;
+      document.getElementById('oc-link-mapa').value = oc.linkMapa || '';
       document.getElementById('oc-relatorio-admin').value = oc.relatorio || '';
       
       document.getElementById('form-oc-titulo').innerText = 'Editar Ocorrência';
@@ -426,8 +429,7 @@
       document.getElementById('oc-tipo').value = 'Aviso de Alarme';
       document.getElementById('oc-valor').value = '';
       document.getElementById('oc-endereco').value = '';
-      document.getElementById('oc-lat').value = '';
-      document.getElementById('oc-lng').value = '';
+      document.getElementById('oc-link-mapa').value = '';
       document.getElementById('oc-relatorio-admin').value = '';
       document.getElementById('form-oc-titulo').innerText = 'Lançar Nova Ocorrência';
       document.getElementById('btn-cancelar-edit').classList.add('hidden');
@@ -516,7 +518,6 @@
       if (!isOnline) return;
       const container = document.getElementById('apoio-ocorrencias-list');
       container.innerHTML = '';
-      if (markersGroup) markersGroup.clearLayers();
 
       const ativas = ocorrencias.filter(o => 
         (o.status === 'pendente' && !recusadas.includes(`${currentUser.id}_${o.id}`)) || 
@@ -528,8 +529,6 @@
       }
 
       ativas.forEach(oc => {
-        if (markersGroup) L.marker([oc.lat, oc.lng]).addTo(markersGroup).bindPopup(oc.tipo);
-
         let acoes = '';
         if (oc.status === 'pendente') {
           acoes = `
@@ -549,8 +548,13 @@
               <strong>${oc.tipo}</strong>
               <span class="badge badge-${oc.status}">${oc.status}</span>
             </div>
-            <p style="font-size:0.85rem; color:var(--dim); margin:0.5rem 0;">${oc.endereco}</p>
-            <p><strong>R$ ${oc.valor.toFixed(2)}</strong></p>
+            <p style="font-size:0.85rem; color:var(--dim); margin-top:0.5rem;">📍 ${oc.endereco}</p>
+            ${oc.linkMapa ? `
+              <div style="margin: 0.3rem 0;">
+                <a href="${oc.linkMapa}" target="_blank" class="btn-link">🔗 Abrir Rota / Ver Distância</a>
+              </div>
+            ` : ''}
+            <p style="margin-top: 0.2rem;"><strong>R$ ${oc.valor.toFixed(2)}</strong></p>
             ${acoes}
           </div>`;
       });
@@ -579,7 +583,15 @@
       selectedOcId = id;
       const oc = ocorrencias.find(o => o.id === id);
       document.getElementById('exec-titulo').innerText = oc.tipo;
-      document.getElementById('exec-endereco').innerText = oc.endereco;
+      document.getElementById('exec-endereco').innerText = `📍 ${oc.endereco}`;
+      
+      const linkContainer = document.getElementById('exec-link-container');
+      if (oc.linkMapa) {
+        linkContainer.innerHTML = `<a href="${oc.linkMapa}" target="_blank" class="btn-link" style="font-size:0.9rem; padding:0.5rem 1rem;">🔗 Clique aqui para Abrir a Rota / GPS / Distância</a>`;
+      } else {
+        linkContainer.innerHTML = '';
+      }
+
       document.getElementById('relatorio-texto').value = oc.relatorio || '';
       document.getElementById('check-fotos-confirmadas').checked = false;
       document.getElementById('foto-input').value = '';

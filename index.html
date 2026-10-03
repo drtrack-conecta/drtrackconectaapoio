@@ -23,22 +23,28 @@
     .form-group { margin-bottom: 0.85rem; }
     .form-group label { display: block; font-size: 0.8rem; color: var(--dim); margin-bottom: 0.25rem; }
     .form-control { width: 100%; padding: 0.6rem; background: var(--bg); border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text); }
-    .btn { background: var(--accent); color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 600; width: 100%; }
+    .btn { background: var(--accent); color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 600; width: 100%; text-align: center; }
     .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--dim); }
     .btn-success { background: var(--success); }
     .btn-danger { background: var(--danger); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .badge { padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
     .badge-pendente { background: var(--warning); color: #000; }
     .badge-aceito { background: var(--accent); }
     .badge-concluido { background: var(--success); }
-    #map { height: 280px; width: 100%; border-radius: 0.5rem; border: 1px solid var(--border); margin-bottom: 1rem; }
-    .photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem; }
-    .photo-preview { width: 100%; height: 120px; object-fit: cover; border-radius: 0.25rem; border: 1px solid var(--border); }
-    .chat-box { height: 180px; overflow-y: auto; border: 1px solid var(--border); padding: 0.5rem; background: var(--bg); border-radius: 0.375rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .badge-aprovado { background: var(--success); }
+    .badge-aguardando { background: var(--warning); color: #000; }
+    #map { height: 260px; width: 100%; border-radius: 0.5rem; border: 1px solid var(--border); margin-bottom: 1rem; }
+    .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem; margin-top: 0.5rem; }
+    .photo-wrapper { position: relative; }
+    .photo-preview { width: 100%; height: 90px; object-fit: cover; border-radius: 0.25rem; border: 1px solid var(--border); }
+    .photo-del { position: absolute; top: 2px; right: 2px; background: rgba(220, 38, 38, 0.8); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-size: 0.7rem; }
+    .chat-box { height: 160px; overflow-y: auto; border: 1px solid var(--border); padding: 0.5rem; background: var(--bg); border-radius: 0.375rem; margin-bottom: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
     .chat-msg { max-width: 85%; padding: 0.4rem 0.6rem; border-radius: 0.25rem; font-size: 0.85rem; }
     .chat-msg.sent { align-self: flex-end; background: var(--accent); }
     .chat-msg.received { align-self: flex-start; background: var(--border); }
     .hidden { display: none !important; }
+    .alert-banner { background: var(--warning); color: #000; padding: 0.75rem; border-radius: 0.375rem; font-weight: bold; margin-bottom: 1rem; text-align: center; }
   </style>
 </head>
 <body>
@@ -55,11 +61,11 @@
   </header>
 
   <main>
-    <!-- TELA: LOGIN ÚNICO -->
+    <!-- TELA: LOGIN -->
     <section id="screen-login" class="card">
       <h2 style="margin-bottom: 1rem;">Acesso à Plataforma</h2>
       <div class="form-group">
-        <label>Telefone / WhatsApp (Apoio) ou 'admin'</label>
+        <label>Telefone/WhatsApp (Apoio) ou 'admin'</label>
         <input type="text" id="login-user" class="form-control" placeholder="11999999999 ou admin">
       </div>
       <div class="form-group">
@@ -88,8 +94,15 @@
 
     <!-- TELA: PAINEL ADMIN -->
     <section id="screen-admin" class="hidden">
+      <!-- Aprovação de Cadastros -->
       <div class="card">
-        <h3>Lançar Ocorrência</h3>
+        <h3>Aprovação de Prestadores de Apoio</h3>
+        <div id="admin-apoios-list" style="margin-top: 0.75rem;"></div>
+      </div>
+
+      <!-- Lançamento de Ocorrência -->
+      <div class="card">
+        <h3>Lançar Nova Ocorrência</h3>
         <form onsubmit="lancarOcorrencia(event)" style="margin-top: 0.75rem;">
           <div class="grid">
             <div class="form-group">
@@ -109,6 +122,7 @@
         </form>
       </div>
 
+      <!-- Gestão de Ocorrências -->
       <div class="card">
         <h3>Painel Geral de Ocorrências</h3>
         <div id="admin-ocorrencias-list" class="grid" style="margin-top: 1rem;"></div>
@@ -118,11 +132,21 @@
     <!-- TELA: PAINEL APOIO -->
     <section id="screen-apoio" class="hidden">
       <div class="card">
-        <h3>Seu Status: <span id="gps-status" style="color: var(--warning);">Iniciando GPS...</span></h3>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3>Status GPS / Presença: <span id="gps-status" style="color: var(--warning);">Inativo</span></h3>
+          <button class="btn btn-success" style="width: auto; padding: 0.4rem 0.8rem;" onclick="ativarModoOnline()">Ficar Online</button>
+        </div>
       </div>
-      <div id="map"></div>
-      <h3>Ocorrências Próximas</h3>
-      <div id="apoio-ocorrencias-list" class="grid" style="margin-top: 0.75rem;"></div>
+
+      <div id="apoio-offline-msg" class="alert-banner">
+        ⚠️️ Você precisa ficar <strong>ONLINE</strong> para visualizar e receber os alertas sonoros de novas ocorrências.
+      </div>
+
+      <div id="apoio-content" class="hidden">
+        <div id="map"></div>
+        <h3>Ocorrências Próximas Disponíveis</h3>
+        <div id="apoio-ocorrencias-list" class="grid" style="margin-top: 0.75rem;"></div>
+      </div>
     </section>
 
     <!-- TELA: EXECUÇÃO DA OCORRÊNCIA (APOIO) -->
@@ -132,7 +156,7 @@
       <p id="exec-endereco" style="color: var(--accent); margin-bottom: 1rem;"></p>
 
       <div class="card" style="background: var(--bg);">
-        <h4>Chat com a Central</h4>
+        <h4>Chat Direto com a Central</h4>
         <div class="chat-box" id="chat-box"></div>
         <div style="display: flex; gap: 0.5rem;">
           <input type="text" class="form-control" id="chat-input" placeholder="Digite uma mensagem...">
@@ -142,16 +166,18 @@
 
       <div class="card" style="background: var(--bg); margin-top: 1rem;">
         <h4>Relatório por Escrito *</h4>
-        <textarea id="relatorio-texto" class="form-control" rows="3" placeholder="Descreva o que constatou no local..."></textarea>
+        <textarea id="relatorio-texto" class="form-control" rows="3" placeholder="Descreva os fatos constatados no local..."></textarea>
       </div>
 
       <div class="card" style="background: var(--bg); margin-top: 1rem;">
-        <h4>Fotos do Local (Mínimo 1)</h4>
+        <h4>Registros Fotográficos (Obrigatório: <span id="foto-contador" style="color: var(--warning);">0 / 5</span>)</h4>
         <input type="file" accept="image/*" capture="environment" class="form-control" onchange="adicionarFoto(event)">
         <div class="photo-grid" id="photo-grid"></div>
       </div>
 
-      <button class="btn btn-success" style="margin-top: 1rem; padding: 0.8rem;" onclick="finalizarAtendimento()">Finalizar Atendimento e Enviar WhatsApp</button>
+      <button id="btn-finalizar" class="btn btn-success" style="margin-top: 1rem; padding: 0.8rem;" disabled onclick="finalizarAtendimento()">
+        Enviar Relatório e Concluir no WhatsApp
+      </button>
     </section>
   </main>
 
@@ -160,9 +186,13 @@
     let apoios = JSON.parse(localStorage.getItem('dr_apoios')) || [];
     let ocorrencias = JSON.parse(localStorage.getItem('dr_ocorrencias')) || [];
     let chats = JSON.parse(localStorage.getItem('dr_chats')) || {};
+    
     let currentUser = null;
     let selectedOcId = null;
-    let map = null, markersGroup = null, userLat = null, userLng = null;
+    let isOnline = false;
+    let map = null, markersGroup = null;
+    let lastOcorrenciasCount = 0;
+    let audioContext = null;
 
     function saveData() {
       localStorage.setItem('dr_apoios', JSON.stringify(apoios));
@@ -173,7 +203,7 @@
     function showScreen(id) {
       document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
-      if (id === 'screen-apoio') initMap();
+      if (id === 'screen-apoio' && isOnline) setTimeout(initMap, 200);
     }
 
     function updateNav() {
@@ -201,11 +231,13 @@
 
       const apoio = apoios.find(a => a.tel.replace(/\D/g, '') === u.replace(/\D/g, '') && a.pass === p);
       if (apoio) {
+        if (apoio.status !== 'aprovado') {
+          return alert('Seu cadastro ainda está aguardando aprovação da Central Admin.');
+        }
         currentUser = { type: 'apoio', ...apoio };
         updateNav();
-        initGPS();
-        renderApoio();
         showScreen('screen-apoio');
+        renderApoio();
       } else {
         alert('Credenciais inválidas.');
       }
@@ -213,6 +245,7 @@
 
     function logout() {
       currentUser = null;
+      isOnline = false;
       updateNav();
       showScreen('screen-login');
     }
@@ -225,11 +258,62 @@
         tel: document.getElementById('cad-tel').value,
         pass: document.getElementById('cad-pass').value,
         veiculo: document.getElementById('cad-veiculo').value,
-        pix: document.getElementById('cad-pix').value
+        pix: document.getElementById('cad-pix').value,
+        status: 'aguardando'
       });
       saveData();
-      alert('Cadastro realizado! Faça login para continuar.');
+      alert('Cadastro enviado com sucesso! Aguarde a aprovação da Central.');
       showScreen('screen-login');
+    }
+
+    // FUNÇÕES DO ADMINISTRADOR
+    function renderAdmin() {
+      // Render Apoios
+      const apoioContainer = document.getElementById('admin-apoios-list');
+      apoioContainer.innerHTML = '';
+      if (apoios.length === 0) apoioContainer.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhum apoio cadastrado.</p>';
+
+      apoios.forEach(a => {
+        apoioContainer.innerHTML += `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg); padding:0.6rem; border-radius:0.375rem; margin-bottom:0.5rem;">
+            <div>
+              <strong>${a.nome}</strong> (${a.veiculo})<br>
+              <small style="color:var(--dim);">Tel: ${a.tel} | PIX: ${a.pix}</small>
+            </div>
+            <div>
+              ${a.status === 'aguardando' ? `
+                <button class="btn btn-success" style="width:auto; padding:0.3rem 0.6rem; font-size:0.75rem;" onclick="alterarStatusApoio(${a.id}, 'aprovado')">Aprovar</button>
+                <button class="btn btn-danger" style="width:auto; padding:0.3rem 0.6rem; font-size:0.75rem;" onclick="alterarStatusApoio(${a.id}, 'rejeitado')">Rejeitar</button>
+              ` : `<span class="badge badge-${a.status}">${a.status}</span>`}
+            </div>
+          </div>`;
+      });
+
+      // Render Ocorrências
+      const ocContainer = document.getElementById('admin-ocorrencias-list');
+      ocContainer.innerHTML = '';
+      ocorrencias.forEach(oc => {
+        ocContainer.innerHTML += `
+          <div class="card" style="background: var(--bg)">
+            <div style="display:flex; justify-content:space-between;">
+              <strong>${oc.tipo}</strong>
+              <span class="badge badge-${oc.status}">${oc.status}</span>
+            </div>
+            <p style="font-size:0.85rem; color:var(--dim); margin:0.5rem 0;">${oc.endereco}</p>
+            <p><strong>R$ ${oc.valor.toFixed(2)}</strong></p>
+            ${oc.relatorio ? `<p style="font-size:0.8rem; margin-top:0.5rem; background:var(--card); padding:0.4rem;"><strong>Relatório:</strong> ${oc.relatorio}</p>` : ''}
+            <button class="btn btn-danger" style="margin-top:0.5rem;" onclick="excluirOc(${oc.id})">Excluir</button>
+          </div>`;
+      });
+    }
+
+    function alterarStatusApoio(id, status) {
+      const a = apoios.find(item => item.id === id);
+      if (a) {
+        a.status = status;
+        saveData();
+        renderAdmin();
+      }
     }
 
     function lancarOcorrencia(e) {
@@ -248,25 +332,7 @@
       saveData();
       e.target.reset();
       renderAdmin();
-      alert('Ocorrência lançada!');
-    }
-
-    function renderAdmin() {
-      const container = document.getElementById('admin-ocorrencias-list');
-      container.innerHTML = '';
-      ocorrencias.forEach(oc => {
-        container.innerHTML += `
-          <div class="card" style="background: var(--bg)">
-            <div style="display:flex; justify-content:space-between;">
-              <strong>${oc.tipo}</strong>
-              <span class="badge badge-${oc.status}">${oc.status}</span>
-            </div>
-            <p style="font-size:0.85rem; color:var(--dim); margin:0.5rem 0;">${oc.endereco}</p>
-            <p><strong>R$ ${oc.valor.toFixed(2)}</strong></p>
-            ${oc.relatorio ? `<p style="font-size:0.8rem; margin-top:0.5rem; background:var(--card); padding:0.4rem;"><strong>Relatório:</strong> ${oc.relatorio}</p>` : ''}
-            <button class="btn btn-danger" style="margin-top:0.5rem;" onclick="excluirOc(${oc.id})">Excluir</button>
-          </div>`;
-      });
+      alert('Ocorrência lançada e enviada aos apoios online!');
     }
 
     function excluirOc(id) {
@@ -275,15 +341,45 @@
       renderAdmin();
     }
 
-    function initGPS() {
-      if (navigator.geolocation) {
-        navigator.geolocation.watchPosition(p => {
-          userLat = p.coords.latitude;
-          userLng = p.coords.longitude;
-          document.getElementById('gps-status').innerText = '🟢 Ativo';
-          document.getElementById('gps-status').style.color = 'var(--success)';
-        });
+    // SISTEMA DE ALERTA SONORO E PRESENÇA (APOIO)
+    function ativarModoOnline() {
+      isOnline = true;
+      document.getElementById('gps-status').innerText = '🟢 Online';
+      document.getElementById('gps-status').style.color = 'var(--success)';
+      document.getElementById('apoio-offline-msg').classList.add('hidden');
+      document.getElementById('apoio-content').classList.remove('hidden');
+
+      // Inicializa áudio do navegador
+      if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+      initMap();
+      renderApoio();
+      
+      // Inicia o monitoramento de novas ocorrências a cada 4s
+      setInterval(checarNovasOcorrencias, 4000);
+    }
+
+    function tocarAlertaSonoro() {
+      if (!audioContext) return;
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880; // Tom alto de bip
+      gain.gain.value = 0.3;
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.start();
+      osc.stop(audioContext.currentTime + 0.6);
+    }
+
+    function checarNovasOcorrencias() {
+      if (!isOnline || currentUser?.type !== 'apoio') return;
+      const pendentes = ocorrencias.filter(o => o.status === 'pendente');
+      if (pendentes.length > lastOcorrenciasCount) {
+        tocarAlertaSonoro();
+        renderApoio();
       }
+      lastOcorrenciasCount = pendentes.length;
     }
 
     function initMap() {
@@ -295,11 +391,18 @@
     }
 
     function renderApoio() {
+      if (!isOnline) return;
       const container = document.getElementById('apoio-ocorrencias-list');
       container.innerHTML = '';
       if (markersGroup) markersGroup.clearLayers();
 
-      ocorrencias.filter(o => o.status === 'pendente' || o.apoioId === currentUser.id).forEach(oc => {
+      const ativas = ocorrencias.filter(o => o.status === 'pendente' || o.apoioId === currentUser.id);
+      
+      if (ativas.length === 0) {
+        container.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhuma ocorrência disponível no momento.</p>';
+      }
+
+      ativas.forEach(oc => {
         if (markersGroup) L.marker([oc.lat, oc.lng]).addTo(markersGroup).bindPopup(oc.tipo);
 
         let btn = oc.status === 'pendente' 
@@ -329,6 +432,7 @@
       }
     }
 
+    // TELA DE EXECUÇÃO
     function abrirExecucao(id) {
       selectedOcId = id;
       const oc = ocorrencias.find(o => o.id === id);
@@ -373,12 +477,35 @@
       reader.readAsDataURL(file);
     }
 
+    function removerFoto(index) {
+      const oc = ocorrencias.find(o => o.id === selectedOcId);
+      if (oc && oc.fotos) {
+        oc.fotos.splice(index, 1);
+        saveData();
+        renderFotos();
+      }
+    }
+
     function renderFotos() {
       const grid = document.getElementById('photo-grid');
       grid.innerHTML = '';
       const oc = ocorrencias.find(o => o.id === selectedOcId);
-      (oc.fotos || []).forEach(f => {
-        grid.innerHTML += `<img src="${f}" class="photo-preview">`;
+      const totalFotos = (oc.fotos || []).length;
+
+      // Atualiza o contador de fotos
+      const contador = document.getElementById('foto-contador');
+      contador.innerText = `${totalFotos} / 5`;
+      contador.style.color = totalFotos >= 5 ? 'var(--success)' : 'var(--warning)';
+
+      // Bloqueia/Libera o botão de finalizar
+      document.getElementById('btn-finalizar').disabled = totalFotos < 5;
+
+      (oc.fotos || []).forEach((f, idx) => {
+        grid.innerHTML += `
+          <div class="photo-wrapper">
+            <img src="${f}" class="photo-preview">
+            <button class="photo-del" onclick="removerFoto(${idx})">✕</button>
+          </div>`;
       });
     }
 
@@ -387,11 +514,13 @@
       if (!rel) return alert('Preencha o relatório por escrito.');
 
       const oc = ocorrencias.find(o => o.id === selectedOcId);
+      if ((oc.fotos || []).length < 5) return alert('É obrigatório anexar no mínimo 5 fotos do local.');
+
       oc.status = 'concluido';
       oc.relatorio = rel;
       saveData();
 
-      const msg = `*RELATÓRIO DE FINALIZAÇÃO DE OCORRÊNCIA*\n*Prestador:* ${currentUser.nome}\n*Evento:* ${oc.tipo}\n*Endereço:* ${oc.endereco}\n\n*Relatório:* ${rel}`;
+      const msg = `*RELATÓRIO DE FINALIZAÇÃO DE OCORRÊNCIA*\n*Prestador:* ${currentUser.nome}\n*Evento:* ${oc.tipo}\n*Endereço:* ${oc.endereco}\n*Fotos Anexadas:* ${oc.fotos.length}\n\n*Relatório:* ${rel}`;
       window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
       showScreen('screen-apoio');
       renderApoio();

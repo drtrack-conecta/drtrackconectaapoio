@@ -28,6 +28,7 @@
     .btn-success { background: var(--success); }
     .btn-warning { background: var(--warning); color: #000; }
     .btn-danger { background: var(--danger); }
+    .btn-pdf { background: #e11d48; color: #fff; }
     .btn-link { background: #0284c7; color: #fff; border: 1px solid var(--accent); font-size: 0.85rem; padding: 0.4rem 0.8rem; margin-top: 0.3rem; margin-bottom: 0.5rem; text-align: center; border-radius: 0.375rem; display: inline-block; text-decoration: none; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .badge { padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
@@ -50,6 +51,16 @@
     .chat-msg.received { align-self: flex-start; background: var(--border); }
     .hidden { display: none !important; }
     .alert-banner { background: var(--warning); color: #000; padding: 0.75rem; border-radius: 0.375rem; font-weight: bold; margin-bottom: 1rem; text-align: center; }
+
+    /* Estilo de Impressão para PDF */
+    @media print {
+      body * { visibility: hidden; }
+      #print-area, #print-area * { visibility: visible; }
+      #print-area { position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; padding: 20px; }
+      #print-area h2 { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
+      #print-area img { max-width: 200px; height: auto; margin: 5px; border: 1px solid #ccc; }
+      #print-area .pdf-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+    }
   </style>
 </head>
 <body>
@@ -122,7 +133,6 @@
             <div class="form-group"><label>Valor (R$)</label><input type="number" step="0.01" class="form-control" id="oc-valor" required></div>
             <div class="form-group" style="grid-column: 1 / -1;"><label>Endereço Completo</label><input type="text" class="form-control" id="oc-endereco" required></div>
             
-            <!-- CAMPO ATUALIZADO: LINK DA LOCALIZAÇÃO EM SUBST. À LAT/LNG -->
             <div class="form-group" style="grid-column: 1 / -1;">
               <label>🔗 Link da Localização / Mapa (Google Maps, Waze, etc.) *</label>
               <input type="url" class="form-control" id="oc-link-mapa" placeholder="https://maps.google.com/?q=..." required>
@@ -186,7 +196,6 @@
         <textarea id="relatorio-texto" class="form-control" rows="3" placeholder="Descreva os fatos constatados no local..."></textarea>
       </div>
 
-      <!-- Envio de Fotos via Upload e WhatsApp -->
       <div class="card" style="background: var(--bg); margin-top: 1rem;">
         <h4>Registros Fotográficos (Mínimo de 5 fotos) *</h4>
         <p style="font-size: 0.8rem; color: var(--dim); margin-bottom: 0.5rem;">
@@ -221,6 +230,9 @@
       </button>
     </section>
   </main>
+
+  <!-- ÁREA DE IMPRESSÃO / GERAÇÃO DE PDF -->
+  <div id="print-area" class="hidden"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
@@ -316,7 +328,7 @@
     function renderAdmin() {
       const apoioContainer = document.getElementById('admin-apoios-list');
       apoioContainer.innerHTML = '';
-      if (apoios.length === 0) apoioContainer.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhum apoio cadastrado.</p>';
+      if (apoios.length === 0) apoioContainer.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenum apoio cadastrado.</p>';
 
       apoios.forEach(a => {
         apoioContainer.innerHTML += `
@@ -354,15 +366,18 @@
             ${oc.linkMapa ? `<a href="${oc.linkMapa}" target="_blank" class="btn-link">🔗 Link do Local</a>` : ''}
             <p style="margin-top:0.4rem;"><strong>R$ ${oc.valor.toFixed(2)}</strong> | <small>Atendimento: ${apoioNome}</small></p>
             
-            ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--card); padding:0.5rem; border-radius:0.25rem;"><strong>Relatório Atual:</strong><br>${oc.relatorio}</div>` : ''}
+            ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--card); padding:0.5rem; border-radius:0.25rem;"><strong>Relatório do Atendimento:</strong><br>${oc.relatorio}</div>` : ''}
             ${fotosHtml}
             
-            <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+            <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.75rem;">
               <button class="btn btn-warning" style="padding:0.4rem;" onclick="prepararEdicaoAdmin(${oc.id})">Editar Dados / Relatório</button>
-              ${oc.status === 'enviada' || oc.status === 'concluido' ? `
-                <button class="btn btn-success" style="padding:0.4rem;" onclick="enviarRelatorioCliente(${oc.id})">Enviar ao Cliente</button>
-              ` : ''}
-              <button class="btn btn-danger" style="padding:0.4rem; width:auto;" onclick="excluirOc(${oc.id})">Excluir</button>
+              
+              <div style="display:flex; gap:0.4rem;">
+                <button class="btn btn-success" style="padding:0.4rem;" onclick="enviarRelatorioWhatsApp(${oc.id})">📱 WhatsApp</button>
+                <button class="btn btn-pdf" style="padding:0.4rem;" onclick="gerarPDFRelatorio(${oc.id})">📄 Gerar PDF</button>
+              </div>
+
+              <button class="btn btn-danger" style="padding:0.4rem; margin-top:0.2rem;" onclick="excluirOc(${oc.id})">Excluir Ocorrência</button>
             </div>
           </div>`;
       });
@@ -435,7 +450,8 @@
       document.getElementById('btn-cancelar-edit').classList.add('hidden');
     }
 
-    function enviarRelatorioCliente(id) {
+    // --- RECURSOS DE ENVIO: WHATSAPP E PDF ---
+    function enviarRelatorioWhatsApp(id) {
       const oc = ocorrencias.find(o => o.id === id);
       if (!oc) return;
 
@@ -443,14 +459,63 @@
       saveData();
       renderAdmin();
 
-      const textoCliente = `*RELATÓRIO OPERACIONAL - DRTRACK*\n\n*Tipo de Evento:* ${oc.tipo}\n*Local:* ${oc.endereco}\n*Status:* Finalizado\n\n*Resumo do Atendimento:* ${oc.relatorio || 'Atendimento presencial concluído sem anormalidades.'}`;
+      const apoioNome = apoios.find(a => a.id === oc.apoioId)?.nome || 'Não especificado';
+      
+      let textoCliente = `*🛡️ RELATÓRIO DE OC ORRÊNCIA - DRTRACK*\n\n`;
+      textoCliente += `*Evento:* ${oc.tipo}\n`;
+      textoCliente += `*Endereço:* ${oc.endereco}\n`;
+      textoCliente += `*Prestador Responsável:* ${apoioNome}\n`;
+      textoCliente += `*Status:* Finalizado\n\n`;
+      textoCliente += `*RESUMO DO ATENDIMENTO:*\n${oc.relatorio || 'Atendimento presencial concluído sem anormalidades.'}\n\n`;
+      
+      if (oc.fotos && oc.fotos.length > 0) {
+        textoCliente += `📸 *Registros Fotográficos Anexados:* ${oc.fotos.length} foto(s) no sistema.\n`;
+      }
+
       window.open(`https://wa.me/?text=${encodeURIComponent(textoCliente)}`, '_blank');
     }
 
+    function gerarPDFRelatorio(id) {
+      const oc = ocorrencias.find(o => o.id === id);
+      if (!oc) return;
+
+      const apoioNome = apoios.find(a => a.id === oc.apoioId)?.nome || 'Não especificado';
+      const printArea = document.getElementById('print-area');
+
+      let fotosPrint = '';
+      if (oc.fotos && oc.fotos.length > 0) {
+        fotosPrint = `
+          <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">Registros Fotográficos</h3>
+          <div class="pdf-grid">
+            ${oc.fotos.map(f => `<img src="${f}">`).join('')}
+          </div>`;
+      }
+
+      printArea.innerHTML = `
+        <h2>🛡️ DRTRACK Conecta - Relatório de Atendimento Operacional</h2>
+        <p><strong>Tipo de Evento:</strong> ${oc.tipo}</p>
+        <p><strong>Endereço do Local:</strong> ${oc.endereco}</p>
+        <p><strong>Prestador Apoio:</strong> ${apoioNome}</p>
+        <p><strong>Data de Emissão:</strong> ${new Date().toLocaleString('pt-BR')}</p>
+        <hr style="margin: 15px 0;">
+        <h3>Resumo / Descrição do Atendimento</h3>
+        <p style="background: #f1f5f9; padding: 10px; border-radius: 4px; margin-top: 5px;">
+          ${oc.relatorio ? oc.relatorio.replace(/\n/g, '<br>') : 'Nenhum detalhe adicional informado.'}
+        </p>
+        ${fotosPrint}
+      `;
+
+      printArea.classList.remove('hidden');
+      window.print();
+      printArea.classList.add('hidden');
+    }
+
     function excluirOc(id) {
-      ocorrencias = ocorrencias.filter(o => o.id !== id);
-      saveData();
-      renderAdmin();
+      if (confirm('Tem certeza que deseja excluir esta ocorrência?')) {
+        ocorrencias = ocorrencias.filter(o => o.id !== id);
+        saveData();
+        renderAdmin();
+      }
     }
 
     // --- ALERTA SONORO CONTÍNUO E PRESENÇA (APOIO) ---
@@ -659,7 +724,7 @@
       const numeroPadrao = '5511994944410';
       const numeroDestino = numeroAdicional ? `55${numeroAdicional}` : numeroPadrao;
 
-      const textoWhatsApp = `*ENVIO DE FOTOS DO ATENDIMENTO*\n*Prestador:* ${currentUser.nome}\n*Evento:* ${oc.tipo}\n*Endereço:* ${oc.endereco}\n\n_Estou enviando abaixo as 5 fotos do atendimento._`;
+      const textoWhatsApp = `*ENVIO DE FOTOS DO ATENDIMENTO*\n*Prestador:* ${currentUser.nome}\n*Evento:* ${oc.tipo}\n*Endereço:* ${oc.endereco}\n\n_Estou enviando abaixo as fotos do atendimento._`;
       
       window.open(`https://wa.me/${numeroDestino}?text=${encodeURIComponent(textoWhatsApp)}`, '_blank');
     }

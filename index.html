@@ -405,6 +405,15 @@
       flex-wrap: wrap;
     }
 
+    .live-badge {
+      font-size: 0.7rem;
+      background-color: #0284c7;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 10px;
+      animation: pulse 2s infinite;
+    }
+
     @media (max-width: 600px) {
       header {
         flex-direction: column;
@@ -514,7 +523,7 @@
     <section id="screen-dashboard-admin" class="hidden">
       <div class="tab-nav">
         <button class="tab-btn active" onclick="switchAdminTab('tab-lancar', event)">Lançar Ocorrência</button>
-        <button class="tab-btn" onclick="switchAdminTab('tab-ocorrencias', event)">Acompanhar Ocorrências</button>
+        <button class="tab-btn" onclick="switchAdminTab('tab-ocorrencias', event)">Acompanhar Ocorrências <span class="live-badge">Ao Vivo</span></button>
         <button class="tab-btn" onclick="switchAdminTab('tab-apoios', event)">Apoios Cadastrados</button>
         <button class="tab-btn" onclick="switchAdminTab('tab-relatorios', event)">Relatório Quinzenal</button>
       </div>
@@ -569,10 +578,13 @@
       <!-- TAB: LISTA DE OCORRÊNCIAS (ADMIN) COM CATEGORIAS E EXCLUSÃO -->
       <div id="tab-ocorrencias" class="admin-tab hidden">
         <div class="card">
-          <h3>Ocorrências Lançadas</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <h3>Ocorrências Lançadas</h3>
+            <small style="color: var(--accent);">📡 Sincronização em tempo real ativa</small>
+          </div>
           
           <!-- FILTROS DE STATUS -->
-          <div class="sub-filter-nav">
+          <div class="sub-filter-nav" style="margin-top: 1rem;">
             <button class="sub-filter-btn active" onclick="filtrarStatusAdmin('pendente', this)">Aguardando Atendimento</button>
             <button class="sub-filter-btn" onclick="filtrarStatusAdmin('aceito', this)">Em Atendimento</button>
             <button class="sub-filter-btn" onclick="filtrarStatusAdmin('concluido', this)">Ocorrências Atendidas</button>
@@ -607,6 +619,9 @@
       <div id="tab-relatorios" class="admin-tab hidden">
         <div class="card">
           <h3>Prestação de Contas / Fechamento Quinzenal</h3>
+          <p style="color: var(--text-dim); margin-bottom: 1rem; font-size: 0.875rem;">
+            Selecione o prestador e o período para gerar o relatório consolidado de fechamento das ocorrências atendidas.
+          </p>
           <div class="grid">
             <div class="form-group">
               <label>Selecione o Apoio</label>
@@ -621,12 +636,15 @@
               <input type="date" class="form-control" id="rel-data-fim">
             </div>
           </div>
-          <button class="btn" onclick="gerarRelatorioQuinzenal()">Gerar Resumo</button>
+          <button class="btn" onclick="gerarRelatorioQuinzenal()">Gerar Resumo Quinzenal</button>
           
           <div id="relatorio-resultado" class="card hidden" style="margin-top: 1rem; background-color: var(--bg-dark);">
             <h4>Extrato da Quinzena</h4>
-            <div id="relatorio-conteudo" style="white-space: pre-wrap; font-family: monospace; margin: 1rem 0;"></div>
-            <button class="btn btn-success" onclick="enviarRelatorioWhats()">Enviar Extrato via WhatsApp</button>
+            <div id="relatorio-conteudo" style="white-space: pre-wrap; font-family: monospace; margin: 1rem 0; background: #090d16; padding: 1rem; border-radius: 0.375rem; border: 1px solid var(--border);"></div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-success" onclick="enviarRelatorioWhats()">📱 Enviar Extrato via WhatsApp</button>
+              <button class="btn btn-warning" onclick="baixarRelatorioQuinzenalTexto()">📄 Baixar Extrato em Arquivo (.txt)</button>
+            </div>
           </div>
         </div>
       </div>
@@ -637,7 +655,7 @@
       <button class="btn btn-secondary" onclick="voltarAdminDashboard()" style="margin-bottom: 1rem;">← Voltar ao Painel Admin</button>
 
       <h2>Personalizar Relatório do Atendimento para o Cliente</h2>
-      <p style="color: var(--text-dim); margin-bottom: 1rem;">Altere os textos, escolha quais fotos enviadas pelo apoio deseja manter e anexe novas fotos se necessário.</p>
+      <p style="color: var(--text-dim); margin-bottom: 1rem;">Altere os textos, escolha quais fotos enviadas pelo apoio deseja manter e anexe novas fotos se necessário antes de enviar ao Cliente.</p>
 
       <div class="form-group">
         <label>Telefone do Cliente (Com DDD)</label>
@@ -664,8 +682,8 @@
       </div>
 
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
-        <button class="btn btn-success" onclick="enviarRelatorioClienteWhatsApp()">Enviar Texto do Relatório para Cliente (WhatsApp)</button>
-        <button class="btn btn-warning" onclick="baixarFotosRelatorioClienteZIP()">Baixar Pacote das Fotos Selecionadas (ZIP)</button>
+        <button class="btn btn-success" onclick="enviarRelatorioClienteWhatsApp()">📲 Enviar Texto do Relatório para Cliente (WhatsApp)</button>
+        <button class="btn btn-warning" onclick="baixarFotosRelatorioClienteZIP()">📦 Baixar Pacote das Fotos Selecionadas (ZIP)</button>
       </div>
     </section>
 
@@ -730,17 +748,17 @@
       </div>
 
       <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
-        <h4>Relatório por Escrito do Atendimento *</h4>
+        <h4>Relatório por Escrito do Atendimento * (Transmissão em Tempo Real para Admin)</h4>
         <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
-          Descreva detalhadamente o que foi verificado, pessoas contatadas e ações tomadas.
+          Descreva detalhadamente o que foi verificado. Conforme você digita, o administrador enxergará as atualizações no painel dele.
         </p>
-        <textarea id="relatorio-escrito-apoio" class="form-control" rows="4" placeholder="Ex: Cheguei ao local às 14h20. O imóvel encontrava-se com o portão fechado..."></textarea>
+        <textarea id="relatorio-escrito-apoio" class="form-control" rows="4" placeholder="Ex: Cheguei ao local às 14h20. O imóvel encontrava-se com o portão fechado..." oninput="sincronizarTextoRelatorioApoio()"></textarea>
       </div>
 
       <div class="card" style="background-color: var(--bg-dark); margin-bottom: 1rem;">
         <h4>Relatório Fotográfico do Local (Mínimo 5 Fotos)</h4>
         <p style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.5rem;">
-          Tire fotos ajustáveis do local. Elas serão exibidas 2 a 2 (uma ao lado da outra) e compactadas para a Central.
+          Tire fotos ajustáveis do local. Elas serão exibidas 2 a 2 (uma ao lado da outra) e enviadas para a Central.
         </p>
         
         <input type="file" id="foto-input" accept="image/*" capture="environment" class="form-control" onchange="adicionarFoto(event)">
@@ -770,8 +788,8 @@
     let currentUser = null; 
     let selectedOcorrenciaId = null;
     let fotosOcorrenciaAtual = [];
-    let pacoteFotosGeradoApoio = false; // Controle da obrigatoriedade do pacote
-    let currentAdminStatusFilter = 'pendente'; // Filtro de status padrão do admin
+    let pacoteFotosGeradoApoio = false;
+    let currentAdminStatusFilter = 'pendente';
 
     let map = null;
     let mapMarkersGroup = null;
@@ -808,23 +826,43 @@
       localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
     }
 
-    // SINCRONIZAÇÃO INTELIGENTE SEM FLICKER/OSCILAÇÃO
+    /* ==================== SINCRONIZAÇÃO EM TEMPO REAL ==================== */
     window.addEventListener('storage', (e) => {
       if (e.key === 'dr_ocorrencias') {
-        const novasOcorrencias = JSON.parse(e.newValue) || [];
-        const novoHash = JSON.stringify(novasOcorrencias.map(o => ({id: o.id, status: o.status, apoioId: o.apoioId})));
-        
-        if (novoHash !== ultimasOcorrenciasHash) {
-          ocorrencias = novasOcorrencias;
-          ultimasOcorrenciasHash = novoHash;
-          if (currentUser && currentUser.type === 'apoio') {
-            renderApoioOcorrencias();
-          } else if (currentUser && currentUser.type === 'admin') {
-            renderAdminOcorrencias();
-          }
+        ocorrencias = JSON.parse(e.newValue) || [];
+        sincronizarTelasAtivas();
+      }
+      if (e.key === 'dr_chats') {
+        mensagensPorOcorrencia = JSON.parse(e.newValue) || {};
+        if (selectedOcorrenciaId) {
+          if (currentUser && currentUser.type === 'admin') renderChatAdmin();
+          if (currentUser && currentUser.type === 'apoio') renderChatApoio();
         }
       }
     });
+
+    // Polling contínuo (a cada 2.5s) para atualizar a tela do Admin em tempo real
+    setInterval(() => {
+      const stored = JSON.parse(localStorage.getItem('dr_ocorrencias')) || [];
+      const novoHash = JSON.stringify(stored.map(o => ({id: o.id, status: o.status, rel: o.relatorioEscrito, fotos: (o.fotos ? o.fotos.length : 0)})));
+      
+      if (novoHash !== ultimasOcorrenciasHash) {
+        ocorrencias = stored;
+        ultimasOcorrenciasHash = novoHash;
+        sincronizarTelasAtivas();
+      }
+    }, 2500);
+
+    function sincronizarTelasAtivas() {
+      if (currentUser && currentUser.type === 'apoio') {
+        renderApoioOcorrencias();
+      } else if (currentUser && currentUser.type === 'admin') {
+        const tabOcorrenciasVisivel = !document.getElementById('tab-ocorrencias').classList.contains('hidden');
+        if (tabOcorrenciasVisivel) {
+          renderAdminOcorrencias();
+        }
+      }
+    }
 
     /* ==================== SISTEMA DE GEOCODIFICAÇÃO E AUTOCOMPLETE ==================== */
     document.addEventListener('DOMContentLoaded', () => {
@@ -1240,6 +1278,7 @@
 
     function renderAdminOcorrencias() {
       const container = document.getElementById('admin-ocorrencias-list');
+      if (!container) return;
       container.innerHTML = '';
 
       let listaFiltrada = ocorrencias;
@@ -1260,7 +1299,9 @@
 
         let relatorioHTML = '';
         if (oc.relatorioEscrito) {
-          relatorioHTML = `<p style="font-size: 0.85rem; color: var(--text-dim); margin-top: 0.5rem; background: var(--bg-card); padding: 0.5rem; border-radius: 0.25rem;"><strong>Relatório do Apoio:</strong> ${oc.relatorioEscrito}</p>`;
+          relatorioHTML = `<p style="font-size: 0.85rem; color: var(--text); margin-top: 0.5rem; background: var(--bg-card); padding: 0.5rem; border-radius: 0.25rem; border-left: 3px solid var(--accent);"><strong>Relatório do Apoio (Tempo Real):</strong><br>${oc.relatorioEscrito}</p>`;
+        } else {
+          relatorioHTML = `<p style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem; font-style: italic;">Aguardando escrita do relatório pelo Apoio...</p>`;
         }
 
         let labelStatus = oc.status;
@@ -1272,7 +1313,13 @@
         if (oc.apoioId) {
           botoesAcao += `<button class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;" onclick="abrirChatAdmin(${oc.id})">💬 Abrir Chat com Apoio</button>`;
         }
-        botoesAcao += `<button class="btn btn-warning" style="width: 100%; margin-top: 0.5rem;" onclick="abrirEdicaoRelatorioCliente(${oc.id})">✏ Editar / Gerar Relatório p/ Cliente</button>`;
+
+        if (oc.status === 'concluido') {
+          botoesAcao += `<button class="btn btn-success" style="width: 100%; margin-top: 0.5rem;" onclick="abrirEdicaoRelatorioCliente(${oc.id})">🔄 Reenviar / Editar Relatório p/ Cliente</button>`;
+        } else {
+          botoesAcao += `<button class="btn btn-warning" style="width: 100%; margin-top: 0.5rem;" onclick="abrirEdicaoRelatorioCliente(${oc.id})">✏ Editar / Gerar Relatório p/ Cliente</button>`;
+        }
+
         botoesAcao += `<button class="btn btn-danger" style="width: 100%; margin-top: 0.5rem;" onclick="excluirOcorrencia(${oc.id})">🗑 Excluir Ocorrência</button>`;
 
         div.innerHTML = `
@@ -1284,7 +1331,7 @@
           <p style="font-size: 0.75rem; color: var(--accent);">Lat: ${oc.lat} | Lng: ${oc.lng}</p>
           <p><strong>Valor:</strong> R$ ${oc.valor.toFixed(2)}</p>
           <p style="font-size: 0.875rem;"><strong>Apoio Assumido:</strong> ${apoioAtrib ? apoioAtrib.nome : 'Nenhum'}</p>
-          <p style="font-size: 0.875rem; color: var(--text-dim);">Data: ${oc.data} | Fotos: ${oc.fotos ? oc.fotos.length : 0}</p>
+          <p style="font-size: 0.875rem; color: var(--text-dim);">Data: ${oc.data} | Fotos Enviadas: <strong>${oc.fotos ? oc.fotos.length : 0}</strong></p>
           ${relatorioHTML}
           ${botoesAcao}
         `;
@@ -1545,15 +1592,21 @@
 
       let total = 0;
       let resumoTexto = `=== EXTRATO DE FECHAMENTO DE SERVIÇOS ===\n`;
+      resumoTexto += `DRTRACK SEGURANÇA E MONITORAMENTO\n`;
       resumoTexto += `Prestador: ${apoio.nome}\n`;
+      resumoTexto += `CPF: ${apoio.cpf || 'Não informado'}\n`;
       resumoTexto += `Chave PIX: ${apoio.pix}\n`;
       resumoTexto += `Período: ${dataInicio} até ${dataFim}\n`;
       resumoTexto += `----------------------------------------\n`;
 
-      ocsConcluidas.forEach((o, index) => {
-        total += o.valor;
-        resumoTexto += `${index + 1}. [${o.data}] ${o.tipo}\n   Local: ${o.endereco}\n   Valor: R$ ${o.valor.toFixed(2)}\n\n`;
-      });
+      if (ocsConcluidas.length === 0) {
+        resumoTexto += `Nenhuma ocorrência concluída encontrada neste período.\n`;
+      } else {
+        ocsConcluidas.forEach((o, index) => {
+          total += o.valor;
+          resumoTexto += `${index + 1}. [${o.data}] ${o.tipo}\n   Local: ${o.endereco}\n   Valor: R$ ${o.valor.toFixed(2)}\n\n`;
+        });
+      }
 
       resumoTexto += `----------------------------------------\n`;
       resumoTexto += `TOTAL A RECEBER: R$ ${total.toFixed(2)}\n`;
@@ -1567,9 +1620,23 @@
       const apoio = apoios.find(a => a.id === apoioId);
       const texto = document.getElementById('relatorio-conteudo').innerText;
 
+      if (!apoio) {
+        alert('Selecione um prestador válido.');
+        return;
+      }
+
       const cleanTel = apoio.tel.replace(/\D/g, '');
       const url = `https://wa.me/55${cleanTel}?text=${encodeURIComponent(texto)}`;
       window.open(url, '_blank');
+    }
+
+    function baixarRelatorioQuinzenalTexto() {
+      const texto = document.getElementById('relatorio-conteudo').innerText;
+      const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Extrato_Quinzenal_Apoio_${Date.now()}.txt`;
+      a.click();
     }
 
     /* ==================== MAPA E MÓDULO DO APOIO (AGENTE) ==================== */
@@ -1683,7 +1750,7 @@
       document.getElementById('relatorio-escrito-apoio').value = oc.relatorioEscrito || '';
       
       fotosOcorrenciaAtual = oc.fotos || [];
-      pacoteFotosGeradoApoio = false; // Reseta obrigatoriedade do pacote ao abrir
+      pacoteFotosGeradoApoio = false;
 
       const btnConcluir = document.getElementById('btn-concluir-oc');
       btnConcluir.disabled = true;
@@ -1700,6 +1767,15 @@
 
       renderChatApoio();
       showScreen('screen-execucao-ocorrencia');
+    }
+
+    function sincronizarTextoRelatorioApoio() {
+      const texto = document.getElementById('relatorio-escrito-apoio').value;
+      const oc = ocorrencias.find(o => o.id === selectedOcorrenciaId);
+      if (oc) {
+        oc.relatorioEscrito = texto;
+        saveData();
+      }
     }
 
     function voltarDashboardApoio() {
@@ -1757,7 +1833,6 @@
           incluirCliente: true
         });
 
-        // Se adicinou novas fotos após gerar o pacote, força a re-geração do pacote
         pacoteFotosGeradoApoio = false;
         document.getElementById('btn-concluir-oc').disabled = true;
         document.getElementById('msg-obrigatorio-pacote').classList.remove('hidden');
@@ -1841,7 +1916,6 @@
         a.click();
       }
 
-      // Ativa e libera a conclusão do atendimento
       pacoteFotosGeradoApoio = true;
       document.getElementById('btn-concluir-oc').disabled = false;
       document.getElementById('msg-obrigatorio-pacote').classList.add('hidden');

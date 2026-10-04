@@ -132,12 +132,22 @@
           <div class="grid">
             <div class="form-group">
               <label>Tipo de Evento</label>
-              <select class="form-control" id="oc-tipo">
+              <select class="form-control" id="oc-tipo" onchange="verificarOutroTipo()">
                 <option value="Aviso de Alarme">Aviso de Alarme</option>
                 <option value="Rastreamento de Veículo">Rastreamento de Veículo</option>
                 <option value="Preservação de Local">Preservação de Local</option>
+                <option value="Acompanhamento">Acompanhamento</option>
+                <option value="Vistoria Presencial">Vistoria Presencial</option>
+                <option value="Outro">Outro (especificar)</option>
               </select>
             </div>
+
+            <!-- Campo texto exibido quando a opção "Outro" for selecionada -->
+            <div class="form-group hidden" id="group-tipo-outro">
+              <label>Especifique o Tipo de Serviço *</label>
+              <input type="text" class="form-control" id="oc-tipo-outro" placeholder="Digite o novo tipo de evento...">
+            </div>
+
             <div class="form-group"><label>Valor (R$)</label><input type="number" step="0.01" class="form-control" id="oc-valor" required></div>
             <div class="form-group" style="grid-column: 1 / -1;"><label>Endereço Completo</label><input type="text" class="form-control" id="oc-endereco" required></div>
             
@@ -212,7 +222,6 @@
         
         <div class="form-group">
           <label>Escolher os Arquivos / Tirar Fotos:</label>
-          <!-- accept="image/*" com capture="environment" abre câmera ou galeria em mobile -->
           <input type="file" id="foto-input" class="form-control" accept="image/*" capture="environment" multiple onchange="handleFotosUpload(event)">
         </div>
 
@@ -335,6 +344,30 @@
       showScreen('screen-login');
     }
 
+    // --- LÓGICA DO TIPO DE EVENTO "OUTRO" ---
+    function verificarOutroTipo() {
+      const selectTipo = document.getElementById('oc-tipo');
+      const groupOutro = document.getElementById('group-tipo-outro');
+      const inputOutro = document.getElementById('oc-tipo-outro');
+
+      if (selectTipo.value === 'Outro') {
+        groupOutro.classList.remove('hidden');
+        inputOutro.required = true;
+      } else {
+        groupOutro.classList.add('hidden');
+        inputOutro.required = false;
+        inputOutro.value = '';
+      }
+    }
+
+    function obterTipoEvento() {
+      const selectTipo = document.getElementById('oc-tipo').value;
+      if (selectTipo === 'Outro') {
+        return document.getElementById('oc-tipo-outro').value.trim() || 'Serviço Personalizado';
+      }
+      return selectTipo;
+    }
+
     // --- FUNÇÕES DO ADMINISTRADOR ---
     function renderAdmin() {
       const apoioContainer = document.getElementById('admin-apoios-list');
@@ -406,11 +439,12 @@
     function salvarOcorrenciaAdmin(e) {
       e.preventDefault();
       const editId = document.getElementById('edit-oc-id').value;
+      const tipoFinal = obterTipoEvento();
 
       if (editId) {
         const oc = ocorrencias.find(o => o.id === parseInt(editId));
         if (oc) {
-          oc.tipo = document.getElementById('oc-tipo').value;
+          oc.tipo = tipoFinal;
           oc.valor = parseFloat(document.getElementById('oc-valor').value);
           oc.endereco = document.getElementById('oc-endereco').value;
           oc.linkMapa = document.getElementById('oc-link-mapa').value;
@@ -419,7 +453,7 @@
       } else {
         ocorrencias.push({
           id: Date.now(),
-          tipo: document.getElementById('oc-tipo').value,
+          tipo: tipoFinal,
           valor: parseFloat(document.getElementById('oc-valor').value),
           endereco: document.getElementById('oc-endereco').value,
           linkMapa: document.getElementById('oc-link-mapa').value,
@@ -439,7 +473,19 @@
       const oc = ocorrencias.find(o => o.id === id);
       if (!oc) return;
       document.getElementById('edit-oc-id').value = oc.id;
-      document.getElementById('oc-tipo').value = oc.tipo;
+      
+      const selectTipo = document.getElementById('oc-tipo');
+      const opcoesPadrao = Array.from(selectTipo.options).map(o => o.value);
+      
+      if (opcoesPadrao.includes(oc.tipo)) {
+        selectTipo.value = oc.tipo;
+        document.getElementById('oc-tipo-outro').value = '';
+      } else {
+        selectTipo.value = 'Outro';
+        document.getElementById('oc-tipo-outro').value = oc.tipo;
+      }
+      verificarOutroTipo();
+
       document.getElementById('oc-valor').value = oc.valor;
       document.getElementById('oc-endereco').value = oc.endereco;
       document.getElementById('oc-link-mapa').value = oc.linkMapa || '';
@@ -453,6 +499,9 @@
     function cancelarEdicaoAdmin() {
       document.getElementById('edit-oc-id').value = '';
       document.getElementById('oc-tipo').value = 'Aviso de Alarme';
+      document.getElementById('oc-tipo-outro').value = '';
+      verificarOutroTipo();
+
       document.getElementById('oc-valor').value = '';
       document.getElementById('oc-endereco').value = '';
       document.getElementById('oc-link-mapa').value = '';
@@ -743,8 +792,6 @@
       window.open(`https://wa.me/${numeroDestino}?text=${encodeURIComponent(textoWhatsApp)}`, '_blank');
     }
 
-    // Regra: O botão abre desabilitado. O envio só é permitido se houver relatório preenchido 
-    // E (checkbox marcado OU 5 fotos anexadas no input).
     function validarStatusExecucao() {
       const rel = document.getElementById('relatorio-texto').value.trim();
       const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
@@ -765,7 +812,6 @@
       const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
       const btnFinalizar = document.getElementById('btn-finalizar');
       
-      // Quando clicar no botão liberado com a confirmação, o botão se torna VERDE
       if (checkFotos) {
         btnFinalizar.classList.add('btn-verde');
       }

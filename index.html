@@ -54,10 +54,10 @@
 
     /* Estilo do botão de finalização */
     #btn-finalizar {
-      background-color: var(--danger); /* Inicia Vermelho */
+      background-color: var(--danger);
     }
     #btn-finalizar.btn-verde {
-      background-color: var(--success) !important; /* Transiciona para Verde ao clicar */
+      background-color: var(--success) !important;
     }
 
     /* Estilo de Impressão para PDF */
@@ -66,8 +66,26 @@
       #print-area, #print-area * { visibility: visible; }
       #print-area { position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; padding: 20px; }
       #print-area h2 { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
-      #print-area img { max-width: 200px; height: auto; margin: 5px; border: 1px solid #ccc; }
-      #print-area .pdf-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+      
+      /* Ajuste de imagens no PDF de duas em duas (2 colunas) */
+      #print-area .pdf-grid { 
+        display: grid !important; 
+        grid-template-columns: 1fr 1fr !important; 
+        gap: 15px !important; 
+        margin-top: 15px !important;
+      }
+      #print-area .pdf-photo-item {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        text-align: center;
+      }
+      #print-area img { 
+        width: 100%; 
+        max-height: 280px; 
+        object-fit: contain; 
+        border: 1px solid #ccc; 
+        border-radius: 4px;
+      }
       #print-area .item-relatorio { border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px; }
     }
   </style>
@@ -143,7 +161,6 @@
               </select>
             </div>
 
-            <!-- Campo texto exibido quando a opção "Outro" for selecionada -->
             <div class="form-group hidden" id="group-tipo-outro">
               <label>Especifique o Tipo de Serviço *</label>
               <input type="text" class="form-control" id="oc-tipo-outro" placeholder="Digite o novo tipo de evento...">
@@ -435,6 +452,8 @@
             ${fotosHtml}
             
             <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.75rem;">
+              ${oc.fotos && oc.fotos.length > 0 ? `<button class="btn btn-secondary" style="padding:0.4rem; color:#fff;" onclick="baixarFotosGaleria(${oc.id})">📥 Baixar Fotos para Galeria (${oc.fotos.length})</button>` : ''}
+              
               <button class="btn btn-warning" style="padding:0.4rem;" onclick="prepararEdicaoAdmin(${oc.id})">Editar Dados / Relatório</button>
               
               <div style="display:flex; gap:0.4rem;">
@@ -532,6 +551,24 @@
       document.getElementById('btn-cancelar-edit').classList.add('hidden');
     }
 
+    function baixarFotosGaleria(id) {
+      const oc = ocorrencias.find(o => o.id === id);
+      if (!oc || !oc.fotos || oc.fotos.length === 0) {
+        return alert('Nenhuma foto encontrada para download nesta ocorrência.');
+      }
+
+      oc.fotos.forEach((fotoBase64, idx) => {
+        setTimeout(() => {
+          const a = document.createElement('a');
+          a.href = fotoBase64;
+          a.download = `DRTRACK_Ocorrencia_${oc.id}_foto_${idx + 1}.jpg`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }, idx * 300);
+      });
+    }
+
     function enviarRelatorioWhatsApp(id) {
       const oc = ocorrencias.find(o => o.id === id);
       if (!oc) return;
@@ -566,9 +603,14 @@
       let fotosPrint = '';
       if (oc.fotos && oc.fotos.length > 0) {
         fotosPrint = `
-          <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px;">Registros Fotográficos</h3>
+          <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px; page-break-before: auto;">Registros Fotográficos</h3>
           <div class="pdf-grid">
-            ${oc.fotos.map(f => `<img src="${f}">`).join('')}
+            ${oc.fotos.map((f, i) => `
+              <div class="pdf-photo-item">
+                <img src="${f}">
+                <p style="font-size:10px; color:#555; margin-top:2px;">Foto ${i + 1}</p>
+              </div>
+            `).join('')}
           </div>`;
       }
 
@@ -924,7 +966,6 @@
         const relDigitado = document.getElementById('relatorio-texto').value.trim();
         const oc = ocorrencias.find(o => o.id === selectedOcId);
 
-        // Montagem das informações do atendimento sem a chave PIX
         const dataHoraAtual = new Date().toLocaleString('pt-BR');
         const statusFotosZap = checkFotos ? "Confirmado envio de 5+ fotos via WhatsApp" : "Não confirmado via checkbox";
 

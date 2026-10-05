@@ -68,6 +68,7 @@
       #print-area h2 { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
       #print-area img { max-width: 200px; height: auto; margin: 5px; border: 1px solid #ccc; }
       #print-area .pdf-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+      #print-area .item-relatorio { border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px; }
     }
   </style>
 </head>
@@ -166,6 +167,28 @@
         </form>
       </div>
 
+      <!-- Relatório Quinzenal para Clientes (Sem Valor) -->
+      <div class="card" style="border: 1px solid var(--accent);">
+        <h3 style="color: var(--accent);">📋 Relatório Quinzenal para Clientes (Sem Valores)</h3>
+        <p style="font-size: 0.85rem; color: var(--dim); margin-top: 0.25rem;">Gere relatórios sem exibir os valores financeiros para envio direto ao cliente.</p>
+        
+        <div class="grid" style="margin-top: 0.75rem;">
+          <div class="form-group">
+            <label>Data Inicial</label>
+            <input type="date" id="rel-data-inicio" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Data Final</label>
+            <input type="date" id="rel-data-fim" class="form-control">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+          <button class="btn btn-success" onclick="enviarRelatorioQuinzenalWhatsApp()">📱 Enviar via WhatsApp</button>
+          <button class="btn btn-pdf" onclick="gerarPDFRelatorioQuinzenal()">📄 Gerar PDF / Imprimir</button>
+        </div>
+      </div>
+
       <!-- Gestão de Ocorrências e Relatórios Recebidos -->
       <div class="card">
         <h3>Ocorrências e Relatórios Recebidos</h3>
@@ -244,7 +267,7 @@
         </div>
       </div>
 
-      <!-- Botão de Envio: Vermelho por padrão, ativado após preenchimento e muda para verde ao clicar -->
+      <!-- Botão de Envio -->
       <button id="btn-finalizar" class="btn" style="margin-top: 1rem; padding: 0.8rem;" disabled onclick="finalizarAtendimento()">
         Enviar Ocorrência a Central Adm
       </button>
@@ -344,7 +367,6 @@
       showScreen('screen-login');
     }
 
-    // --- LÓGICA DO TIPO DE EVENTO "OUTRO" ---
     function verificarOutroTipo() {
       const selectTipo = document.getElementById('oc-tipo');
       const groupOutro = document.getElementById('group-tipo-outro');
@@ -368,7 +390,6 @@
       return selectTipo;
     }
 
-    // --- FUNÇÕES DO ADMINISTRADOR ---
     function renderAdmin() {
       const apoioContainer = document.getElementById('admin-apoios-list');
       apoioContainer.innerHTML = '';
@@ -410,7 +431,7 @@
             ${oc.linkMapa ? `<a href="${oc.linkMapa}" target="_blank" class="btn-link">🔗 Link do Local</a>` : ''}
             <p style="margin-top:0.4rem;"><strong>R$ ${oc.valor.toFixed(2)}</strong> | <small>Atendimento: ${apoioNome}</small></p>
             
-            ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--card); padding:0.5rem; border-radius:0.25rem;"><strong>Relatório do Atendimento:</strong><br>${oc.relatorio}</div>` : ''}
+            ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--card); padding:0.5rem; border-radius:0.25rem;"><strong>Relatório do Atendimento:</strong><br>${oc.relatorio.replace(/\n/g, '<br>')}</div>` : ''}
             ${fotosHtml}
             
             <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.75rem;">
@@ -459,6 +480,7 @@
           linkMapa: document.getElementById('oc-link-mapa').value,
           status: 'pendente',
           relatorio: document.getElementById('oc-relatorio-admin').value.trim(),
+          dataCriacao: new Date().toISOString(),
           fotos: []
         });
       }
@@ -510,7 +532,6 @@
       document.getElementById('btn-cancelar-edit').classList.add('hidden');
     }
 
-    // --- RECURSOS DE ENVIO: WHATSAPP E PDF ---
     function enviarRelatorioWhatsApp(id) {
       const oc = ocorrencias.find(o => o.id === id);
       if (!oc) return;
@@ -570,6 +591,91 @@
       printArea.classList.add('hidden');
     }
 
+    function obterOcorrenciasFiltradasPorData() {
+      const inicio = document.getElementById('rel-data-inicio').value;
+      const fim = document.getElementById('rel-data-fim').value;
+
+      return ocorrencias.filter(oc => {
+        if (!oc.dataCriacao) return true;
+        const dataOc = oc.dataCriacao.substring(0, 10);
+        if (inicio && dataOc < inicio) return false;
+        if (fim && dataOc > fim) return false;
+        return true;
+      });
+    }
+
+    function enviarRelatorioQuinzenalWhatsApp() {
+      const lista = obterOcorrenciasFiltradasPorData();
+      if (lista.length === 0) return alert('Nenhuma ocorrência encontrada no período selecionado.');
+
+      const inicio = document.getElementById('rel-data-inicio').value;
+      const fim = document.getElementById('rel-data-fim').value;
+      
+      let periodoTexto = '';
+      if (inicio || fim) {
+        periodoTexto = ` (Período: ${inicio ? inicio.split('-').reverse().join('/') : 'Início'} até ${fim ? fim.split('-').reverse().join('/') : 'Hoje'})`;
+      }
+
+      let msg = `*🛡️ DRTRACK - RELATÓRIO DE OCORRÊNCIAS*${periodoTexto}\n`;
+      msg += `------------------------------------------\n\n`;
+
+      lista.forEach((oc, index) => {
+        const dataFmt = oc.dataCriacao ? new Date(oc.dataCriacao).toLocaleDateString('pt-BR') : 'Data não registrada';
+        msg += `*${index + 1}. ${oc.tipo}*\n`;
+        msg += `📍 *Local:* ${oc.endereco}\n`;
+        msg += `📅 *Data:* ${dataFmt}\n`;
+        msg += `📝 *Relatório:* ${oc.relatorio || 'Atendimento concluído.'}\n\n`;
+      });
+
+      msg += `------------------------------------------\n`;
+      msg += `*Total de atendimentos prestados:* ${lista.length}\n`;
+      msg += `_Relatório gerado automaticamente pelo sistema DRTRACK Conecta._`;
+
+      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function gerarPDFRelatorioQuinzenal() {
+      const lista = obterOcorrenciasFiltradasPorData();
+      if (lista.length === 0) return alert('Nenhuma ocorrência encontrada no período selecionado.');
+
+      const inicio = document.getElementById('rel-data-inicio').value;
+      const fim = document.getElementById('rel-data-fim').value;
+
+      let periodoTexto = 'Geral';
+      if (inicio || fim) {
+        periodoTexto = `${inicio ? inicio.split('-').reverse().join('/') : 'Início'} até ${fim ? fim.split('-').reverse().join('/') : 'Hoje'}`;
+      }
+
+      const printArea = document.getElementById('print-area');
+
+      let conteudoItens = lista.map((oc, i) => {
+        const dataFmt = oc.dataCriacao ? new Date(oc.dataCriacao).toLocaleDateString('pt-BR') : 'Data N/I';
+        return `
+          <div class="item-relatorio">
+            <h4>#${i + 1} - ${oc.tipo} (${dataFmt})</h4>
+            <p><strong>Endereço:</strong> ${oc.endereco}</p>
+            <p><strong>Status:</strong> ${oc.status}</p>
+            <p style="margin-top: 5px; background: #f8fafc; padding: 6px; border-left: 3px solid #0284c7;">
+              <strong>Detalhamento:</strong><br>${oc.relatorio ? oc.relatorio.replace(/\n/g, '<br>') : 'Sem observações.'}
+            </p>
+          </div>
+        `;
+      }).join('');
+
+      printArea.innerHTML = `
+        <h2>🛡️ DRTRACK Conecta - Relatório Periódico de Ocorrências</h2>
+        <p><strong>Período:</strong> ${periodoTexto}</p>
+        <p><strong>Data de Emissão:</strong> ${new Date().toLocaleString('pt-BR')}</p>
+        <p><strong>Total de Atendimentos:</strong> ${lista.length}</p>
+        <hr style="margin: 15px 0;">
+        ${conteudoItens}
+      `;
+
+      printArea.classList.remove('hidden');
+      window.print();
+      printArea.classList.add('hidden');
+    }
+
     function excluirOc(id) {
       if (confirm('Tem certeza que deseja excluir esta ocorrência?')) {
         ocorrencias = ocorrencias.filter(o => o.id !== id);
@@ -578,7 +684,6 @@
       }
     }
 
-    // --- ALERTA SONORO CONTÍNUO E PRESENÇA (APOIO) ---
     function ativarModoOnline() {
       isOnline = true;
       document.getElementById('gps-status').innerText = '🟢 Online';
@@ -703,7 +808,6 @@
       renderApoio();
     }
 
-    // --- EXECUÇÃO PELO APOIO E GESTÃO DE FOTOS ---
     function abrirExecucao(id) {
       selectedOcId = id;
       const oc = ocorrencias.find(o => o.id === id);
@@ -817,15 +921,29 @@
       }
 
       setTimeout(() => {
-        const rel = document.getElementById('relatorio-texto').value.trim();
+        const relDigitado = document.getElementById('relatorio-texto').value.trim();
         const oc = ocorrencias.find(o => o.id === selectedOcId);
 
+        // Montagem das informações do atendimento sem a chave PIX
+        const dataHoraAtual = new Date().toLocaleString('pt-BR');
+        const statusFotosZap = checkFotos ? "Confirmado envio de 5+ fotos via WhatsApp" : "Não confirmado via checkbox";
+
+        let relatorioCompleto = `[DADOS DO ATENDIMENTO]
+- Prestador: ${currentUser.nome}
+- Veículo / Placa: ${currentUser.veiculo || 'N/I'}
+- Data/Hora do Envio: ${dataHoraAtual}
+- Fotos Anexadas no App: ${fotosTemp.length} foto(s)
+- Envio WhatsApp: ${statusFotosZap}
+
+[DESCRIÇÃO DOS FATOS]
+${relDigitado}`;
+
         oc.status = 'enviada';
-        oc.relatorio = rel;
+        oc.relatorio = relatorioCompleto;
         oc.fotos = fotosTemp;
         saveData();
 
-        alert('Ocorrência enviada com sucesso para a Central Adm!');
+        alert('Ocorrência e dados do atendimento enviados com sucesso para a Central Adm!');
         showScreen('screen-apoio');
         renderApoio();
       }, 300);

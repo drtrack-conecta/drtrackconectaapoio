@@ -34,7 +34,6 @@
     .btn-link { background: #0284c7; color: #fff; border: 1px solid var(--accent); font-size: 0.85rem; padding: 0.4rem 0.8rem; margin-top: 0.3rem; margin-bottom: 0.5rem; text-align: center; border-radius: 0.375rem; display: inline-block; text-decoration: none; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(50%); }
     
-    /* ESTILO DO BOTÃO DE FINALIZAR DO APOIO */
     #btn-finalizar { background-color: var(--danger) !important; color: white !important; }
     #btn-finalizar.btn-verde { background-color: var(--success) !important; }
 
@@ -59,7 +58,6 @@
     .hidden { display: none !important; }
     .alert-banner { background: var(--warning); color: #000; padding: 0.75rem; border-radius: 0.375rem; font-weight: bold; margin-bottom: 1rem; text-align: center; }
 
-    /* DICAS DE ENDEREÇO (AUTOCOMPLETE) */
     .address-suggestions {
       position: absolute;
       top: 100%;
@@ -81,7 +79,6 @@
     }
     .suggestion-item:hover { background: var(--accent); color: #fff; }
 
-    /* PAINEL DE DISTÂNCIA E TEMPO DO APOIO */
     .eta-box {
       background: #0284c71a;
       border: 1px solid var(--accent);
@@ -96,7 +93,6 @@
       color: #38bdf8;
     }
 
-    /* ESTILOS DAS ABAS E ACCORDIONS */
     .admin-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -152,7 +148,6 @@
     .accordion-icon { transition: transform 0.2s ease; font-size: 0.8rem; }
     .accordion-item.open .accordion-icon { transform: rotate(180deg); }
 
-    /* REGRAS DE IMPRESSÃO / GERADOR DE PDF A4 (FOTOS DE 2 EM 2) */
     @media print {
       @page {
         size: A4 portrait;
@@ -172,7 +167,6 @@
       }
       #print-area h2 { border-bottom: 2px solid #0284c7; padding-bottom: 6px; margin-bottom: 12px; color: #0284c7; }
       
-      /* Grid 2 colunas para caber 2 fotos por linha ajustadas na folha A4 */
       #print-area .pdf-grid { 
         display: grid !important; 
         grid-template-columns: 1fr 1fr !important; 
@@ -289,7 +283,6 @@
 
               <div class="form-group"><label>Valor (R$)</label><input type="number" step="0.01" class="form-control" id="oc-valor" required></div>
               
-              <!-- CAMPO DE ENDEREÇO COM AUTOPREENCHIMENTO AUTOMÁTICO -->
               <div class="form-group" style="grid-column: 1 / -1;">
                 <label>Endereço Completo (Digite para buscar sugestões) *</label>
                 <input type="text" class="form-control" id="oc-endereco" placeholder="Digite a rua, bairro ou localidade..." autocomplete="off" oninput="buscarSugestoesEndereco(this.value)" required>
@@ -426,7 +419,6 @@
         </div>
       </div>
 
-      <!-- BOTÃO DE ENVIO PARA CENTRAL ADM (INICIA VERMELHO QUANDO LIBERADO) -->
       <button id="btn-finalizar" class="btn" style="margin-top: 1rem; padding: 0.8rem;" disabled onclick="finalizarAtendimento()">
         Enviar Ocorrência a Central Adm
       </button>
@@ -762,7 +754,6 @@
       });
     }
 
-    /* GERADOR DE PDF DE OCORRÊNCIA COM FOTOS AJUSTADAS 2x2 NA FOLHA A4 */
     function gerarPDFRelatorio(id) {
       const oc = ocorrencias.find(o => o.id === id);
       if (!oc) return;
@@ -785,7 +776,7 @@
       }
 
       printArea.innerHTML = `
-        <h2>🛡️️ DRTRACK Conecta - Relatório Operacional</h2>
+        <h2>🛡 DRTRACK Conecta - Relatório Operacional</h2>
         <p><strong>Evento:</strong> ${oc.tipo}</p>
         <p><strong>Endereço:</strong> ${oc.endereco}</p>
         <p><strong>Prestador Responsável:</strong> ${apoioNome}</p>
@@ -997,7 +988,7 @@
             etaHtml = `
               <div class="eta-box">
                 <span>🚘 Distância: <strong>${etaData.distancia}</strong></span>
-                <span>⏱️ Tempo Estimado: <strong>${etaData.tempo}</strong></span>
+                <span>⏱️️ Tempo Estimado: <strong>${etaData.tempo}</strong></span>
               </div>`;
           }
         } else {
@@ -1105,17 +1096,15 @@
       window.open(`https://wa.me/${numeroDestino}?text=${encodeURIComponent(textoWhatsApp)}`, '_blank');
     }
 
-    /* VALIDAÇÃO DO BOTÃO DE FINALIZAR DO APOIO */
     function validarStatusExecucao() {
       const rel = document.getElementById('relatorio-texto').value.trim();
       const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
       const temCincoFotosAnexadas = fotosTemp.length >= 5;
       const btnFinalizar = document.getElementById('btn-finalizar');
 
-      // Requisito: relatorio + (5 fotos anexadas OU checkbox zap confirmado)
       if (rel && (checkFotos || temCincoFotosAnexadas)) {
         btnFinalizar.disabled = false;
-        btnFinalizar.classList.remove('btn-verde'); // Fica Vermelho por padrão
+        btnFinalizar.classList.remove('btn-verde');
       } else {
         btnFinalizar.disabled = true;
         btnFinalizar.classList.remove('btn-verde');
@@ -1124,11 +1113,9 @@
 
     document.getElementById('relatorio-texto')?.addEventListener('input', validarStatusExecucao);
 
-    /* CLIQUE EM ENVIAR: TRANSITION VERDE E ENVIO DE DADOS */
     async function finalizarAtendimento() {
       const btnFinalizar = document.getElementById('btn-finalizar');
       
-      // Muda a cor para verde no clique
       btnFinalizar.classList.add('btn-verde');
 
       setTimeout(async () => {
@@ -1137,9 +1124,9 @@
         const oc = ocorrencias.find(o => o.id === selectedOcId);
         const dataHoraAtual = new Date().toLocaleString('pt-BR');
 
+        // RELATÓRIO AJUSTADO: Veículo/Placa removido a pedido
         let relatorioCompleto = `[DADOS DO ATENDIMENTO]
 - Prestador: ${currentUser.nome}
-- Veículo / Placa: ${currentUser.veiculo || 'N/I'}
 - Data/Hora: ${dataHoraAtual}
 - Fotos Anexadas: ${fotosTemp.length}
 - Confirmação Envio Zap: ${checkFotos ? 'Sim' : 'Não'}

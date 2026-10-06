@@ -429,9 +429,11 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    const SUPABASE_URL = 'https://sua-url-supabase.supabase.co';
-    const SUPABASE_KEY = 'sua-chave-anon-supabase';
+    // Configuração das Credenciais do Supabase
+    const SUPABASE_URL = 'https://svrvdthztljfupbpnhah.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2cnZkdGh6dGxqZnVwYnBuaGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNTgyOTEsImV4cCI6MjEwNjgzNDI5MX0.0GWuYcLhDXtey3fi_ru-zm41tL0kN-cTBhLzIcQMX40';
     
+    // Inicialização do Cliente do Supabase
     let supabaseClient = null;
     if (window.supabase) {
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1070,15 +1072,12 @@
             canvas.height = img.height;
             const ctx = canvas.getContext('2d');
 
-            // Renderiza a imagem original no Canvas
             ctx.drawImage(img, 0, 0);
 
-            // Desenha a barra de fundo do carimbo no rodapé
             const barHeight = Math.max(70, canvas.height * 0.08);
             ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
             ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
 
-            // Configura a tipografia e cor dos textos
             const fontSize = Math.max(14, Math.round(barHeight * 0.25));
             ctx.fillStyle = '#ffffff';
             ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
@@ -1095,7 +1094,6 @@
             ctx.fillText(linha2, marginX, startY + (fontSize * 1.2));
             ctx.fillText(linha3, marginX, startY + (fontSize * 2.4));
 
-            // Exporta a foto estampada
             const fotoStampar = canvas.toDataURL('image/jpeg', 0.85);
             fotosTemp.push(fotoStampar);
             renderFotosPreview();

@@ -32,7 +32,12 @@
     .btn-danger { background: var(--danger); }
     .btn-pdf { background: #e11d48; color: #fff; }
     .btn-link { background: #0284c7; color: #fff; border: 1px solid var(--accent); font-size: 0.85rem; padding: 0.4rem 0.8rem; margin-top: 0.3rem; margin-bottom: 0.5rem; text-align: center; border-radius: 0.375rem; display: inline-block; text-decoration: none; }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(50%); }
+    
+    /* ESTILO DO BOTÃO DE FINALIZAR DO APOIO */
+    #btn-finalizar { background-color: var(--danger) !important; color: white !important; }
+    #btn-finalizar.btn-verde { background-color: var(--success) !important; }
+
     .badge { padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
     .badge-pendente { background: var(--warning); color: #000; }
     .badge-aceito { background: var(--accent); }
@@ -147,17 +152,45 @@
     .accordion-icon { transition: transform 0.2s ease; font-size: 0.8rem; }
     .accordion-item.open .accordion-icon { transform: rotate(180deg); }
 
-    #btn-finalizar { background-color: var(--danger); }
-    #btn-finalizar.btn-verde { background-color: var(--success) !important; }
-
+    /* REGRAS DE IMPRESSÃO / GERADOR DE PDF A4 (FOTOS DE 2 EM 2) */
     @media print {
+      @page {
+        size: A4 portrait;
+        margin: 12mm;
+      }
       body * { visibility: hidden; }
       #print-area, #print-area * { visibility: visible; }
-      #print-area { position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; padding: 20px; }
-      #print-area h2 { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
-      #print-area .pdf-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 15px !important; margin-top: 15px !important; }
-      #print-area .pdf-photo-item { page-break-inside: avoid; break-inside: avoid; text-align: center; }
-      #print-area img { width: 100%; max-height: 280px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; }
+      #print-area { 
+        position: absolute; 
+        left: 0; 
+        top: 0; 
+        width: 100%; 
+        color: #111; 
+        background: #fff; 
+        padding: 0;
+        font-size: 12px;
+      }
+      #print-area h2 { border-bottom: 2px solid #0284c7; padding-bottom: 6px; margin-bottom: 12px; color: #0284c7; }
+      
+      /* Grid 2 colunas para caber 2 fotos por linha ajustadas na folha A4 */
+      #print-area .pdf-grid { 
+        display: grid !important; 
+        grid-template-columns: 1fr 1fr !important; 
+        gap: 12px !important; 
+        margin-top: 12px !important;
+      }
+      #print-area .pdf-photo-item {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        text-align: center;
+      }
+      #print-area img { 
+        width: 100%; 
+        height: 220px; 
+        object-fit: cover; 
+        border: 1px solid #ccc; 
+        border-radius: 4px;
+      }
       #print-area .item-relatorio { border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px; }
     }
   </style>
@@ -393,6 +426,7 @@
         </div>
       </div>
 
+      <!-- BOTÃO DE ENVIO PARA CENTRAL ADM (INICIA VERMELHO QUANDO LIBERADO) -->
       <button id="btn-finalizar" class="btn" style="margin-top: 1rem; padding: 0.8rem;" disabled onclick="finalizarAtendimento()">
         Enviar Ocorrência a Central Adm
       </button>
@@ -544,7 +578,6 @@
       alert('Cadastro enviado com sucesso!'); showScreen('screen-login');
     }
 
-    /* BUSCA AUTOMÁTICA DE ENDEREÇO (AUTOCOMPLETE API) */
     function buscarSugestoesEndereco(query) {
       clearTimeout(debounceTimer);
       const box = document.getElementById('suggestions-box');
@@ -599,9 +632,7 @@
       }
     }
 
-    /* CÁLCULO DE DISTÂNCIA E TEMPO ESTIMADO CORRIGIDO */
     function calcularDistanciaETempo(lat1, lon1, lat2, lon2) {
-      // Garantir conversão estrita para formato numérico
       const nLat1 = Number(lat1);
       const nLon1 = Number(lon1);
       const nLat2 = Number(lat2);
@@ -609,7 +640,7 @@
 
       if (isNaN(nLat1) || isNaN(nLon1) || isNaN(nLat2) || isNaN(nLon2)) return null;
 
-      const R = 6371; // Raio da Terra em km
+      const R = 6371; 
       const dLat = (nLat2 - nLat1) * Math.PI / 180;
       const dLon = (nLon2 - nLon1) * Math.PI / 180;
       const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -622,7 +653,6 @@
         return { distancia: 'No local', tempo: 'Chegou' };
       }
 
-      // Média de velocidade no trânsito urbano: ~35 km/h
       const tempoMinutos = Math.max(1, Math.round((distanciaKm / 35) * 60));
 
       return {
@@ -694,6 +724,14 @@
         let listaOcsHtml = '';
         listaOcs.forEach(oc => {
           const apoioNome = apoios.find(a => a.id === oc.apoioId)?.nome || 'Não atribuído';
+          
+          let fotosHtml = '';
+          if (oc.fotos && oc.fotos.length > 0) {
+            fotosHtml = '<div class="photo-grid" style="margin-top:0.5rem;">' +
+              oc.fotos.map(f => `<img src="${f}" class="photo-preview">`).join('') +
+              '</div>';
+          }
+
           listaOcsHtml += `
             <div class="card" style="background: var(--card); margin-bottom: 0.75rem;">
               <div style="display:flex; justify-content:space-between;">
@@ -704,7 +742,9 @@
               ${oc.linkMapa ? `<a href="${oc.linkMapa}" target="_blank" class="btn-link">🔗 Link do Local</a>` : ''}
               <p style="margin-top:0.4rem;"><strong>R$ ${oc.valor.toFixed(2)}</strong> | <small>Atendimento: ${apoioNome}</small></p>
               ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--bg); padding:0.5rem; border-radius:0.25rem;">${oc.relatorio.replace(/\n/g, '<br>')}</div>` : ''}
+              ${fotosHtml}
               <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.75rem;">
+                <button class="btn btn-pdf" style="padding:0.4rem;" onclick="gerarPDFRelatorio(${oc.id})">📄 Gerar PDF / Enviar ao Cliente</button>
                 <button class="btn btn-warning" style="padding:0.4rem;" onclick="prepararEdicaoAdmin(${oc.id})">Editar Dados / Relatório</button>
                 <button class="btn btn-danger" style="padding:0.4rem; margin-top:0.2rem;" onclick="excluirOc(${oc.id})">Excluir Ocorrência</button>
               </div>
@@ -720,6 +760,47 @@
             <div class="accordion-body">${listaOcsHtml}</div>
           </div>`;
       });
+    }
+
+    /* GERADOR DE PDF DE OCORRÊNCIA COM FOTOS AJUSTADAS 2x2 NA FOLHA A4 */
+    function gerarPDFRelatorio(id) {
+      const oc = ocorrencias.find(o => o.id === id);
+      if (!oc) return;
+
+      const apoioNome = apoios.find(a => a.id === oc.apoioId)?.nome || 'Não especificado';
+      const printArea = document.getElementById('print-area');
+
+      let fotosPrint = '';
+      if (oc.fotos && oc.fotos.length > 0) {
+        fotosPrint = `
+          <h3 style="margin-top:15px; border-bottom:1px solid #ccc; padding-bottom:4px;">Registros Fotográficos</h3>
+          <div class="pdf-grid">
+            ${oc.fotos.map((f, i) => `
+              <div class="pdf-photo-item">
+                <img src="${f}">
+                <p style="font-size:10px; color:#555; margin-top:2px;">Registro #${i + 1}</p>
+              </div>
+            `).join('')}
+          </div>`;
+      }
+
+      printArea.innerHTML = `
+        <h2>🛡️️ DRTRACK Conecta - Relatório Operacional</h2>
+        <p><strong>Evento:</strong> ${oc.tipo}</p>
+        <p><strong>Endereço:</strong> ${oc.endereco}</p>
+        <p><strong>Prestador Responsável:</strong> ${apoioNome}</p>
+        <p><strong>Data de Emissão:</strong> ${new Date().toLocaleString('pt-BR')}</p>
+        <hr style="margin: 10px 0;">
+        <h3>Resumo do Atendimento</h3>
+        <p style="background: #f1f5f9; padding: 8px; border-radius: 4px; margin-top: 5px;">
+          ${oc.relatorio ? oc.relatorio.replace(/\n/g, '<br>') : 'Atendimento prestado no local sem anormalidades.'}
+        </p>
+        ${fotosPrint}
+      `;
+
+      printArea.classList.remove('hidden');
+      window.print();
+      printArea.classList.add('hidden');
     }
 
     async function alterarStatusApoio(id, status) {
@@ -839,7 +920,6 @@
       setInterval(checarNovasOcorrencias, 3000);
     }
 
-    /* MONITORAMENTO CONTÍNUO DO GPS DO APOIO */
     function iniciarGeolocalizacaoContinua() {
       if ("geolocation" in navigator) {
         if (watchGpsId) navigator.geolocation.clearWatch(watchGpsId);
@@ -859,7 +939,7 @@
             }
             renderApoio();
           },
-          (err) => console.warn('Erro ao obter GPS:', err.message),
+          (err) => console.warn('Erro GPS:', err.message),
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
         );
       }
@@ -873,7 +953,6 @@
       }
     }
 
-    /* RENDERIZAÇÃO DAS OCORRÊNCIAS COM DISTÂNCIA E TEMPO DINÂMICOS */
     function renderApoio() {
       if (!isOnline) return;
       const container = document.getElementById('apoio-ocorrencias-list');
@@ -900,7 +979,6 @@
           acoes = `<button class="btn" style="margin-top:0.5rem;" onclick="abrirExecucao(${oc.id})">Abrir Atendimento</button>`;
         }
 
-        // Tenta extrair a lat/lng do objeto ou do link de mapa se não existirem diretamente
         let targetLat = oc.lat;
         let targetLng = oc.lng;
 
@@ -975,8 +1053,12 @@
       linkContainer.innerHTML = oc.linkMapa ? `<a href="${oc.linkMapa}" target="_blank" class="btn-link" style="font-size:0.9rem; padding:0.5rem 1rem;">🔗 Clique aqui para Abrir a Rota / GPS</a>` : '';
 
       document.getElementById('relatorio-texto').value = oc.relatorio || '';
+      document.getElementById('check-fotos-confirmadas').checked = false;
       fotosTemp = oc.fotos || [];
-      renderFotosPreview(); validarStatusExecucao(); renderChat(); showScreen('screen-execucao');
+      renderFotosPreview(); 
+      validarStatusExecucao(); 
+      renderChat(); 
+      showScreen('screen-execucao');
     }
 
     function handleFotosUpload(event) {
@@ -1023,33 +1105,65 @@
       window.open(`https://wa.me/${numeroDestino}?text=${encodeURIComponent(textoWhatsApp)}`, '_blank');
     }
 
+    /* VALIDAÇÃO DO BOTÃO DE FINALIZAR DO APOIO */
     function validarStatusExecucao() {
       const rel = document.getElementById('relatorio-texto').value.trim();
       const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
       const temCincoFotosAnexadas = fotosTemp.length >= 5;
-      document.getElementById('btn-finalizar').disabled = !(rel && (checkFotos || temCincoFotosAnexadas));
+      const btnFinalizar = document.getElementById('btn-finalizar');
+
+      // Requisito: relatorio + (5 fotos anexadas OU checkbox zap confirmado)
+      if (rel && (checkFotos || temCincoFotosAnexadas)) {
+        btnFinalizar.disabled = false;
+        btnFinalizar.classList.remove('btn-verde'); // Fica Vermelho por padrão
+      } else {
+        btnFinalizar.disabled = true;
+        btnFinalizar.classList.remove('btn-verde');
+      }
     }
 
     document.getElementById('relatorio-texto')?.addEventListener('input', validarStatusExecucao);
 
+    /* CLIQUE EM ENVIAR: TRANSITION VERDE E ENVIO DE DADOS */
     async function finalizarAtendimento() {
-      const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
-      const relDigitado = document.getElementById('relatorio-texto').value.trim();
-      const oc = ocorrencias.find(o => o.id === selectedOcId);
-      const dataHoraAtual = new Date().toLocaleString('pt-BR');
+      const btnFinalizar = document.getElementById('btn-finalizar');
+      
+      // Muda a cor para verde no clique
+      btnFinalizar.classList.add('btn-verde');
 
-      let relatorioCompleto = `[DADOS DO ATENDIMENTO]
+      setTimeout(async () => {
+        const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
+        const relDigitado = document.getElementById('relatorio-texto').value.trim();
+        const oc = ocorrencias.find(o => o.id === selectedOcId);
+        const dataHoraAtual = new Date().toLocaleString('pt-BR');
+
+        let relatorioCompleto = `[DADOS DO ATENDIMENTO]
 - Prestador: ${currentUser.nome}
 - Veículo / Placa: ${currentUser.veiculo || 'N/I'}
 - Data/Hora: ${dataHoraAtual}
 - Fotos Anexadas: ${fotosTemp.length}
+- Confirmação Envio Zap: ${checkFotos ? 'Sim' : 'Não'}
+
 [DESCRIÇÃO DOS FATOS]
 ${relDigitado}`;
 
-      oc.status = 'enviada'; oc.relatorio = relatorioCompleto; oc.fotos = fotosTemp; saveData();
-      if (supabaseClient) await supabaseClient.from('ocorrencias').update({ status: 'enviada', relatorio: relatorioCompleto, fotos: fotosTemp }).eq('id', selectedOcId);
+        oc.status = 'enviada'; 
+        oc.relatorio = relatorioCompleto; 
+        oc.fotos = fotosTemp; 
+        saveData();
 
-      alert('Ocorrência enviada à Central Adm com sucesso!'); showScreen('screen-apoio'); renderApoio();
+        if (supabaseClient) {
+          await supabaseClient.from('ocorrencias').update({ 
+            status: 'enviada', 
+            relatorio: relatorioCompleto, 
+            fotos: fotosTemp 
+          }).eq('id', selectedOcId);
+        }
+
+        alert('Ocorrência enviada à Central Adm com sucesso!'); 
+        showScreen('screen-apoio'); 
+        renderApoio();
+      }, 300);
     }
 
     function checarNovasOcorrencias() {

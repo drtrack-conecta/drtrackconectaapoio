@@ -988,7 +988,7 @@
             etaHtml = `
               <div class="eta-box">
                 <span>🚘 Distância: <strong>${etaData.distancia}</strong></span>
-                <span>⏱️️ Tempo Estimado: <strong>${etaData.tempo}</strong></span>
+                <span>⏱ Tempo Estimado: <strong>${etaData.tempo}</strong></span>
               </div>`;
           }
         } else {
@@ -1052,11 +1052,55 @@
       showScreen('screen-execucao');
     }
 
+    /* PROCESSO DE ANEXAR E STAMPAR LAT/LONG/DATA NA FOTO */
     function handleFotosUpload(event) {
       const files = Array.from(event.target.files);
+      const oc = ocorrencias.find(o => o.id === selectedOcId);
+      const latInfo = userCurrentLat ? Number(userCurrentLat).toFixed(6) : (oc?.lat ? Number(oc.lat).toFixed(6) : 'N/I');
+      const lngInfo = userCurrentLng ? Number(userCurrentLng).toFixed(6) : (oc?.lng ? Number(oc.lng).toFixed(6) : 'N/I');
+      const enderecoInfo = oc ? oc.endereco : 'Localização não informada';
+
       files.forEach(file => {
         const reader = new FileReader();
-        reader.onload = (e) => { fotosTemp.push(e.target.result); renderFotosPreview(); validarStatusExecucao(); };
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+
+            ctx.drawImage(img, 0, 0);
+
+            // Estilização da Tarja de Carimbo
+            const barHeight = Math.max(70, canvas.height * 0.08);
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
+
+            // Estilo do Texto
+            const fontSize = Math.max(14, Math.round(barHeight * 0.25));
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
+
+            const dataHora = new Date().toLocaleString('pt-BR');
+            const linha1 = `DRTRACK | ${dataHora}`;
+            const linha2 = `LAT: ${latInfo} | LON: ${lngInfo}`;
+            const linha3 = `LOC: ${enderecoInfo.length > 50 ? enderecoInfo.substring(0, 50) + '...' : enderecoInfo}`;
+
+            const marginX = canvas.width * 0.03;
+            const startY = canvas.height - barHeight + (fontSize * 1.2);
+
+            ctx.fillText(linha1, marginX, startY);
+            ctx.fillText(linha2, marginX, startY + (fontSize * 1.2));
+            ctx.fillText(linha3, marginX, startY + (fontSize * 2.4));
+
+            const fotoStampar = canvas.toDataURL('image/jpeg', 0.85);
+            fotosTemp.push(fotoStampar);
+            renderFotosPreview();
+            validarStatusExecucao();
+          };
+          img.src = e.target.result;
+        };
         reader.readAsDataURL(file);
       });
     }
@@ -1124,7 +1168,6 @@
         const oc = ocorrencias.find(o => o.id === selectedOcId);
         const dataHoraAtual = new Date().toLocaleString('pt-BR');
 
-        // RELATÓRIO AJUSTADO: Veículo/Placa removido a pedido
         let relatorioCompleto = `[DADOS DO ATENDIMENTO]
 - Prestador: ${currentUser.nome}
 - Data/Hora: ${dataHoraAtual}

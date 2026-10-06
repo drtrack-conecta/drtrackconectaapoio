@@ -6,6 +6,8 @@
   <title>DRTRACK Conecta - Gestão Operacional</title>
   
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <style>
     :root {
@@ -387,6 +389,15 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    // Configurações do Supabase (Substitua com suas chaves do painel do Supabase se necessário)
+    const SUPABASE_URL = 'https://sua-url-supabase.supabase.co';
+    const SUPABASE_KEY = 'sua-chave-anon-supabase';
+    
+    let supabaseClient = null;
+    if (window.supabase) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+
     let apoios = JSON.parse(localStorage.getItem('dr_apoios')) || [];
     let ocorrencias = JSON.parse(localStorage.getItem('dr_ocorrencias')) || [];
     let chats = JSON.parse(localStorage.getItem('dr_chats')) || {};
@@ -395,10 +406,54 @@
     let currentUser = null;
     let selectedOcId = null;
     let isOnline = false;
-    let map = null, markersGroup = null;
+    let map = null, markersGroup = null, userMarker = null;
     let timerBip = null;
     let audioContext = null;
     let fotosTemp = [];
+
+    // Coordenadas Padrão do Ponto Inicial (São Paulo)
+    const SP_LAT = -23.5505;
+    const SP_LNG = -46.6333;
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await carregarDadosIniciais();
+      iniciarEscutaTempoReal();
+    });
+
+    async function carregarDadosIniciais() {
+      if (!supabaseClient) return;
+      try {
+        const { data: dbApoios } = await supabaseClient.from('apoios').select('*');
+        if (dbApoios) {
+          apoios = dbApoios;
+          localStorage.setItem('dr_apoios', JSON.stringify(apoios));
+        }
+
+        const { data: dbOcorrencias } = await supabaseClient.from('ocorrencias').select('*');
+        if (dbOcorrencias) {
+          ocorrencias = dbOcorrencias;
+          localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
+        }
+      } catch (err) {
+        console.log('Modo offline/local storage ativo:', err);
+      }
+    }
+
+    function iniciarEscutaTempoReal() {
+      if (!supabaseClient) return;
+      supabaseClient
+        .channel('mudancas_realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'apoios' }, async () => {
+          await carregarDadosIniciais();
+          if (currentUser?.type === 'admin') renderAdminApoios();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'ocorrencias' }, async () => {
+          await carregarDadosIniciais();
+          if (currentUser?.type === 'admin') renderAdminOcorrencias();
+          if (currentUser?.type === 'apoio') renderApoio();
+        })
+        .subscribe();
+    }
 
     function saveData() {
       localStorage.setItem('dr_apoios', JSON.stringify(apoios));
@@ -441,7 +496,7 @@
       }
     }
 
-    function login() {
+    async function login() {
       const u = document.getElementById('login-user').value.trim();
       const p = document.getElementById('login-pass').value.trim();
 
@@ -454,6 +509,7 @@
         return;
       }
 
+      await carregarDadosIniciais();
       const apoio = apoios.find(a => a.tel.replace(/\D/g, '') === u.replace(/\D/g, '') && a.pass === p);
       if (apoio) {
         if (apoio.status === 'aguardando') return alert('Seu cadastro está aguardando aprovação da Central.');
@@ -477,9 +533,9 @@
       showScreen('screen-login');
     }
 
-    function cadastrarApoio(e) {
+    async function cadastrarApoio(e) {
       e.preventDefault();
-      apoios.push({
+      const novoApoio = {
         id: Date.now(),
         nome: document.getElementById('cad-nome').value,
         tel: document.getElementById('cad-tel').value,
@@ -487,8 +543,15 @@
         veiculo: document.getElementById('cad-veiculo').value,
         pix: document.getElementById('cad-pix').value,
         status: 'aguardando'
-      });
+      };
+
+      apoios.push(novoApoio);
       saveData();
+
+      if (supabaseClient) {
+        await supabaseClient.from('apoios').insert([novoApoio]);
+      }
+
       alert('Cadastro enviado com sucesso! Aguarde a liberação da Central.');
       showScreen('screen-login');
     }
@@ -521,21 +584,18 @@
       renderAdminOcorrencias();
     }
 
-    /* RENDERIZAÇÃO DE PRESTADORES (MINIMIZADOS E ORDENADOS POR TELEFONE) */
     function renderAdminApoios() {
       const apoioContainer = document.getElementById('admin-apoios-list');
       const termoBusca = (document.getElementById('busca-apoio-tel')?.value || '').toLowerCase().trim();
 
       apoioContainer.innerHTML = '';
 
-      // Ordenar apoios pelo número de telefone
       let apoiosOrdenados = [...apoios].sort((a, b) => {
         const telA = a.tel.replace(/\D/g, '');
         const telB = b.tel.replace(/\D/g, '');
         return telA.localeCompare(telB);
       });
 
-      // Filtrar por termo de busca se houver
       if (termoBusca) {
         apoiosOrdenados = apoiosOrdenados.filter(a => 
           a.tel.toLowerCase().includes(termoBusca) || a.nome.toLowerCase().includes(termoBusca)
@@ -570,7 +630,6 @@
       });
     }
 
-    /* RENDERIZAÇÃO DE OCORRÊNCIAS (MINIMIZADAS E AGRUPADAS POR DATA) */
     function renderAdminOcorrencias() {
       const ocContainer = document.getElementById('admin-ocorrencias-list');
       ocContainer.innerHTML = '';
@@ -595,7 +654,6 @@
         return;
       }
 
-      // Agrupar por data (YYYY-MM-DD)
       const gruposPorData = {};
       ocsFiltradas.forEach(oc => {
         const dataChave = oc.dataCriacao ? oc.dataCriacao.substring(0, 10) : 'Sem Data';
@@ -603,7 +661,6 @@
         gruposPorData[dataChave].push(oc);
       });
 
-      // Ordenar datas da mais recente para a mais antiga
       const datasOrdenadas = Object.keys(gruposPorData).sort((a, b) => b.localeCompare(a));
 
       datasOrdenadas.forEach(dataChave => {
@@ -661,19 +718,25 @@
       });
     }
 
-    function alterarStatusApoio(id, status) {
+    async function alterarStatusApoio(id, status) {
       const a = apoios.find(item => item.id === id);
       if (a) {
         a.status = status;
         saveData();
         renderAdminApoios();
+
+        if (supabaseClient) {
+          await supabaseClient.from('apoios').update({ status: status }).eq('id', id);
+        }
       }
     }
 
-    function salvarOcorrenciaAdmin(e) {
+    async function salvarOcorrenciaAdmin(e) {
       e.preventDefault();
       const editId = document.getElementById('edit-oc-id').value;
       const tipoFinal = obterTipoEvento();
+
+      let ocObjeto = null;
 
       if (editId) {
         const oc = ocorrencias.find(o => o.id === parseInt(editId));
@@ -683,9 +746,10 @@
           oc.endereco = document.getElementById('oc-endereco').value;
           oc.linkMapa = document.getElementById('oc-link-mapa').value;
           oc.relatorio = document.getElementById('oc-relatorio-admin').value.trim();
+          ocObjeto = oc;
         }
       } else {
-        ocorrencias.push({
+        ocObjeto = {
           id: Date.now(),
           tipo: tipoFinal,
           valor: parseFloat(document.getElementById('oc-valor').value),
@@ -695,10 +759,20 @@
           relatorio: document.getElementById('oc-relatorio-admin').value.trim(),
           dataCriacao: new Date().toISOString(),
           fotos: []
-        });
+        };
+        ocorrencias.push(ocObjeto);
       }
 
       saveData();
+
+      if (supabaseClient) {
+        if (editId) {
+          await supabaseClient.from('ocorrencias').update(ocObjeto).eq('id', parseInt(editId));
+        } else {
+          await supabaseClient.from('ocorrencias').insert([ocObjeto]);
+        }
+      }
+
       cancelarEdicaoAdmin();
       renderAdmin();
       alert('Ocorrência salva com sucesso!');
@@ -767,17 +841,22 @@
       });
     }
 
-    function enviarRelatorioWhatsApp(id) {
+    async function enviarRelatorioWhatsApp(id) {
       const oc = ocorrencias.find(o => o.id === id);
       if (!oc) return;
 
       oc.status = 'concluido';
       saveData();
+
+      if (supabaseClient) {
+        await supabaseClient.from('ocorrencias').update({ status: 'concluido' }).eq('id', id);
+      }
+
       renderAdmin();
 
       const apoioNome = apoios.find(a => a.id === oc.apoioId)?.nome || 'Não especificado';
       
-      let textoCliente = `*🛡️️ RELATÓRIO DE OCORRÊNCIA - DRTRACK*\n\n`;
+      let textoCliente = `*🛡️ RELATÓRIO DE OCORRÊNCIA - DRTRACK*\n\n`;
       textoCliente += `*Evento:* ${oc.tipo}\n`;
       textoCliente += `*Endereço:* ${oc.endereco}\n`;
       textoCliente += `*Prestador Responsável:* ${apoioNome}\n`;
@@ -916,10 +995,15 @@
       printArea.classList.add('hidden');
     }
 
-    function excluirOc(id) {
+    async function excluirOc(id) {
       if (confirm('Tem certeza que deseja excluir esta ocorrência?')) {
         ocorrencias = ocorrencias.filter(o => o.id !== id);
         saveData();
+
+        if (supabaseClient) {
+          await supabaseClient.from('ocorrencias').delete().eq('id', id);
+        }
+
         renderAdmin();
       }
     }
@@ -934,9 +1018,38 @@
       if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
       initMap();
+      obterGeolocalizacaoPrecisa();
       renderApoio();
       
       setInterval(checarNovasOcorrencias, 3000);
+    }
+
+    // CAPTURA DA GEOLOCALIZAÇÃO PRECISA (HTML5 GEOLOCATION)
+    function obterGeolocalizacaoPrecisa() {
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            
+            if (map) {
+              map.setView([lat, lng], 14);
+              
+              if (userMarker) {
+                userMarker.setLatLng([lat, lng]);
+              } else {
+                userMarker = L.marker([lat, lng]).addTo(map)
+                  .bindPopup(`📍 Sua localização atual (${currentUser?.nome || 'Apoio'})`)
+                  .openPopup();
+              }
+            }
+          },
+          (err) => {
+            console.warn('Geolocalização não permitida ou indisponível. Usando padrão SP:', err.message);
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      }
     }
 
     function iniciarAlertaSonoroContinuo() {
@@ -976,9 +1089,10 @@
       renderApoio();
     }
 
+    // INICIALIZAÇÃO DO MAPA COM COORDENADAS PADRÃO DE SÃO PAULO
     function initMap() {
       if (!map) {
-        map = L.map('map').setView([-23.5505, -46.6333], 11);
+        map = L.map('map').setView([SP_LAT, SP_LNG], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         markersGroup = L.layerGroup().addTo(map);
       }
@@ -1030,13 +1144,18 @@
       });
     }
 
-    function aceitarOc(id) {
+    async function aceitarOc(id) {
       pararAlertaSonoro();
       const oc = ocorrencias.find(o => o.id === id);
       if (oc) {
         oc.status = 'aceito';
         oc.apoioId = currentUser.id;
         saveData();
+
+        if (supabaseClient) {
+          await supabaseClient.from('ocorrencias').update({ status: 'aceito', apoioId: currentUser.id }).eq('id', id);
+        }
+
         abrirExecucao(id);
       }
     }
@@ -1152,7 +1271,7 @@
 
     document.getElementById('relatorio-texto')?.addEventListener('input', validarStatusExecucao);
 
-    function finalizarAtendimento() {
+    async function finalizarAtendimento() {
       const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
       const btnFinalizar = document.getElementById('btn-finalizar');
       
@@ -1160,7 +1279,7 @@
         btnFinalizar.classList.add('btn-verde');
       }
 
-      setTimeout(() => {
+      setTimeout(async () => {
         const relDigitado = document.getElementById('relatorio-texto').value.trim();
         const oc = ocorrencias.find(o => o.id === selectedOcId);
 
@@ -1181,6 +1300,14 @@ ${relDigitado}`;
         oc.relatorio = relatorioCompleto;
         oc.fotos = fotosTemp;
         saveData();
+
+        if (supabaseClient) {
+          await supabaseClient.from('ocorrencias').update({
+            status: 'enviada',
+            relatorio: relatorioCompleto,
+            fotos: fotosTemp
+          }).eq('id', selectedOcId);
+        }
 
         alert('Ocorrência e dados do atendimento enviados com sucesso para a Central Adm!');
         showScreen('screen-apoio');

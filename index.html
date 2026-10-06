@@ -242,27 +242,27 @@
               <div class="form-group"><label>Valor (R$)</label><input type="number" step="0.01" class="form-control" id="oc-valor" required></div>
               <div class="form-group" style="grid-column: 1 / -1;"><label>Endereço Completo *</label><input type="text" class="form-control" id="oc-endereco" placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo - SP" required></div>
               
-              <!-- CAPTURA DA GEOLOCALIZAÇÃO DO ADMINISTRADOR -->
+              <!-- BOTAO DE CAPTURA GEOLOCALIZACAO (HTML5 GEOLOCATION) -->
               <div class="form-group" style="grid-column: 1 / -1;">
                 <button type="button" class="btn btn-secondary" onclick="obterGeolocalizacaoAdmin()" style="margin-bottom: 0.5rem; border-color: var(--accent); color: var(--text);">
-                  📍 Usar Minha Localização Atual (GPS do Aparelho)
+                  📍 Capturar Minha Localização Atual (GPS)
                 </button>
               </div>
 
               <div class="form-group">
-                <label>Latitude (Opcional / Automático)</label>
+                <label>Latitude (Opcional)</label>
                 <input type="text" class="form-control" id="oc-lat" placeholder="-23.5505">
               </div>
 
               <div class="form-group">
-                <label>Longitude (Opcional / Automático)</label>
+                <label>Longitude (Opcional)</label>
                 <input type="text" class="form-control" id="oc-lng" placeholder="-46.6333">
               </div>
 
-              <!-- CAMPO OPCIONAL DE LINK DE NAVEGAÇÃO / MAPA -->
+              <!-- LINK OPCIONAL DA LOCALIZACAO -->
               <div class="form-group" style="grid-column: 1 / -1;">
-                <label>🔗 Link da Localização / Mapa (Opcional - Pode ser preenchido manualmente caso falhe)</label>
-                <input type="url" class="form-control" id="oc-link-mapa" placeholder="https://maps.google.com/?q=-23.5505,-46.6333 (Opcional)">
+                <label>🔗 Link da Localização / Mapa (Opcional - Pode ser preenchido manualmente caso ocorra falha no GPS)</label>
+                <input type="url" class="form-control" id="oc-link-mapa" placeholder="https://maps.google.com/?q=-23.5505,-46.6333">
               </div>
 
               <div class="form-group" style="grid-column: 1 / -1;">
@@ -428,7 +428,7 @@
     let audioContext = null;
     let fotosTemp = [];
 
-    // Coordenadas Padrão de São Paulo
+    // COORDENADAS PADRÃO DE SÃO PAULO
     const SP_LAT = -23.5505;
     const SP_LNG = -46.6333;
 
@@ -596,7 +596,7 @@
       return selectTipo;
     }
 
-    // CAPTURA DE GEOLOCALIZAÇÃO PARA O ADMINISTRADOR LANÇAR OCORRÊNCIA
+    // CAPTURA DA GEOLOCALIZACAO DO NAVEGADOR (HTML5 GEOLOCATION) NO FORMULARIO DO ADMIN
     function obterGeolocalizacaoAdmin() {
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
@@ -610,7 +610,7 @@
             alert(`Coordenadas obtidas com sucesso!\nLatitude: ${lat} | Longitude: ${lng}`);
           },
           (err) => {
-            alert('Não foi possível obter a localização exata do seu dispositivo. As coordenadas padrão de São Paulo serão aplicadas.');
+            alert('Falha ao obter geolocalização do dispositivo ou acesso negado. Serão aplicadas as coordenadas padrão de São Paulo.');
             document.getElementById('oc-lat').value = SP_LAT;
             document.getElementById('oc-lng').value = SP_LNG;
             document.getElementById('oc-link-mapa').value = `https://maps.google.com/?q=${SP_LAT},${SP_LNG}`;
@@ -618,9 +618,10 @@
           { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
         );
       } else {
-        alert('Seu navegador não suporta a API de geolocalização. Aplicando padrão São Paulo.');
+        alert('O seu navegador não suporta geolocalização. Aplicando coordenadas padrão de São Paulo.');
         document.getElementById('oc-lat').value = SP_LAT;
         document.getElementById('oc-lng').value = SP_LNG;
+        document.getElementById('oc-link-mapa').value = `https://maps.google.com/?q=${SP_LAT},${SP_LNG}`;
       }
     }
 
@@ -988,7 +989,7 @@
         periodoTexto = ` (Período: ${inicio ? inicio.split('-').reverse().join('/') : 'Início'} até ${fim ? fim.split('-').reverse().join('/') : 'Hoje'})`;
       }
 
-      let msg = `*🛡️️ DRTRACK - RELATÓRIO DE OCORRÊNCIAS*${periodoTexto}\n`;
+      let msg = `*🛡️ DRTRACK - RELATÓRIO DE OCORRÊNCIAS*${periodoTexto}\n`;
       msg += `------------------------------------------\n\n`;
 
       lista.forEach((oc, index) => {

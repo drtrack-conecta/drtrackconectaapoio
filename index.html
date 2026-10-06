@@ -22,7 +22,7 @@
     main { flex: 1; padding: 1rem; max-width: 1000px; margin: 0 auto; width: 100%; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: 0.5rem; padding: 1.25rem; margin-bottom: 1rem; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
-    .form-group { margin-bottom: 0.85rem; }
+    .form-group { margin-bottom: 0.85rem; position: relative; }
     .form-group label { display: block; font-size: 0.8rem; color: var(--dim); margin-bottom: 0.25rem; }
     .form-control { width: 100%; padding: 0.6rem; background: var(--bg); border: 1px solid var(--border); border-radius: 0.375rem; color: var(--text); }
     .btn { background: var(--accent); color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 600; width: 100%; text-align: center; text-decoration: none; display: inline-block; transition: background-color 0.3s ease; }
@@ -54,7 +54,44 @@
     .hidden { display: none !important; }
     .alert-banner { background: var(--warning); color: #000; padding: 0.75rem; border-radius: 0.375rem; font-weight: bold; margin-bottom: 1rem; text-align: center; }
 
-    /* ESTILOS DAS ABAS E ACCORDIONS (SISTEMA MINIMIZADO) */
+    /* DICAS DE ENDEREÇO (AUTOCOMPLETE) */
+    .address-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--card);
+      border: 1px solid var(--accent);
+      border-radius: 0 0 0.375rem 0.375rem;
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .suggestion-item {
+      padding: 0.6rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+    }
+    .suggestion-item:hover { background: var(--accent); color: #fff; }
+
+    /* PAINEL DE DISTÂNCIA E TEMPO DO APOIO */
+    .eta-box {
+      background: #0284c71a;
+      border: 1px solid var(--accent);
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      margin: 0.5rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #38bdf8;
+    }
+
+    /* ESTILOS DAS ABAS E ACCORDIONS */
     .admin-tabs {
       display: flex;
       flex-wrap: wrap;
@@ -111,35 +148,17 @@
     .accordion-icon { transition: transform 0.2s ease; font-size: 0.8rem; }
     .accordion-item.open .accordion-icon { transform: rotate(180deg); }
 
-    /* Estilo do botão de finalização */
     #btn-finalizar { background-color: var(--danger); }
     #btn-finalizar.btn-verde { background-color: var(--success) !important; }
 
-    /* Estilo de Impressão para PDF */
     @media print {
       body * { visibility: hidden; }
       #print-area, #print-area * { visibility: visible; }
       #print-area { position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; padding: 20px; }
       #print-area h2 { border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
-      
-      #print-area .pdf-grid { 
-        display: grid !important; 
-        grid-template-columns: 1fr 1fr !important; 
-        gap: 15px !important; 
-        margin-top: 15px !important;
-      }
-      #print-area .pdf-photo-item {
-        page-break-inside: avoid;
-        break-inside: avoid;
-        text-align: center;
-      }
-      #print-area img { 
-        width: 100%; 
-        max-height: 280px; 
-        object-fit: contain; 
-        border: 1px solid #ccc; 
-        border-radius: 4px;
-      }
+      #print-area .pdf-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 15px !important; margin-top: 15px !important; }
+      #print-area .pdf-photo-item { page-break-inside: avoid; break-inside: avoid; text-align: center; }
+      #print-area img { width: 100%; max-height: 280px; object-fit: contain; border: 1px solid #ccc; border-radius: 4px; }
       #print-area .item-relatorio { border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px; }
     }
   </style>
@@ -189,9 +208,8 @@
       </form>
     </section>
 
-    <!-- TELA: PAINEL ADMIN COM ABAS NO TOPO -->
+    <!-- TELA: PAINEL ADMIN -->
     <section id="screen-admin" class="hidden">
-      <!-- Navegação por Abas -->
       <div class="admin-tabs">
         <button class="tab-btn active" onclick="switchAdminTab('tab-apoios')">✓ Gestão de Prestadores de Apoio</button>
         <button class="tab-btn" onclick="switchAdminTab('tab-nova-oc')">✓ Lançar Nova Ocorrência</button>
@@ -199,23 +217,21 @@
         <button class="tab-btn" onclick="switchAdminTab('tab-ocorrencias')">✓ Ocorrências e Relatórios Recebidos</button>
       </div>
 
-      <!-- CONTEÚDO DA ABA 1: GESTÃO DE PRESTADORES DE APOIO -->
+      <!-- ABA 1: GESTÃO DE APOIOS -->
       <div id="tab-apoios" class="tab-content active">
         <div class="card">
           <h3>Gestão de Prestadores de Apoio</h3>
           <p style="font-size:0.8rem; color:var(--dim); margin-bottom: 0.75rem;">
-            Listados em ordem por número de celular cadastrado. Clique no prestador para ver detalhes ou alterar status.
+            Listados em ordem por número de celular cadastrado.
           </p>
-          
           <div class="form-group">
             <input type="text" id="busca-apoio-tel" class="form-control" placeholder="🔍 Buscar por número de celular ou nome..." oninput="renderAdminApoios()">
           </div>
-
           <div id="admin-apoios-list" style="margin-top: 0.75rem;"></div>
         </div>
       </div>
 
-      <!-- CONTEÚDO DA ABA 2: LANÇAR NOVA OCORRÊNCIA -->
+      <!-- ABA 2: LANÇAR NOVA OCORRÊNCIA -->
       <div id="tab-nova-oc" class="tab-content">
         <div class="card">
           <h3 id="form-oc-titulo">Lançar Nova Ocorrência</h3>
@@ -240,28 +256,32 @@
               </div>
 
               <div class="form-group"><label>Valor (R$)</label><input type="number" step="0.01" class="form-control" id="oc-valor" required></div>
-              <div class="form-group" style="grid-column: 1 / -1;"><label>Endereço Completo *</label><input type="text" class="form-control" id="oc-endereco" placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo - SP" required></div>
               
-              <!-- BOTAO DE CAPTURA GEOLOCALIZACAO (HTML5 GEOLOCATION) -->
+              <!-- CAMPO DE ENDEREÇO COM AUTOPREENCHIMENTO AUTOMÁTICO -->
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Endereço Completo (Digite para buscar sugestões) *</label>
+                <input type="text" class="form-control" id="oc-endereco" placeholder="Digite a rua, bairro ou localidade..." autocomplete="off" oninput="buscarSugestoesEndereco(this.value)" required>
+                <div id="suggestions-box" class="address-suggestions hidden"></div>
+              </div>
+              
               <div class="form-group" style="grid-column: 1 / -1;">
                 <button type="button" class="btn btn-secondary" onclick="obterGeolocalizacaoAdmin()" style="margin-bottom: 0.5rem; border-color: var(--accent); color: var(--text);">
-                  📍 Capturar Minha Localização Atual (GPS)
+                  📍 Capturar Minha Localização Atual (GPS do Aparelho)
                 </button>
               </div>
 
               <div class="form-group">
-                <label>Latitude (Opcional)</label>
+                <label>Latitude (Preenchida Automaticamente)</label>
                 <input type="text" class="form-control" id="oc-lat" placeholder="-23.5505">
               </div>
 
               <div class="form-group">
-                <label>Longitude (Opcional)</label>
+                <label>Longitude (Preenchida Automaticamente)</label>
                 <input type="text" class="form-control" id="oc-lng" placeholder="-46.6333">
               </div>
 
-              <!-- LINK OPCIONAL DA LOCALIZACAO -->
               <div class="form-group" style="grid-column: 1 / -1;">
-                <label>🔗 Link da Localização / Mapa (Opcional - Pode ser preenchido manualmente caso ocorra falha no GPS)</label>
+                <label>🔗 Link da Localização / Mapa (Opcional)</label>
                 <input type="url" class="form-control" id="oc-link-mapa" placeholder="https://maps.google.com/?q=-23.5505,-46.6333">
               </div>
 
@@ -276,23 +296,15 @@
         </div>
       </div>
 
-      <!-- CONTEÚDO DA ABA 3: RELATÓRIO QUINZENAL PARA CLIENTES (SEM VALORES) -->
+      <!-- ABA 3: RELATÓRIO QUINZENAL -->
       <div id="tab-relatorio-quinzenal" class="tab-content">
         <div class="card" style="border: 1px solid var(--accent);">
           <h3 style="color: var(--accent);">📋 Relatório Quinzenal para Clientes (Sem Valores)</h3>
-          <p style="font-size: 0.85rem; color: var(--dim); margin-top: 0.25rem;">Gere relatórios sem exibir os valores financeiros para envio direto ao cliente.</p>
-          
+          <p style="font-size: 0.85rem; color: var(--dim); margin-top: 0.25rem;">Gere relatórios sem exibir valores financeiros.</p>
           <div class="grid" style="margin-top: 0.75rem;">
-            <div class="form-group">
-              <label>Data Inicial</label>
-              <input type="date" id="rel-data-inicio" class="form-control">
-            </div>
-            <div class="form-group">
-              <label>Data Final</label>
-              <input type="date" id="rel-data-fim" class="form-control">
-            </div>
+            <div class="form-group"><label>Data Inicial</label><input type="date" id="rel-data-inicio" class="form-control"></div>
+            <div class="form-group"><label>Data Final</label><input type="date" id="rel-data-fim" class="form-control"></div>
           </div>
-
           <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
             <button class="btn btn-success" onclick="enviarRelatorioQuinzenalWhatsApp()">📱 Enviar via WhatsApp</button>
             <button class="btn btn-pdf" onclick="gerarPDFRelatorioQuinzenal()">📄 Gerar PDF / Imprimir</button>
@@ -300,25 +312,14 @@
         </div>
       </div>
 
-      <!-- CONTEÚDO DA ABA 4: OCORRÊNCIAS E RELATÓRIOS RECEBIDOS -->
+      <!-- ABA 4: OCORRÊNCIAS RECEBIDAS -->
       <div id="tab-ocorrencias" class="tab-content">
         <div class="card">
           <h3>Ocorrências e Relatórios Recebidos</h3>
-          <p style="font-size:0.8rem; color:var(--dim); margin-bottom: 0.75rem;">
-            Ocorrências organizadas e minimizadas por data. Selecione uma data ou período para filtrar.
-          </p>
-
           <div class="grid" style="margin-bottom: 0.75rem;">
-            <div class="form-group">
-              <label>Filtrar Data Inicial</label>
-              <input type="date" id="filtro-oc-data-inicio" class="form-control" onchange="renderAdminOcorrencias()">
-            </div>
-            <div class="form-group">
-              <label>Filtrar Data Final</label>
-              <input type="date" id="filtro-oc-data-fim" class="form-control" onchange="renderAdminOcorrencias()">
-            </div>
+            <div class="form-group"><label>Filtrar Data Inicial</label><input type="date" id="filtro-oc-data-inicio" class="form-control" onchange="renderAdminOcorrencias()"></div>
+            <div class="form-group"><label>Filtrar Data Final</label><input type="date" id="filtro-oc-data-fim" class="form-control" onchange="renderAdminOcorrencias()"></div>
           </div>
-
           <div id="admin-ocorrencias-list" style="margin-top: 0.5rem;"></div>
         </div>
       </div>
@@ -334,7 +335,7 @@
       </div>
 
       <div id="apoio-offline-msg" class="alert-banner">
-        ⚠ Você precisa ficar <strong>ONLINE</strong> para visualizar e receber os alertas sonoros de novas ocorrências.
+        ⚠ Você precisa ficar <strong>ONLINE</strong> para visualizar a distância e tempo até o local.
       </div>
 
       <div id="apoio-content" class="hidden">
@@ -349,6 +350,8 @@
       <button class="btn btn-secondary" style="margin-bottom: 1rem;" onclick="showScreen('screen-apoio')">← Voltar</button>
       <h2 id="exec-titulo">Atendimento</h2>
       <p id="exec-endereco" style="color: var(--accent); margin-bottom: 0.25rem;"></p>
+      
+      <div id="exec-eta-box" class="eta-box hidden"></div>
       <div id="exec-link-container" style="margin-bottom: 1rem;"></div>
 
       <div class="card" style="background: var(--bg);">
@@ -367,10 +370,6 @@
 
       <div class="card" style="background: var(--bg); margin-top: 1rem;">
         <h4>Registros Fotográficos (Mínimo de 5 fotos) *</h4>
-        <p style="font-size: 0.8rem; color: var(--dim); margin-bottom: 0.5rem;">
-          Anexe as fotos diretamente no sistema ou tire com a câmera e envie via WhatsApp.
-        </p>
-        
         <div class="form-group">
           <label>Escolher os Arquivos / Tirar Fotos:</label>
           <input type="file" id="foto-input" class="form-control" accept="image/*" capture="environment" multiple onchange="handleFotosUpload(event)">
@@ -395,14 +394,12 @@
         </div>
       </div>
 
-      <!-- Botão de Envio -->
       <button id="btn-finalizar" class="btn" style="margin-top: 1rem; padding: 0.8rem;" disabled onclick="finalizarAtendimento()">
         Enviar Ocorrência a Central Adm
       </button>
     </section>
   </main>
 
-  <!-- ÁREA DE IMPRESSÃO / GERAÇÃO DE PDF -->
   <div id="print-area" class="hidden"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -424,11 +421,12 @@
     let selectedOcId = null;
     let isOnline = false;
     let map = null, markersGroup = null, userMarker = null;
+    let userCurrentLat = null, userCurrentLng = null;
     let timerBip = null;
     let audioContext = null;
     let fotosTemp = [];
+    let debounceTimer = null;
 
-    // COORDENADAS PADRÃO DE SÃO PAULO
     const SP_LAT = -23.5505;
     const SP_LNG = -46.6333;
 
@@ -441,25 +439,16 @@
       if (!supabaseClient) return;
       try {
         const { data: dbApoios } = await supabaseClient.from('apoios').select('*');
-        if (dbApoios) {
-          apoios = dbApoios;
-          localStorage.setItem('dr_apoios', JSON.stringify(apoios));
-        }
+        if (dbApoios) { apoios = dbApoios; localStorage.setItem('dr_apoios', JSON.stringify(apoios)); }
 
         const { data: dbOcorrencias } = await supabaseClient.from('ocorrencias').select('*');
-        if (dbOcorrencias) {
-          ocorrencias = dbOcorrencias;
-          localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias));
-        }
-      } catch (err) {
-        console.log('Modo offline/local storage ativo:', err);
-      }
+        if (dbOcorrencias) { ocorrencias = dbOcorrencias; localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias)); }
+      } catch (err) { console.log('Modo offline ativo'); }
     }
 
     function iniciarEscutaTempoReal() {
       if (!supabaseClient) return;
-      supabaseClient
-        .channel('mudancas_realtime')
+      supabaseClient.channel('mudancas_realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'apoios' }, async () => {
           await carregarDadosIniciais();
           if (currentUser?.type === 'admin') renderAdminApoios();
@@ -468,8 +457,7 @@
           await carregarDadosIniciais();
           if (currentUser?.type === 'admin') renderAdminOcorrencias();
           if (currentUser?.type === 'apoio') renderApoio();
-        })
-        .subscribe();
+        }).subscribe();
     }
 
     function saveData() {
@@ -489,18 +477,14 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(
-        btn => btn.getAttribute('onclick').includes(tabId)
-      );
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
       if (activeBtn) activeBtn.classList.add('active');
 
       const targetTab = document.getElementById(tabId);
       if (targetTab) targetTab.classList.add('active');
     }
 
-    function toggleAccordion(element) {
-      element.classList.toggle('open');
-    }
+    function toggleAccordion(element) { element.classList.toggle('open'); }
 
     function updateNav() {
       if (currentUser) {
@@ -519,36 +503,23 @@
 
       if (u === 'admin' && p === 'admin123') {
         currentUser = { type: 'admin', nome: 'Central Admin' };
-        updateNav();
-        renderAdmin();
-        showScreen('screen-admin');
-        switchAdminTab('tab-apoios');
+        updateNav(); renderAdmin(); showScreen('screen-admin'); switchAdminTab('tab-apoios');
         return;
       }
 
       await carregarDadosIniciais();
       const apoio = apoios.find(a => a.tel.replace(/\D/g, '') === u.replace(/\D/g, '') && a.pass === p);
       if (apoio) {
-        if (apoio.status === 'aguardando') return alert('Seu cadastro está aguardando aprovação da Central.');
-        if (apoio.status === 'suspenso') return alert('Seu cadastro está SUSPENSO provisoriamente pela Central.');
-        if (apoio.status === 'rejeitado') return alert('Seu cadastro foi REJEITADO pela Central.');
+        if (apoio.status === 'aguardando') return alert('Seu cadastro está aguardando aprovação.');
+        if (apoio.status === 'suspenso') return alert('Seu cadastro está SUSPENSO.');
+        if (apoio.status === 'rejeitado') return alert('Seu cadastro foi REJEITADO.');
 
         currentUser = { type: 'apoio', ...apoio };
-        updateNav();
-        showScreen('screen-apoio');
-        renderApoio();
-      } else {
-        alert('Credenciais inválidas.');
-      }
+        updateNav(); showScreen('screen-apoio'); renderApoio();
+      } else { alert('Credenciais inválidas.'); }
     }
 
-    function logout() {
-      currentUser = null;
-      isOnline = false;
-      pararAlertaSonoro();
-      updateNav();
-      showScreen('screen-login');
-    }
+    function logout() { currentUser = null; isOnline = false; pararAlertaSonoro(); updateNav(); showScreen('screen-login'); }
 
     async function cadastrarApoio(e) {
       e.preventDefault();
@@ -561,111 +532,107 @@
         pix: document.getElementById('cad-pix').value,
         status: 'aguardando'
       };
-
-      apoios.push(novoApoio);
-      saveData();
-
-      if (supabaseClient) {
-        await supabaseClient.from('apoios').insert([novoApoio]);
-      }
-
-      alert('Cadastro enviado com sucesso! Aguarde a liberação da Central.');
-      showScreen('screen-login');
+      apoios.push(novoApoio); saveData();
+      if (supabaseClient) await supabaseClient.from('apoios').insert([novoApoio]);
+      alert('Cadastro enviado com sucesso!'); showScreen('screen-login');
     }
 
-    function verificarOutroTipo() {
-      const selectTipo = document.getElementById('oc-tipo');
-      const groupOutro = document.getElementById('group-tipo-outro');
-      const inputOutro = document.getElementById('oc-tipo-outro');
+    /* BUSCA AUTOMÁTICA DE ENDEREÇO (AUTOCOMPLETE API) */
+    function buscarSugestoesEndereco(query) {
+      clearTimeout(debounceTimer);
+      const box = document.getElementById('suggestions-box');
+      if (!query || query.length < 4) { box.classList.add('hidden'); return; }
 
-      if (selectTipo.value === 'Outro') {
-        groupOutro.classList.remove('hidden');
-        inputOutro.required = true;
-      } else {
-        groupOutro.classList.add('hidden');
-        inputOutro.required = false;
-        inputOutro.value = '';
-      }
+      debounceTimer = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=br`);
+          const data = await res.json();
+          box.innerHTML = '';
+          
+          if (data.length > 0) {
+            box.classList.remove('hidden');
+            data.forEach(item => {
+              const div = document.createElement('div');
+              div.className = 'suggestion-item';
+              div.innerText = item.display_name;
+              div.onclick = () => selecionarEnderecoSugestao(item);
+              box.appendChild(div);
+            });
+          } else { box.classList.add('hidden'); }
+        } catch (e) { box.classList.add('hidden'); }
+      }, 400);
     }
 
-    function obterTipoEvento() {
-      const selectTipo = document.getElementById('oc-tipo').value;
-      if (selectTipo === 'Outro') {
-        return document.getElementById('oc-tipo-outro').value.trim() || 'Serviço Personalizado';
-      }
-      return selectTipo;
+    function selecionarEnderecoSugestao(item) {
+      document.getElementById('oc-endereco').value = item.display_name;
+      document.getElementById('oc-lat').value = parseFloat(item.lat).toFixed(6);
+      document.getElementById('oc-lng').value = parseFloat(item.lon).toFixed(6);
+      document.getElementById('oc-link-mapa').value = `https://maps.google.com/?q=${item.lat},${item.lon}`;
+      document.getElementById('suggestions-box').classList.add('hidden');
     }
 
-    // CAPTURA DA GEOLOCALIZACAO DO NAVEGADOR (HTML5 GEOLOCATION) NO FORMULARIO DO ADMIN
     function obterGeolocalizacaoAdmin() {
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             const lat = pos.coords.latitude.toFixed(6);
             const lng = pos.coords.longitude.toFixed(6);
-            
             document.getElementById('oc-lat').value = lat;
             document.getElementById('oc-lng').value = lng;
             document.getElementById('oc-link-mapa').value = `https://maps.google.com/?q=${lat},${lng}`;
-            alert(`Coordenadas obtidas com sucesso!\nLatitude: ${lat} | Longitude: ${lng}`);
+            alert(`Localização capturada:\nLatitude: ${lat} | Longitude: ${lng}`);
           },
-          (err) => {
-            alert('Falha ao obter geolocalização do dispositivo ou acesso negado. Serão aplicadas as coordenadas padrão de São Paulo.');
+          () => {
             document.getElementById('oc-lat').value = SP_LAT;
             document.getElementById('oc-lng').value = SP_LNG;
             document.getElementById('oc-link-mapa').value = `https://maps.google.com/?q=${SP_LAT},${SP_LNG}`;
           },
-          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+          { enableHighAccuracy: true, timeout: 8000 }
         );
-      } else {
-        alert('O seu navegador não suporta geolocalização. Aplicando coordenadas padrão de São Paulo.');
-        document.getElementById('oc-lat').value = SP_LAT;
-        document.getElementById('oc-lng').value = SP_LNG;
-        document.getElementById('oc-link-mapa').value = `https://maps.google.com/?q=${SP_LAT},${SP_LNG}`;
       }
     }
 
-    function renderAdmin() {
-      renderAdminApoios();
-      renderAdminOcorrencias();
+    /* CÁLCULO DE DISTÂNCIA E TEMPO ESTIMADO (HAVERSINE) */
+    function calcularDistanciaETempo(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distanciaKm = R * c;
+      const tempoMinutos = Math.round((distanciaKm / 35) * 60);
+
+      return {
+        distancia: distanciaKm < 1 ? `${Math.round(distanciaKm * 1000)} metros` : `${distanciaKm.toFixed(1)} km`,
+        tempo: tempoMinutos < 1 ? 'Menos de 1 min' : `~${tempoMinutos} min`
+      };
     }
+
+    function renderAdmin() { renderAdminApoios(); renderAdminOcorrencias(); }
 
     function renderAdminApoios() {
       const apoioContainer = document.getElementById('admin-apoios-list');
       const termoBusca = (document.getElementById('busca-apoio-tel')?.value || '').toLowerCase().trim();
-
       apoioContainer.innerHTML = '';
 
-      let apoiosOrdenados = [...apoios].sort((a, b) => {
-        const telA = a.tel.replace(/\D/g, '');
-        const telB = b.tel.replace(/\D/g, '');
-        return telA.localeCompare(telB);
-      });
+      let apoiosOrdenados = [...apoios].sort((a, b) => a.tel.replace(/\D/g, '').localeCompare(b.tel.replace(/\D/g, '')));
+      if (termoBusca) apoiosOrdenados = apoiosOrdenados.filter(a => a.tel.toLowerCase().includes(termoBusca) || a.nome.toLowerCase().includes(termoBusca));
 
-      if (termoBusca) {
-        apoiosOrdenados = apoiosOrdenados.filter(a => 
-          a.tel.toLowerCase().includes(termoBusca) || a.nome.toLowerCase().includes(termoBusca)
-        );
-      }
-
-      if (apoiosOrdenados.length === 0) {
-        apoioContainer.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhum prestador encontrado.</p>';
-        return;
-      }
+      if (apoiosOrdenados.length === 0) { apoioContainer.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhum prestador encontrado.</p>'; return; }
 
       apoiosOrdenados.forEach(a => {
         apoioContainer.innerHTML += `
           <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this.parentElement)">
-              <div>
-                📞 <strong>${a.tel}</strong> — ${a.nome} 
-                <span class="badge badge-${a.status}" style="margin-left:6px;">${a.status}</span>
-              </div>
+              <div>📞 <strong>${a.tel}</strong> — ${a.nome} <span class="badge badge-${a.status}">${a.status}</span></div>
               <span class="accordion-icon">▼</span>
             </div>
             <div class="accordion-body">
-              <p style="margin-bottom:0.4rem; font-size:0.85rem;"><strong>Veículo:</strong> ${a.veiculo}</p>
-              <p style="margin-bottom:0.4rem; font-size:0.85rem;"><strong>Chave PIX:</strong> ${a.pix}</p>
+              <p><strong>Veículo:</strong> ${a.veiculo}</p>
+              <p><strong>PIX:</strong> ${a.pix}</p>
               <div style="display:flex; gap:0.4rem; margin-top:0.6rem;">
                 <button class="btn btn-success" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="alterarStatusApoio(${a.id}, 'aprovado')">Aprovar</button>
                 <button class="btn btn-warning" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="alterarStatusApoio(${a.id}, 'suspenso')">Suspender</button>
@@ -679,26 +646,19 @@
     function renderAdminOcorrencias() {
       const ocContainer = document.getElementById('admin-ocorrencias-list');
       ocContainer.innerHTML = '';
-
       const dataInicio = document.getElementById('filtro-oc-data-inicio')?.value;
       const dataFim = document.getElementById('filtro-oc-data-fim')?.value;
 
       let ocsFiltradas = [...ocorrencias];
-
       if (dataInicio || dataFim) {
         ocsFiltradas = ocsFiltradas.filter(oc => {
           if (!oc.dataCriacao) return true;
           const dt = oc.dataCriacao.substring(0, 10);
-          if (dataInicio && dt < dataInicio) return false;
-          if (dataFim && dt > dataFim) return false;
-          return true;
+          return !(dataInicio && dt < dataInicio) && !(dataFim && dt > dataFim);
         });
       }
 
-      if (ocsFiltradas.length === 0) {
-        ocContainer.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhuma ocorrência encontrada para o filtro selecionado.</p>';
-        return;
-      }
+      if (ocsFiltradas.length === 0) { ocContainer.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhuma ocorrência encontrada.</p>'; return; }
 
       const gruposPorData = {};
       ocsFiltradas.forEach(oc => {
@@ -707,22 +667,13 @@
         gruposPorData[dataChave].push(oc);
       });
 
-      const datasOrdenadas = Object.keys(gruposPorData).sort((a, b) => b.localeCompare(a));
-
-      datasOrdenadas.forEach(dataChave => {
+      Object.keys(gruposPorData).sort((a, b) => b.localeCompare(a)).forEach(dataChave => {
         const listaOcs = gruposPorData[dataChave];
-        const dataFormatada = dataChave !== 'Sem Data' ? dataChave.split('-').reverse().join('/') : 'Data Não Registrada';
+        const dataFormatada = dataChave !== 'Sem Data' ? dataChave.split('-').reverse().join('/') : 'Data N/I';
 
         let listaOcsHtml = '';
         listaOcs.forEach(oc => {
           const apoioNome = apoios.find(a => a.id === oc.apoioId)?.nome || 'Não atribuído';
-          let fotosHtml = '';
-          if (oc.fotos && oc.fotos.length > 0) {
-            fotosHtml = '<div class="photo-grid" style="margin-top: 0.5rem;">' +
-              oc.fotos.map(f => `<img src="${f}" class="photo-preview">`).join('') +
-              '</div>';
-          }
-
           listaOcsHtml += `
             <div class="card" style="background: var(--card); margin-bottom: 0.75rem;">
               <div style="display:flex; justify-content:space-between;">
@@ -732,20 +683,9 @@
               <p style="font-size:0.85rem; color:var(--dim); margin:0.4rem 0 0.2rem 0;">📍 ${oc.endereco}</p>
               ${oc.linkMapa ? `<a href="${oc.linkMapa}" target="_blank" class="btn-link">🔗 Link do Local</a>` : ''}
               <p style="margin-top:0.4rem;"><strong>R$ ${oc.valor.toFixed(2)}</strong> | <small>Atendimento: ${apoioNome}</small></p>
-              
-              ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--bg); padding:0.5rem; border-radius:0.25rem;"><strong>Relatório do Atendimento:</strong><br>${oc.relatorio.replace(/\n/g, '<br>')}</div>` : ''}
-              ${fotosHtml}
-              
+              ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--bg); padding:0.5rem; border-radius:0.25rem;">${oc.relatorio.replace(/\n/g, '<br>')}</div>` : ''}
               <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.75rem;">
-                ${oc.fotos && oc.fotos.length > 0 ? `<button class="btn btn-secondary" style="padding:0.4rem; color:#fff;" onclick="baixarFotosGaleria(${oc.id})">📥 Baixar Fotos para Galeria (${oc.fotos.length})</button>` : ''}
-                
                 <button class="btn btn-warning" style="padding:0.4rem;" onclick="prepararEdicaoAdmin(${oc.id})">Editar Dados / Relatório</button>
-                
-                <div style="display:flex; gap:0.4rem;">
-                  <button class="btn btn-success" style="padding:0.4rem;" onclick="enviarRelatorioWhatsApp(${oc.id})">📱 WhatsApp</button>
-                  <button class="btn btn-pdf" style="padding:0.4rem;" onclick="gerarPDFRelatorio(${oc.id})">📄 Gerar PDF</button>
-                </div>
-
                 <button class="btn btn-danger" style="padding:0.4rem; margin-top:0.2rem;" onclick="excluirOc(${oc.id})">Excluir Ocorrência</button>
               </div>
             </div>`;
@@ -754,12 +694,10 @@
         ocContainer.innerHTML += `
           <div class="accordion-item">
             <div class="accordion-header" onclick="toggleAccordion(this.parentElement)">
-              <div>📅 <strong>Atendimentos do Dia: ${dataFormatada}</strong> (${listaOcs.length} ocorrência(s))</div>
+              <div>📅 <strong>Atendimentos do Dia: ${dataFormatada}</strong> (${listaOcs.length})</div>
               <span class="accordion-icon">▼</span>
             </div>
-            <div class="accordion-body">
-              ${listaOcsHtml}
-            </div>
+            <div class="accordion-body">${listaOcsHtml}</div>
           </div>`;
       });
     }
@@ -767,13 +705,8 @@
     async function alterarStatusApoio(id, status) {
       const a = apoios.find(item => item.id === id);
       if (a) {
-        a.status = status;
-        saveData();
-        renderAdminApoios();
-
-        if (supabaseClient) {
-          await supabaseClient.from('apoios').update({ status: status }).eq('id', id);
-        }
+        a.status = status; saveData(); renderAdminApoios();
+        if (supabaseClient) await supabaseClient.from('apoios').update({ status: status }).eq('id', id);
       }
     }
 
@@ -781,7 +714,6 @@
       e.preventDefault();
       const editId = document.getElementById('edit-oc-id').value;
       const tipoFinal = obterTipoEvento();
-
       let ocObjeto = null;
 
       if (editId) {
@@ -814,59 +746,32 @@
       }
 
       saveData();
-
       if (supabaseClient) {
-        if (editId) {
-          await supabaseClient.from('ocorrencias').update(ocObjeto).eq('id', parseInt(editId));
-        } else {
-          await supabaseClient.from('ocorrencias').insert([ocObjeto]);
-        }
+        if (editId) await supabaseClient.from('ocorrencias').update(ocObjeto).eq('id', parseInt(editId));
+        else await supabaseClient.from('ocorrencias').insert([ocObjeto]);
       }
 
-      cancelarEdicaoAdmin();
-      renderAdmin();
-      alert('Ocorrência salva com sucesso!');
-      switchAdminTab('tab-ocorrencias');
+      cancelarEdicaoAdmin(); renderAdmin(); alert('Ocorrência salva com sucesso!'); switchAdminTab('tab-ocorrencias');
     }
 
     function prepararEdicaoAdmin(id) {
       const oc = ocorrencias.find(o => o.id === id);
       if (!oc) return;
-
       switchAdminTab('tab-nova-oc');
-
       document.getElementById('edit-oc-id').value = oc.id;
-      
-      const selectTipo = document.getElementById('oc-tipo');
-      const opcoesPadrao = Array.from(selectTipo.options).map(o => o.value);
-      
-      if (opcoesPadrao.includes(oc.tipo)) {
-        selectTipo.value = oc.tipo;
-        document.getElementById('oc-tipo-outro').value = '';
-      } else {
-        selectTipo.value = 'Outro';
-        document.getElementById('oc-tipo-outro').value = oc.tipo;
-      }
-      verificarOutroTipo();
-
+      document.getElementById('oc-tipo').value = oc.tipo;
       document.getElementById('oc-valor').value = oc.valor;
       document.getElementById('oc-endereco').value = oc.endereco;
       document.getElementById('oc-lat').value = oc.lat || '';
       document.getElementById('oc-lng').value = oc.lng || '';
       document.getElementById('oc-link-mapa').value = oc.linkMapa || '';
       document.getElementById('oc-relatorio-admin').value = oc.relatorio || '';
-      
       document.getElementById('form-oc-titulo').innerText = 'Editar Ocorrência';
       document.getElementById('btn-cancelar-edit').classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function cancelarEdicaoAdmin() {
       document.getElementById('edit-oc-id').value = '';
-      document.getElementById('oc-tipo').value = 'Aviso de Alarme';
-      document.getElementById('oc-tipo-outro').value = '';
-      verificarOutroTipo();
-
       document.getElementById('oc-valor').value = '';
       document.getElementById('oc-endereco').value = '';
       document.getElementById('oc-lat').value = '';
@@ -877,187 +782,21 @@
       document.getElementById('btn-cancelar-edit').classList.add('hidden');
     }
 
-    function baixarFotosGaleria(id) {
-      const oc = ocorrencias.find(o => o.id === id);
-      if (!oc || !oc.fotos || oc.fotos.length === 0) {
-        return alert('Nenhuma foto encontrada para download nesta ocorrência.');
-      }
-
-      oc.fotos.forEach((fotoBase64, idx) => {
-        setTimeout(() => {
-          const a = document.createElement('a');
-          a.href = fotoBase64;
-          a.download = `DRTRACK_Ocorrencia_${oc.id}_foto_${idx + 1}.jpg`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        }, idx * 300);
-      });
+    function verificarOutroTipo() {
+      const selectTipo = document.getElementById('oc-tipo');
+      const groupOutro = document.getElementById('group-tipo-outro');
+      groupOutro.classList.toggle('hidden', selectTipo.value !== 'Outro');
     }
 
-    async function enviarRelatorioWhatsApp(id) {
-      const oc = ocorrencias.find(o => o.id === id);
-      if (!oc) return;
-
-      oc.status = 'concluido';
-      saveData();
-
-      if (supabaseClient) {
-        await supabaseClient.from('ocorrencias').update({ status: 'concluido' }).eq('id', id);
-      }
-
-      renderAdmin();
-
-      const apoioNome = apoios.find(a => a.id === oc.apoioId)?.nome || 'Não especificado';
-      
-      let textoCliente = `*🛡️ RELATÓRIO DE OCORRÊNCIA - DRTRACK*\n\n`;
-      textoCliente += `*Evento:* ${oc.tipo}\n`;
-      textoCliente += `*Endereço:* ${oc.endereco}\n`;
-      textoCliente += `*Prestador Responsável:* ${apoioNome}\n`;
-      textoCliente += `*Status:* Finalizado\n\n`;
-      textoCliente += `*RESUMO DO ATENDIMENTO:*\n${oc.relatorio || 'Atendimento presencial concluído sem anormalidades.'}\n\n`;
-      
-      if (oc.fotos && oc.fotos.length > 0) {
-        textoCliente += `📸 *Registros Fotográficos Anexados:* ${oc.fotos.length} foto(s) no sistema.\n`;
-      }
-
-      window.open(`https://wa.me/?text=${encodeURIComponent(textoCliente)}`, '_blank');
-    }
-
-    function gerarPDFRelatorio(id) {
-      const oc = ocorrencias.find(o => o.id === id);
-      if (!oc) return;
-
-      const apoioNome = apoios.find(a => a.id === oc.apoioId)?.nome || 'Não especificado';
-      const printArea = document.getElementById('print-area');
-
-      let fotosPrint = '';
-      if (oc.fotos && oc.fotos.length > 0) {
-        fotosPrint = `
-          <h3 style="margin-top:20px; border-bottom:1px solid #ccc; padding-bottom:5px; page-break-before: auto;">Registros Fotográficos</h3>
-          <div class="pdf-grid">
-            ${oc.fotos.map((f, i) => `
-              <div class="pdf-photo-item">
-                <img src="${f}">
-                <p style="font-size:10px; color:#555; margin-top:2px;">Foto ${i + 1}</p>
-              </div>
-            `).join('')}
-          </div>`;
-      }
-
-      printArea.innerHTML = `
-        <h2>🛡️ DRTRACK Conecta - Relatório de Atendimento Operacional</h2>
-        <p><strong>Tipo de Evento:</strong> ${oc.tipo}</p>
-        <p><strong>Endereço do Local:</strong> ${oc.endereco}</p>
-        <p><strong>Prestador Apoio:</strong> ${apoioNome}</p>
-        <p><strong>Data de Emissão:</strong> ${new Date().toLocaleString('pt-BR')}</p>
-        <hr style="margin: 15px 0;">
-        <h3>Resumo / Descrição do Atendimento</h3>
-        <p style="background: #f1f5f9; padding: 10px; border-radius: 4px; margin-top: 5px;">
-          ${oc.relatorio ? oc.relatorio.replace(/\n/g, '<br>') : 'Nenhum detalhe adicional informado.'}
-        </p>
-        ${fotosPrint}
-      `;
-
-      printArea.classList.remove('hidden');
-      window.print();
-      printArea.classList.add('hidden');
-    }
-
-    function obterOcorrenciasFiltradasPorData() {
-      const inicio = document.getElementById('rel-data-inicio').value;
-      const fim = document.getElementById('rel-data-fim').value;
-
-      return ocorrencias.filter(oc => {
-        if (!oc.dataCriacao) return true;
-        const dataOc = oc.dataCriacao.substring(0, 10);
-        if (inicio && dataOc < inicio) return false;
-        if (fim && dataOc > fim) return false;
-        return true;
-      });
-    }
-
-    function enviarRelatorioQuinzenalWhatsApp() {
-      const lista = obterOcorrenciasFiltradasPorData();
-      if (lista.length === 0) return alert('Nenhuma ocorrência encontrada no período selecionado.');
-
-      const inicio = document.getElementById('rel-data-inicio').value;
-      const fim = document.getElementById('rel-data-fim').value;
-      
-      let periodoTexto = '';
-      if (inicio || fim) {
-        periodoTexto = ` (Período: ${inicio ? inicio.split('-').reverse().join('/') : 'Início'} até ${fim ? fim.split('-').reverse().join('/') : 'Hoje'})`;
-      }
-
-      let msg = `*🛡️ DRTRACK - RELATÓRIO DE OCORRÊNCIAS*${periodoTexto}\n`;
-      msg += `------------------------------------------\n\n`;
-
-      lista.forEach((oc, index) => {
-        const dataFmt = oc.dataCriacao ? new Date(oc.dataCriacao).toLocaleDateString('pt-BR') : 'Data não registrada';
-        msg += `*${index + 1}. ${oc.tipo}*\n`;
-        msg += `📍 *Local:* ${oc.endereco}\n`;
-        msg += `📅 *Data:* ${dataFmt}\n`;
-        msg += `📝 *Relatório:* ${oc.relatorio || 'Atendimento concluído.'}\n\n`;
-      });
-
-      msg += `------------------------------------------\n`;
-      msg += `*Total de atendimentos prestados:* ${lista.length}\n`;
-      msg += `_Relatório gerado automaticamente pelo sistema DRTRACK Conecta._`;
-
-      window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-
-    function gerarPDFRelatorioQuinzenal() {
-      const lista = obterOcorrenciasFiltradasPorData();
-      if (lista.length === 0) return alert('Nenhuma ocorrência encontrada no período selecionado.');
-
-      const inicio = document.getElementById('rel-data-inicio').value;
-      const fim = document.getElementById('rel-data-fim').value;
-
-      let periodoTexto = 'Geral';
-      if (inicio || fim) {
-        periodoTexto = `${inicio ? inicio.split('-').reverse().join('/') : 'Início'} até ${fim ? fim.split('-').reverse().join('/') : 'Hoje'}`;
-      }
-
-      const printArea = document.getElementById('print-area');
-
-      let conteudoItens = lista.map((oc, i) => {
-        const dataFmt = oc.dataCriacao ? new Date(oc.dataCriacao).toLocaleDateString('pt-BR') : 'Data N/I';
-        return `
-          <div class="item-relatorio">
-            <h4>#${i + 1} - ${oc.tipo} (${dataFmt})</h4>
-            <p><strong>Endereço:</strong> ${oc.endereco}</p>
-            <p><strong>Status:</strong> ${oc.status}</p>
-            <p style="margin-top: 5px; background: #f8fafc; padding: 6px; border-left: 3px solid #0284c7;">
-              <strong>Detalhamento:</strong><br>${oc.relatorio ? oc.relatorio.replace(/\n/g, '<br>') : 'Sem observações.'}
-            </p>
-          </div>
-        `;
-      }).join('');
-
-      printArea.innerHTML = `
-        <h2>🛡️ DRTRACK Conecta - Relatório Periódico de Ocorrências</h2>
-        <p><strong>Período:</strong> ${periodoTexto}</p>
-        <p><strong>Data de Emissão:</strong> ${new Date().toLocaleString('pt-BR')}</p>
-        <p><strong>Total de Atendimentos:</strong> ${lista.length}</p>
-        <hr style="margin: 15px 0;">
-        ${conteudoItens}
-      `;
-
-      printArea.classList.remove('hidden');
-      window.print();
-      printArea.classList.add('hidden');
+    function obterTipoEvento() {
+      const selectTipo = document.getElementById('oc-tipo').value;
+      return selectTipo === 'Outro' ? (document.getElementById('oc-tipo-outro').value.trim() || 'Serviço Personalizado') : selectTipo;
     }
 
     async function excluirOc(id) {
       if (confirm('Tem certeza que deseja excluir esta ocorrência?')) {
-        ocorrencias = ocorrencias.filter(o => o.id !== id);
-        saveData();
-
-        if (supabaseClient) {
-          await supabaseClient.from('ocorrencias').delete().eq('id', id);
-        }
-
+        ocorrencias = ocorrencias.filter(o => o.id !== id); saveData();
+        if (supabaseClient) await supabaseClient.from('ocorrencias').delete().eq('id', id);
         renderAdmin();
       }
     }
@@ -1070,11 +809,9 @@
       document.getElementById('apoio-content').classList.remove('hidden');
 
       if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
       initMap();
       obterGeolocalizacaoPrecisa();
       renderApoio();
-      
       setInterval(checarNovasOcorrencias, 3000);
     }
 
@@ -1082,64 +819,19 @@
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
-            
+            userCurrentLat = pos.coords.latitude;
+            userCurrentLng = pos.coords.longitude;
             if (map) {
-              map.setView([lat, lng], 14);
-              
-              if (userMarker) {
-                userMarker.setLatLng([lat, lng]);
-              } else {
-                userMarker = L.marker([lat, lng]).addTo(map)
-                  .bindPopup(`📍 Sua localização atual (${currentUser?.nome || 'Apoio'})`)
-                  .openPopup();
-              }
+              map.setView([userCurrentLat, userCurrentLng], 14);
+              if (userMarker) userMarker.setLatLng([userCurrentLat, userCurrentLng]);
+              else userMarker = L.marker([userCurrentLat, userCurrentLng]).addTo(map).bindPopup('📍 Sua localização atual').openPopup();
             }
+            renderApoio();
           },
-          (err) => {
-            console.warn('Geolocalização não permitida ou indisponível. Usando padrão SP:', err.message);
-          },
+          (err) => console.warn(err.message),
           { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
       }
-    }
-
-    function iniciarAlertaSonoroContinuo() {
-      if (timerBip || !audioContext) return;
-      timerBip = setInterval(() => {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = 900;
-        gain.gain.value = 0.3;
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-        osc.start();
-        osc.stop(audioContext.currentTime + 0.4);
-      }, 1000);
-    }
-
-    function pararAlertaSonoro() {
-      if (timerBip) {
-        clearInterval(timerBip);
-        timerBip = null;
-      }
-    }
-
-    function checarNovasOcorrencias() {
-      if (!isOnline || currentUser?.type !== 'apoio') return;
-      
-      const pendentesDisponiveis = ocorrencias.filter(o => 
-        o.status === 'pendente' && !recusadas.includes(`${currentUser.id}_${o.id}`)
-      );
-
-      if (pendentesDisponiveis.length > 0) {
-        iniciarAlertaSonoroContinuo();
-      } else {
-        pararAlertaSonoro();
-      }
-      renderApoio();
     }
 
     function initMap() {
@@ -1150,6 +842,7 @@
       }
     }
 
+    /* RENDERIZAÇÃO DE OCORRÊNCIAS COM DISTÂNCIA E TEMPO NO PAINEL DO APOIO */
     function renderApoio() {
       if (!isOnline) return;
       const container = document.getElementById('apoio-ocorrencias-list');
@@ -1174,8 +867,19 @@
             </div>`;
         } else if (oc.status === 'aceito') {
           acoes = `<button class="btn" style="margin-top:0.5rem;" onclick="abrirExecucao(${oc.id})">Abrir Atendimento</button>`;
-        } else {
-          acoes = `<p style="font-size:0.8rem; color:var(--dim); margin-top:0.5rem;">Aguardando validação da Central</p>`;
+        }
+
+        // CÁLCULO DE DISTÂNCIA E TEMPO PARA O APOIO
+        let etaHtml = '';
+        if (userCurrentLat && userCurrentLng && oc.lat && oc.lng) {
+          const etaData = calcularDistanciaETempo(userCurrentLat, userCurrentLng, parseFloat(oc.lat), parseFloat(oc.lng));
+          if (etaData) {
+            etaHtml = `
+              <div class="eta-box">
+                <span>🚘 Distância: <strong>${etaData.distancia}</strong></span>
+                <span>⏱️ Tempo Estimado: <strong>${etaData.tempo}</strong></span>
+              </div>`;
+          }
         }
 
         container.innerHTML += `
@@ -1185,11 +889,8 @@
               <span class="badge badge-${oc.status}">${oc.status}</span>
             </div>
             <p style="font-size:0.85rem; color:var(--dim); margin-top:0.5rem;">📍 ${oc.endereco}</p>
-            ${oc.linkMapa ? `
-              <div style="margin: 0.3rem 0;">
-                <a href="${oc.linkMapa}" target="_blank" class="btn-link">🔗 Abrir Rota / Ver Distância</a>
-              </div>
-            ` : ''}
+            ${etaHtml}
+            ${oc.linkMapa ? `<a href="${oc.linkMapa}" target="_blank" class="btn-link">🔗 Abrir Rota / Ver Distância</a>` : ''}
             <p style="margin-top: 0.2rem;"><strong>R$ ${oc.valor.toFixed(2)}</strong></p>
             ${acoes}
           </div>`;
@@ -1200,80 +901,53 @@
       pararAlertaSonoro();
       const oc = ocorrencias.find(o => o.id === id);
       if (oc) {
-        oc.status = 'aceito';
-        oc.apoioId = currentUser.id;
-        saveData();
-
-        if (supabaseClient) {
-          await supabaseClient.from('ocorrencias').update({ status: 'aceito', apoioId: currentUser.id }).eq('id', id);
-        }
-
+        oc.status = 'aceito'; oc.apoioId = currentUser.id; saveData();
+        if (supabaseClient) await supabaseClient.from('ocorrencias').update({ status: 'aceito', apoioId: currentUser.id }).eq('id', id);
         abrirExecucao(id);
       }
     }
 
-    function recusarOc(id) {
-      recusadas.push(`${currentUser.id}_${id}`);
-      saveData();
-      checarNovasOcorrencias();
-      renderApoio();
-    }
+    function recusarOc(id) { recusadas.push(`${currentUser.id}_${id}`); saveData(); checarNovasOcorrencias(); renderApoio(); }
 
     function abrirExecucao(id) {
       selectedOcId = id;
       const oc = ocorrencias.find(o => o.id === id);
       document.getElementById('exec-titulo').innerText = oc.tipo;
       document.getElementById('exec-endereco').innerText = `📍 ${oc.endereco}`;
-      
+
+      const etaBox = document.getElementById('exec-eta-box');
+      if (userCurrentLat && userCurrentLng && oc.lat && oc.lng) {
+        const etaData = calcularDistanciaETempo(userCurrentLat, userCurrentLng, parseFloat(oc.lat), parseFloat(oc.lng));
+        if (etaData) {
+          etaBox.innerHTML = `<span>🚘 Distância até o local: <strong>${etaData.distancia}</strong></span><span>⏱️ Tempo aproximado: <strong>${etaData.tempo}</strong></span>`;
+          etaBox.classList.remove('hidden');
+        }
+      } else { etaBox.classList.add('hidden'); }
+
       const linkContainer = document.getElementById('exec-link-container');
-      if (oc.linkMapa) {
-        linkContainer.innerHTML = `<a href="${oc.linkMapa}" target="_blank" class="btn-link" style="font-size:0.9rem; padding:0.5rem 1rem;">🔗 Clique aqui para Abrir a Rota / GPS / Distância</a>`;
-      } else {
-        linkContainer.innerHTML = '';
-      }
+      linkContainer.innerHTML = oc.linkMapa ? `<a href="${oc.linkMapa}" target="_blank" class="btn-link" style="font-size:0.9rem; padding:0.5rem 1rem;">🔗 Clique aqui para Abrir a Rota / GPS</a>` : '';
 
       document.getElementById('relatorio-texto').value = oc.relatorio || '';
-      document.getElementById('check-fotos-confirmadas').checked = false;
-      document.getElementById('foto-input').value = '';
-      
-      const btnFinalizar = document.getElementById('btn-finalizar');
-      btnFinalizar.classList.remove('btn-verde');
-      
       fotosTemp = oc.fotos || [];
-      renderFotosPreview();
-      validarStatusExecucao();
-      renderChat();
-      showScreen('screen-execucao');
+      renderFotosPreview(); validarStatusExecucao(); renderChat(); showScreen('screen-execucao');
     }
 
     function handleFotosUpload(event) {
       const files = Array.from(event.target.files);
       files.forEach(file => {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          fotosTemp.push(e.target.result);
-          renderFotosPreview();
-          validarStatusExecucao();
-        };
+        reader.onload = (e) => { fotosTemp.push(e.target.result); renderFotosPreview(); validarStatusExecucao(); };
         reader.readAsDataURL(file);
       });
     }
 
-    function removerFoto(index) {
-      fotosTemp.splice(index, 1);
-      renderFotosPreview();
-      validarStatusExecucao();
-    }
+    function removerFoto(index) { fotosTemp.splice(index, 1); renderFotosPreview(); validarStatusExecucao(); }
 
     function renderFotosPreview() {
       const container = document.getElementById('photo-preview-container');
       container.innerHTML = '';
       fotosTemp.forEach((f, index) => {
-        container.innerHTML += `
-          <div class="photo-wrapper">
-            <img src="${f}" class="photo-preview">
-            <button type="button" class="photo-del" onclick="removerFoto(${index})">✕</button>
-          </div>`;
+        container.innerHTML += `<div class="photo-wrapper"><img src="${f}" class="photo-preview"><button type="button" class="photo-del" onclick="removerFoto(${index})">✕</button></div>`;
       });
     }
 
@@ -1291,19 +965,14 @@
       if (!input.value.trim()) return;
       if (!chats[selectedOcId]) chats[selectedOcId] = [];
       chats[selectedOcId].push({ sender: currentUser.nome, texto: input.value.trim() });
-      input.value = '';
-      saveData();
-      renderChat();
+      input.value = ''; saveData(); renderChat();
     }
 
     function enviarFotosWhatsApp() {
       const oc = ocorrencias.find(o => o.id === selectedOcId);
       const numeroAdicional = document.getElementById('zap-adicional').value.replace(/\D/g, '');
-      const numeroPadrao = '5511994944410';
-      const numeroDestino = numeroAdicional ? `55${numeroAdicional}` : numeroPadrao;
-
+      const numeroDestino = numeroAdicional ? `55${numeroAdicional}` : '5511994944410';
       const textoWhatsApp = `*ENVIO DE FOTOS DO ATENDIMENTO*\n*Prestador:* ${currentUser.nome}\n*Evento:* ${oc.tipo}\n*Endereço:* ${oc.endereco}\n\n_Estou enviando abaixo as fotos do atendimento._`;
-      
       window.open(`https://wa.me/${numeroDestino}?text=${encodeURIComponent(textoWhatsApp)}`, '_blank');
     }
 
@@ -1311,61 +980,49 @@
       const rel = document.getElementById('relatorio-texto').value.trim();
       const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
       const temCincoFotosAnexadas = fotosTemp.length >= 5;
-      const btnFinalizar = document.getElementById('btn-finalizar');
-
-      if (rel && (checkFotos || temCincoFotosAnexadas)) {
-        btnFinalizar.disabled = false;
-      } else {
-        btnFinalizar.disabled = true;
-        btnFinalizar.classList.remove('btn-verde');
-      }
+      document.getElementById('btn-finalizar').disabled = !(rel && (checkFotos || temCincoFotosAnexadas));
     }
 
     document.getElementById('relatorio-texto')?.addEventListener('input', validarStatusExecucao);
 
     async function finalizarAtendimento() {
       const checkFotos = document.getElementById('check-fotos-confirmadas').checked;
-      const btnFinalizar = document.getElementById('btn-finalizar');
-      
-      if (checkFotos) {
-        btnFinalizar.classList.add('btn-verde');
-      }
+      const relDigitado = document.getElementById('relatorio-texto').value.trim();
+      const oc = ocorrencias.find(o => o.id === selectedOcId);
+      const dataHoraAtual = new Date().toLocaleString('pt-BR');
 
-      setTimeout(async () => {
-        const relDigitado = document.getElementById('relatorio-texto').value.trim();
-        const oc = ocorrencias.find(o => o.id === selectedOcId);
-
-        const dataHoraAtual = new Date().toLocaleString('pt-BR');
-        const statusFotosZap = checkFotos ? "Confirmado envio de 5+ fotos via WhatsApp" : "Não confirmado via checkbox";
-
-        let relatorioCompleto = `[DADOS DO ATENDIMENTO]
+      let relatorioCompleto = `[DADOS DO ATENDIMENTO]
 - Prestador: ${currentUser.nome}
 - Veículo / Placa: ${currentUser.veiculo || 'N/I'}
-- Data/Hora do Envio: ${dataHoraAtual}
-- Fotos Anexadas no App: ${fotosTemp.length} foto(s)
-- Envio WhatsApp: ${statusFotosZap}
-
+- Data/Hora: ${dataHoraAtual}
+- Fotos Anexadas: ${fotosTemp.length}
 [DESCRIÇÃO DOS FATOS]
 ${relDigitado}`;
 
-        oc.status = 'enviada';
-        oc.relatorio = relatorioCompleto;
-        oc.fotos = fotosTemp;
-        saveData();
+      oc.status = 'enviada'; oc.relatorio = relatorioCompleto; oc.fotos = fotosTemp; saveData();
+      if (supabaseClient) await supabaseClient.from('ocorrencias').update({ status: 'enviada', relatorio: relatorioCompleto, fotos: fotosTemp }).eq('id', selectedOcId);
 
-        if (supabaseClient) {
-          await supabaseClient.from('ocorrencias').update({
-            status: 'enviada',
-            relatorio: relatorioCompleto,
-            fotos: fotosTemp
-          }).eq('id', selectedOcId);
-        }
-
-        alert('Ocorrência e dados do atendimento enviados com sucesso para a Central Adm!');
-        showScreen('screen-apoio');
-        renderApoio();
-      }, 300);
+      alert('Ocorrência enviada à Central Adm com sucesso!'); showScreen('screen-apoio'); renderApoio();
     }
+
+    function checarNovasOcorrencias() {
+      if (!isOnline || currentUser?.type !== 'apoio') return;
+      const pendentes = ocorrencias.filter(o => o.status === 'pendente' && !recusadas.includes(`${currentUser.id}_${o.id}`));
+      if (pendentes.length > 0) iniciarAlertaSonoroContinuo(); else pararAlertaSonoro();
+      renderApoio();
+    }
+
+    function iniciarAlertaSonoroContinuo() {
+      if (timerBip || !audioContext) return;
+      timerBip = setInterval(() => {
+        const osc = audioContext.createOscillator(); const gain = audioContext.createGain();
+        osc.type = 'sine'; osc.frequency.value = 900; gain.gain.value = 0.3;
+        osc.connect(gain); gain.connect(audioContext.destination);
+        osc.start(); osc.stop(audioContext.currentTime + 0.4);
+      }, 1000);
+    }
+
+    function pararAlertaSonoro() { if (timerBip) { clearInterval(timerBip); timerBip = null; } }
   </script>
 </body>
 </html>

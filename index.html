@@ -466,12 +466,12 @@
     async function carregarDadosIniciais() {
       if (!supabaseClient) return;
       try {
-        const { data: dbApoios } = await supabaseClient.from('apoios').select('*');
+        const { data: dbApoios, error: errApoios } = await supabaseClient.from('apoios').select('*');
         if (dbApoios) { apoios = dbApoios; localStorage.setItem('dr_apoios', JSON.stringify(apoios)); }
 
-        const { data: dbOcorrencias } = await supabaseClient.from('ocorrencias').select('*');
+        const { data: dbOcorrencias, error: errOc } = await supabaseClient.from('ocorrencias').select('*');
         if (dbOcorrencias) { ocorrencias = dbOcorrencias; localStorage.setItem('dr_ocorrencias', JSON.stringify(ocorrencias)); }
-      } catch (err) { console.log('Modo offline ativo'); }
+      } catch (err) { console.log('Modo offline ativo ou erro na sincronização'); }
     }
 
     function iniciarEscutaTempoReal() {
@@ -505,7 +505,7 @@
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick')?.includes(tabId));
       if (activeBtn) activeBtn.classList.add('active');
 
       const targetTab = document.getElementById(tabId);
@@ -529,22 +529,42 @@
       const u = document.getElementById('login-user').value.trim();
       const p = document.getElementById('login-pass').value.trim();
 
-      if (u === 'admin' && p === 'admin123') {
-        currentUser = { type: 'admin', nome: 'Central Admin' };
-        updateNav(); renderAdmin(); showScreen('screen-admin'); switchAdminTab('tab-apoios');
+      if (!u || !p) {
+        alert('Por favor, informe o usuário/telefone e a senha.');
         return;
       }
 
+      if (u === 'admin' && p === 'admin123') {
+        currentUser = { type: 'admin', nome: 'Central Admin' };
+        updateNav(); 
+        renderAdmin(); 
+        showScreen('screen-admin'); 
+        switchAdminTab('tab-apoios');
+        return;
+      }
+
+      // Sincronizar dados mais recentes do Supabase antes de validar login
       await carregarDadosIniciais();
-      const apoio = apoios.find(a => a.tel.replace(/\D/g, '') === u.replace(/\D/g, '') && a.pass === p);
+
+      const userDigits = u.replace(/\D/g, '');
+      const apoio = apoios.find(a => {
+        const telDigits = (a.tel || '').toString().replace(/\D/g, '');
+        const passCadastrada = a.pass || a.senha || '';
+        return (telDigits === userDigits || a.tel === u) && passCadastrada === p;
+      });
+
       if (apoio) {
         if (apoio.status === 'aguardando') return alert('Seu cadastro está aguardando aprovação.');
         if (apoio.status === 'suspenso') return alert('Seu cadastro está SUSPENSO.');
         if (apoio.status === 'rejeitado') return alert('Seu cadastro foi REJEITADO.');
 
         currentUser = { type: 'apoio', ...apoio };
-        updateNav(); showScreen('screen-apoio'); renderApoio();
-      } else { alert('Credenciais inválidas.'); }
+        updateNav(); 
+        showScreen('screen-apoio'); 
+        renderApoio();
+      } else { 
+        alert('Credenciais inválidas. Verifique o telefone e a senha informados.'); 
+      }
     }
 
     function logout() { 
@@ -558,18 +578,30 @@
 
     async function cadastrarApoio(e) {
       e.preventDefault();
+      const telInput = document.getElementById('cad-tel').value;
+      const passInput = document.getElementById('cad-pass').value;
+
       const novoApoio = {
         id: Date.now(),
         nome: document.getElementById('cad-nome').value,
-        tel: document.getElementById('cad-tel').value,
-        pass: document.getElementById('cad-pass').value,
+        tel: telInput,
+        pass: passInput,
+        senha: passInput, // Adicionado para garantir compatibilidade com colunas do Supabase
         veiculo: document.getElementById('cad-veiculo').value,
         pix: document.getElementById('cad-pix').value,
         status: 'aguardando'
       };
-      apoios.push(novoApoio); saveData();
-      if (supabaseClient) await supabaseClient.from('apoios').insert([novoApoio]);
-      alert('Cadastro enviado com sucesso!'); showScreen('screen-login');
+
+      apoios.push(novoApoio); 
+      saveData();
+
+      if (supabaseClient) {
+        const { error } = await supabaseClient.from('apoios').insert([novoApoio]);
+        if (error) console.error("Erro Supabase Cadastro:", error);
+      }
+
+      alert('Cadastro enviado com sucesso! Aguarde a liberação do Administrador.'); 
+      showScreen('screen-login');
     }
 
     function buscarSugestoesEndereco(query) {
@@ -655,15 +687,20 @@
       };
     }
 
-    function renderAdmin() { renderAdminApoios(); renderAdminOcorrencias(); }
+    function renderAdmin() { 
+      renderAdminApoios(); 
+      renderAdminOcorrencias(); 
+    }
 
     function renderAdminApoios() {
       const apoioContainer = document.getElementById('admin-apoios-list');
+      if (!apoioContainer) return;
+
       const termoBusca = (document.getElementById('busca-apoio-tel')?.value || '').toLowerCase().trim();
       apoioContainer.innerHTML = '';
 
-      let apoiosOrdenados = [...apoios].sort((a, b) => a.tel.replace(/\D/g, '').localeCompare(b.tel.replace(/\D/g, '')));
-      if (termoBusca) apoiosOrdenados = apoiosOrdenados.filter(a => a.tel.toLowerCase().includes(termoBusca) || a.nome.toLowerCase().includes(termoBusca));
+      let apoiosOrdenados = [...apoios].sort((a, b) => (a.tel || '').toString().replace(/\D/g, '').localeCompare((b.tel || '').toString().replace(/\D/g, '')));
+      if (termoBusca) apoiosOrdenados = apoiosOrdenados.filter(a => (a.tel || '').toLowerCase().includes(termoBusca) || (a.nome || '').toLowerCase().includes(termoBusca));
 
       if (apoiosOrdenados.length === 0) { apoioContainer.innerHTML = '<p style="color:var(--dim); font-size:0.85rem;">Nenhum prestador encontrado.</p>'; return; }
 
@@ -689,6 +726,8 @@
 
     function renderAdminOcorrencias() {
       const ocContainer = document.getElementById('admin-ocorrencias-list');
+      if (!ocContainer) return;
+
       ocContainer.innerHTML = '';
       const dataInicio = document.getElementById('filtro-oc-data-inicio')?.value;
       const dataFim = document.getElementById('filtro-oc-data-fim')?.value;
@@ -734,7 +773,7 @@
               </div>
               <p style="font-size:0.85rem; color:var(--dim); margin:0.4rem 0 0.2rem 0;">📍 ${oc.endereco}</p>
               ${oc.linkMapa ? `<a href="${oc.linkMapa}" target="_blank" class="btn-link">🔗 Link do Local</a>` : ''}
-              <p style="margin-top:0.4rem;"><strong>R$ ${oc.valor.toFixed(2)}</strong> | <small>Atendimento: ${apoioNome}</small></p>
+              <p style="margin-top:0.4rem;"><strong>R$ ${(Number(oc.valor) || 0).toFixed(2)}</strong> | <small>Atendimento: ${apoioNome}</small></p>
               ${oc.relatorio ? `<div style="font-size:0.8rem; margin-top:0.5rem; background:var(--bg); padding:0.5rem; border-radius:0.25rem;">${oc.relatorio.replace(/\n/g, '<br>')}</div>` : ''}
               ${fotosHtml}
               <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.75rem;">
@@ -949,6 +988,8 @@
     function renderApoio() {
       if (!isOnline) return;
       const container = document.getElementById('apoio-ocorrencias-list');
+      if (!container) return;
+
       container.innerHTML = '';
 
       const ativas = ocorrencias.filter(o => 
@@ -1009,7 +1050,7 @@
             <p style="font-size:0.85rem; color:var(--dim); margin-top:0.5rem;">📍 ${oc.endereco}</p>
             ${etaHtml}
             ${oc.linkMapa ? `<a href="${oc.linkMapa}" target="_blank" class="btn-link">🔗 Abrir Rota / Ver Distância</a>` : ''}
-            <p style="margin-top: 0.2rem;"><strong>R$ ${oc.valor.toFixed(2)}</strong></p>
+            <p style="margin-top: 0.2rem;"><strong>R$ ${(Number(oc.valor) || 0).toFixed(2)}</strong></p>
             ${acoes}
           </div>`;
       });
@@ -1054,7 +1095,7 @@
       showScreen('screen-execucao');
     }
 
-    /* UPLOAD DE FOTOS COM CARIMBO DE CANVAS (DATA, HORA, LAT/LONG E LOCALIZAÇÃO) */
+    /* UPLOAD DE FOTOS COM CARIMBO DE CANVAS */
     function handleFotosUpload(event) {
       const files = Array.from(event.target.files);
       const oc = ocorrencias.find(o => o.id === selectedOcId);
@@ -1109,6 +1150,7 @@
 
     function renderFotosPreview() {
       const container = document.getElementById('photo-preview-container');
+      if (!container) return;
       container.innerHTML = '';
       fotosTemp.forEach((f, index) => {
         container.innerHTML += `<div class="photo-wrapper"><img src="${f}" class="photo-preview"><button type="button" class="photo-del" onclick="removerFoto(${index})">✕</button></div>`;
@@ -1117,9 +1159,10 @@
 
     function renderChat() {
       const box = document.getElementById('chat-box');
+      if (!box) return;
       box.innerHTML = '';
       (chats[selectedOcId] || []).forEach(m => {
-        box.innerHTML += `<div class="chat-msg ${m.sender === currentUser.nome ? 'sent' : 'received'}"><strong>${m.sender}:</strong> ${m.texto}</div>`;
+        box.innerHTML += `<div class="chat-msg ${m.sender === currentUser?.nome ? 'sent' : 'received'}"><strong>${m.sender}:</strong> ${m.texto}</div>`;
       });
       box.scrollTop = box.scrollHeight;
     }

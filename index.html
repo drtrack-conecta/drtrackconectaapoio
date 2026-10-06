@@ -119,7 +119,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* Accordion / Elementos Minimizados */
     .accordion-item {
       border: 1px solid var(--border);
       border-radius: 0.375rem;
@@ -422,6 +421,7 @@
     let isOnline = false;
     let map = null, markersGroup = null, userMarker = null;
     let userCurrentLat = null, userCurrentLng = null;
+    let watchGpsId = null;
     let timerBip = null;
     let audioContext = null;
     let fotosTemp = [];
@@ -519,7 +519,14 @@
       } else { alert('Credenciais inválidas.'); }
     }
 
-    function logout() { currentUser = null; isOnline = false; pararAlertaSonoro(); updateNav(); showScreen('screen-login'); }
+    function logout() { 
+      currentUser = null; 
+      isOnline = false; 
+      if (watchGpsId) navigator.geolocation.clearWatch(watchGpsId);
+      pararAlertaSonoro(); 
+      updateNav(); 
+      showScreen('screen-login'); 
+    }
 
     async function cadastrarApoio(e) {
       e.preventDefault();
@@ -565,8 +572,8 @@
 
     function selecionarEnderecoSugestao(item) {
       document.getElementById('oc-endereco').value = item.display_name;
-      document.getElementById('oc-lat').value = parseFloat(item.lat).toFixed(6);
-      document.getElementById('oc-lng').value = parseFloat(item.lon).toFixed(6);
+      document.getElementById('oc-lat').value = Number(item.lat).toFixed(6);
+      document.getElementById('oc-lng').value = Number(item.lon).toFixed(6);
       document.getElementById('oc-link-mapa').value = `https://maps.google.com/?q=${item.lat},${item.lon}`;
       document.getElementById('suggestions-box').classList.add('hidden');
     }
@@ -575,8 +582,8 @@
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           (pos) => {
-            const lat = pos.coords.latitude.toFixed(6);
-            const lng = pos.coords.longitude.toFixed(6);
+            const lat = Number(pos.coords.latitude).toFixed(6);
+            const lng = Number(pos.coords.longitude).toFixed(6);
             document.getElementById('oc-lat').value = lat;
             document.getElementById('oc-lng').value = lng;
             document.getElementById('oc-link-mapa').value = `https://maps.google.com/?q=${lat},${lng}`;
@@ -592,22 +599,35 @@
       }
     }
 
-    /* CÁLCULO DE DISTÂNCIA E TEMPO ESTIMADO (HAVERSINE) */
+    /* CÁLCULO DE DISTÂNCIA E TEMPO ESTIMADO CORRIGIDO */
     function calcularDistanciaETempo(lat1, lon1, lat2, lon2) {
-      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
-      const R = 6371;
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLon = (lon2 - lon1) * Math.PI / 180;
+      // Garantir conversão estrita para formato numérico
+      const nLat1 = Number(lat1);
+      const nLon1 = Number(lon1);
+      const nLat2 = Number(lat2);
+      const nLon2 = Number(lon2);
+
+      if (isNaN(nLat1) || isNaN(nLon1) || isNaN(nLat2) || isNaN(nLon2)) return null;
+
+      const R = 6371; // Raio da Terra em km
+      const dLat = (nLat2 - nLat1) * Math.PI / 180;
+      const dLon = (nLon2 - nLon1) * Math.PI / 180;
       const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.cos(nLat1 * Math.PI / 180) * Math.cos(nLat2 * Math.PI / 180) *
                 Math.sin(dLon/2) * Math.sin(dLon/2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       const distanciaKm = R * c;
-      const tempoMinutos = Math.round((distanciaKm / 35) * 60);
+
+      if (distanciaKm <= 0.05) {
+        return { distancia: 'No local', tempo: 'Chegou' };
+      }
+
+      // Média de velocidade no trânsito urbano: ~35 km/h
+      const tempoMinutos = Math.max(1, Math.round((distanciaKm / 35) * 60));
 
       return {
         distancia: distanciaKm < 1 ? `${Math.round(distanciaKm * 1000)} metros` : `${distanciaKm.toFixed(1)} km`,
-        tempo: tempoMinutos < 1 ? 'Menos de 1 min' : `~${tempoMinutos} min`
+        tempo: tempoMinutos <= 1 ? 'Menos de 1 min' : `~${tempoMinutos} min`
       };
     }
 
@@ -714,6 +734,10 @@
       e.preventDefault();
       const editId = document.getElementById('edit-oc-id').value;
       const tipoFinal = obterTipoEvento();
+
+      let latVal = Number(document.getElementById('oc-lat').value) || SP_LAT;
+      let lngVal = Number(document.getElementById('oc-lng').value) || SP_LNG;
+
       let ocObjeto = null;
 
       if (editId) {
@@ -722,8 +746,8 @@
           oc.tipo = tipoFinal;
           oc.valor = parseFloat(document.getElementById('oc-valor').value);
           oc.endereco = document.getElementById('oc-endereco').value;
-          oc.lat = document.getElementById('oc-lat').value || SP_LAT;
-          oc.lng = document.getElementById('oc-lng').value || SP_LNG;
+          oc.lat = latVal;
+          oc.lng = lngVal;
           oc.linkMapa = document.getElementById('oc-link-mapa').value;
           oc.relatorio = document.getElementById('oc-relatorio-admin').value.trim();
           ocObjeto = oc;
@@ -734,8 +758,8 @@
           tipo: tipoFinal,
           valor: parseFloat(document.getElementById('oc-valor').value),
           endereco: document.getElementById('oc-endereco').value,
-          lat: document.getElementById('oc-lat').value || SP_LAT,
-          lng: document.getElementById('oc-lng').value || SP_LNG,
+          lat: latVal,
+          lng: lngVal,
           linkMapa: document.getElementById('oc-link-mapa').value,
           status: 'pendente',
           relatorio: document.getElementById('oc-relatorio-admin').value.trim(),
@@ -810,26 +834,33 @@
 
       if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
       initMap();
-      obterGeolocalizacaoPrecisa();
+      iniciarGeolocalizacaoContinua();
       renderApoio();
       setInterval(checarNovasOcorrencias, 3000);
     }
 
-    function obterGeolocalizacaoPrecisa() {
+    /* MONITORAMENTO CONTÍNUO DO GPS DO APOIO */
+    function iniciarGeolocalizacaoContinua() {
       if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
+        if (watchGpsId) navigator.geolocation.clearWatch(watchGpsId);
+
+        watchGpsId = navigator.geolocation.watchPosition(
           (pos) => {
             userCurrentLat = pos.coords.latitude;
             userCurrentLng = pos.coords.longitude;
+
             if (map) {
               map.setView([userCurrentLat, userCurrentLng], 14);
-              if (userMarker) userMarker.setLatLng([userCurrentLat, userCurrentLng]);
-              else userMarker = L.marker([userCurrentLat, userCurrentLng]).addTo(map).bindPopup('📍 Sua localização atual').openPopup();
+              if (userMarker) {
+                userMarker.setLatLng([userCurrentLat, userCurrentLng]);
+              } else {
+                userMarker = L.marker([userCurrentLat, userCurrentLng]).addTo(map).bindPopup('📍 Sua localização atual').openPopup();
+              }
             }
             renderApoio();
           },
-          (err) => console.warn(err.message),
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          (err) => console.warn('Erro ao obter GPS:', err.message),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
         );
       }
     }
@@ -842,7 +873,7 @@
       }
     }
 
-    /* RENDERIZAÇÃO DE OCORRÊNCIAS COM DISTÂNCIA E TEMPO NO PAINEL DO APOIO */
+    /* RENDERIZAÇÃO DAS OCORRÊNCIAS COM DISTÂNCIA E TEMPO DINÂMICOS */
     function renderApoio() {
       if (!isOnline) return;
       const container = document.getElementById('apoio-ocorrencias-list');
@@ -869,10 +900,21 @@
           acoes = `<button class="btn" style="margin-top:0.5rem;" onclick="abrirExecucao(${oc.id})">Abrir Atendimento</button>`;
         }
 
-        // CÁLCULO DE DISTÂNCIA E TEMPO PARA O APOIO
+        // Tenta extrair a lat/lng do objeto ou do link de mapa se não existirem diretamente
+        let targetLat = oc.lat;
+        let targetLng = oc.lng;
+
+        if ((!targetLat || !targetLng) && oc.linkMapa && oc.linkMapa.includes('q=')) {
+          const coordsMatch = oc.linkMapa.split('q=')[1]?.split('&')[0]?.split(',');
+          if (coordsMatch && coordsMatch.length === 2) {
+            targetLat = coordsMatch[0];
+            targetLng = coordsMatch[1];
+          }
+        }
+
         let etaHtml = '';
-        if (userCurrentLat && userCurrentLng && oc.lat && oc.lng) {
-          const etaData = calcularDistanciaETempo(userCurrentLat, userCurrentLng, parseFloat(oc.lat), parseFloat(oc.lng));
+        if (userCurrentLat && userCurrentLng && targetLat && targetLng) {
+          const etaData = calcularDistanciaETempo(userCurrentLat, userCurrentLng, targetLat, targetLng);
           if (etaData) {
             etaHtml = `
               <div class="eta-box">
@@ -880,6 +922,11 @@
                 <span>⏱️ Tempo Estimado: <strong>${etaData.tempo}</strong></span>
               </div>`;
           }
+        } else {
+          etaHtml = `
+            <div class="eta-box">
+              <span>📍 Obter posição GPS para calcular distância...</span>
+            </div>`;
         }
 
         container.innerHTML += `
@@ -917,7 +964,7 @@
 
       const etaBox = document.getElementById('exec-eta-box');
       if (userCurrentLat && userCurrentLng && oc.lat && oc.lng) {
-        const etaData = calcularDistanciaETempo(userCurrentLat, userCurrentLng, parseFloat(oc.lat), parseFloat(oc.lng));
+        const etaData = calcularDistanciaETempo(userCurrentLat, userCurrentLng, oc.lat, oc.lng);
         if (etaData) {
           etaBox.innerHTML = `<span>🚘 Distância até o local: <strong>${etaData.distancia}</strong></span><span>⏱️ Tempo aproximado: <strong>${etaData.tempo}</strong></span>`;
           etaBox.classList.remove('hidden');
